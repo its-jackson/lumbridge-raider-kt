@@ -1,0 +1,12 @@
+.gradle
+.idea
+# Project exclude paths
+/build/
+/libraries/build/
+/libraries/daxtracker-api/build/
+/libraries/daxtracker-api/build/classes/java/main/
+/scripts/build/
+/scripts/polymorphic-scripts/build/
+/scripts/polymorphic-scripts/premium/build/
+/scripts/polymorphic-scripts/testing/build/
+/scripts/polymorphic-scripts/testing/build/classes/java/main/
