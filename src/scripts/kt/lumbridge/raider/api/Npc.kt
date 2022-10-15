@@ -14,7 +14,13 @@ private val chickenLoot = arrayOf("Feather", "Bones", "Raw chicken")
 private val cow = arrayOf("Cow", "Cow calf")
 private val cowLoot = arrayOf("Cowhide", "Bones", "Raw beef")
 
-enum class Npc(x: Int, y: Int, z: Int, val names: Array<String>, val lootableGroundItems: Array<String>) {
+enum class Npc(
+    x: Int,
+    y: Int,
+    z: Int,
+    val names: Array<String>,
+    val lootableGroundItems: Array<String>
+) {
     CHICKENS_LUMBRIDGE_EAST(
         3230, 3297, 0,
         chicken,
@@ -51,8 +57,7 @@ enum class Npc(x: Int, y: Int, z: Int, val names: Array<String>, val lootableGro
     override fun toString(): String = "${names[0]} at ${location()}"
 
     companion object {
-        fun attack(npc: Npc): Boolean {
-            return  Query.npcs()
+        fun attack(npc: Npc): Boolean = Query.npcs()
                 .nameContains(*npc.names.sortedArray())
                 .isReachable
                 .isNotBeingInteractedWith
@@ -64,6 +69,5 @@ enum class Npc(x: Int, y: Int, z: Int, val names: Array<String>, val lootableGro
                             Waiting.waitUntil { !it.isValid }
                 }
                 .orElse(false)
-        }
     }
 }

@@ -16,40 +16,67 @@ import scripts.waitUntilNotAnimating
 
 /**
 Composite nodes: sequence and selector, the sequence node behaves as an AND gate.
-                    The selector node behaves as an OR gate.
+The selector node behaves as an OR gate.
 
 Decorative nodes: inverter, repeatUntil, succeeder, conditional.
-                    inverter: invert the result of the child. A child fails, and it will return success to its parent,
-                    or a child succeeds, and it will return failure to the parent.
+inverter: invert the result of the child. A child fails, and it will return success to its parent,
+or a child succeeds, and it will return failure to the parent.
 
-                    conditional: ensures that we can skip steps we don't need to do. So if the condition is satisfied,
-                    great! We move on. If not, we do something to satisfy it.
+conditional: ensures that we can skip steps we don't need to do. So if the condition is satisfied,
+great! We move on. If not, we do something to satisfy it.
 
 Leaf nodes: perform, terminal node that will always return success.
-            (actually perform is a method, that takes a lambda param
-            that defines the node object ref and returns unit)
-*/
+(actually perform is a method, that takes a lambda param
+that defines the node object ref and returns unit)
+ */
+
+// this behaviour tree ensures the user is logged in first.
+// then it will ensure the inventory is empty
+// before entering the main script logic.
+fun initBehaviour(taskRunner: ScriptTaskRunner): IBehaviorNode = behaviorTree {
+    sequence {
+        selector {
+            inverter { condition { !Login.isLoggedIn() } }
+            repeatUntil({ Login.isLoggedIn() }) { condition { Login.login() } }
+        }
+        selector {
+            inverter { condition { !Inventory.isEmpty() } }
+            repeatUntil({ Inventory.isEmpty() }) { walkToAndDepositInvBank() }
+        }
+    }
+}
+
+// this behaviour tree is the main logic tree for the script.
+// it decides the behaviour of the character.
+fun logicBehaviour(taskRunner: ScriptTaskRunner): IBehaviorNode = behaviorTree {
+    repeatUntil({ taskRunner.isRunnerComplete() }) {
+        sequence {
+            selector { abstractBehaviour(taskRunner) }
+            selector { specificBehaviour(taskRunner) }
+        }
+    }
+}
 
 /**
- * Carryout the character generic tasks
+ * Carryout the high level abstraction behaviours
  *
  * Logging in, setting the next task, turning on character run, and killing the script
  */
-fun IParentNode.genericBehaviour(): SequenceNode = sequence("Generic behaviour") {
+fun IParentNode.abstractBehaviour(taskRunner: ScriptTaskRunner): SequenceNode = sequence("Generic behaviour") {
     // terminate
     selector {
-        condition { !ScriptTaskRunner.isRunnerComplete() }
-        sequence { BehaviorTreeStatus.KILL }
+        condition { !taskRunner.isRunnerComplete() }
+        sequence { BehaviorTreeStatus.FAILURE }
     }
 
     // next task
     selector {
         inverter {
-            condition { ScriptTaskRunner.isSatisfied() }
+            condition { taskRunner.isSatisfied() }
         }
         sequence {
             walkToAndDepositInvBank()
-            perform { ScriptTaskRunner.setNext() }
+            perform { taskRunner.setNext() }
         }
     }
 
@@ -65,9 +92,9 @@ fun IParentNode.genericBehaviour(): SequenceNode = sequence("Generic behaviour")
     }
 }
 
-fun IParentNode.specificBehaviour(): SequenceNode = sequence("Specific behaviour") {
+fun IParentNode.specificBehaviour(taskRunner: ScriptTaskRunner): SequenceNode = sequence("Specific behaviour") {
     selector {
-        combatMeleeBehaviour()
+        combatMeleeBehaviour(taskRunner)
     }
 }
 
@@ -76,14 +103,14 @@ fun IParentNode.specificBehaviour(): SequenceNode = sequence("Specific behaviour
  *
  * Melee, Ranged, Magic, Cooking, Firemaking, Woodcutting, Fishing, Mining, Smithing, and Prayer
  */
-fun IParentNode.combatMeleeBehaviour(): SequenceNode = sequence("Combat behaviour") {
+fun IParentNode.combatMeleeBehaviour(taskRunner: ScriptTaskRunner): SequenceNode = sequence("Combat behaviour") {
     // ensure sequence is melee combat
-    condition { ScriptTaskRunner.activeTask?.behaviour == Behaviour.COMBAT_MELEE }
+    condition { taskRunner.activeTask?.behaviour == Behaviour.COMBAT_MELEE }
 
     // character cooking
     selector {
-        inverter { condition { isCookRawFood(ScriptTaskRunner.activeTask) } }
-        repeatUntil({ !isCookRawFood(ScriptTaskRunner.activeTask) }) {
+        inverter { condition { isCookRawFood(taskRunner.activeTask) } }
+        repeatUntil({ !isCookRawFood(taskRunner.activeTask) }) {
             walkToAndCookRange()
         }
     }
@@ -91,22 +118,22 @@ fun IParentNode.combatMeleeBehaviour(): SequenceNode = sequence("Combat behaviou
     // character banking
     selector {
         inverter {
-            condition { isBankNeeded(ScriptTaskRunner.activeTask) }
+            condition { isBankNeeded(taskRunner.activeTask) }
         }
         walkToAndDepositInvBank()
     }
 
     // character combat
     selector {
-        condition { isCombat(ScriptTaskRunner.activeTask) }
-        walkToAndAttackNpc(ScriptTaskRunner.activeTask)
+        condition { isCombat(taskRunner.activeTask) }
+        walkToAndAttackNpc(taskRunner.activeTask)
     }
 
     // character looting
     selector {
-        repeatUntil({ !foundLootableItems(ScriptTaskRunner.activeTask) || Inventory.isFull() }) {
+        repeatUntil({ !foundLootableItems(taskRunner.activeTask) || Inventory.isFull() }) {
             sequence {
-                condition { lootItems(ScriptTaskRunner.activeTask) }
+                condition { lootItems(taskRunner.activeTask) }
             }
         }
     }
@@ -116,20 +143,19 @@ fun IParentNode.combatMeleeBehaviour(): SequenceNode = sequence("Combat behaviou
  * This function can be called on an [IParentNode], which means it can be called in lambdas for nodes
  * such as "sequence" and "selector".
  */
-fun IParentNode.walkToAndOpenBank(): SequenceNode {
-    return sequence {
-        selector {
-            condition { Bank.ensureOpen() }
-            sequence {
-                selector {
-                    condition { Bank.isNearby() } // at the bank? good, we are done now.
-                    condition { GlobalWalking.walkToBank() } // we aren't at the bank, let's walk to it.
-                }
-                condition { Bank.ensureOpen() }
+fun IParentNode.walkToAndOpenBank(): SequenceNode = sequence {
+    selector {
+        condition { Bank.ensureOpen() }
+        sequence {
+            selector {
+                condition { Bank.isNearby() } // at the bank? good, we are done now.
+                condition { GlobalWalking.walkToBank() } // we aren't at the bank, let's walk to it.
             }
+            condition { Bank.ensureOpen() }
         }
     }
 }
+
 
 fun IParentNode.walkToAndDepositInvBank(): SequenceNode {
     return sequence {

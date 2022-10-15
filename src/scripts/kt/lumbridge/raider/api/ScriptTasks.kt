@@ -70,8 +70,9 @@ class TimeStopCondition(
     }
 }
 
-object ScriptTaskRunner : Satisfiable {
+class ScriptTaskRunner : Satisfiable {
     private val taskStack: ArrayDeque<ScriptTask> = ArrayDeque()
+
     var activeTask: ScriptTask? = ScriptTask()
 
     fun configure(scriptTasks: Array<ScriptTask>) {
@@ -79,6 +80,8 @@ object ScriptTaskRunner : Satisfiable {
         taskStack.addAll(scriptTasks)
         setNext()
     }
+
+    fun run(taskRunner: ScriptTaskRunner = this, func: (ScriptTaskRunner) -> Unit) = func(taskRunner)
 
     fun remaining(): Int = taskStack.size
 
