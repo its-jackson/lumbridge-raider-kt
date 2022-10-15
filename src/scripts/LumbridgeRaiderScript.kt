@@ -56,15 +56,17 @@ class LumbridgeRaiderKt : TribotScript {
         taskRunner.configure(scriptTasks)
     }
 
-    override fun execute(args: String): Unit = taskRunner.run {
-        val initBTree = initBehaviour(it)
-        val initState = initBTree.tick()
-        Log.debug("Initialize ${initBTree.name} ?: [$initState]")
-        if (initState != BehaviorTreeStatus.SUCCESS) return@run
+    override fun execute(args: String): Unit = taskRunner.run { script(it) }
+}
 
-        val logicBTree = logicBehaviour(it)
-        val logicState = logicBTree.tick()
-        Log.debug("LumbridgeRaider.kt ${logicBTree.name} ?: [$logicState]")
-    }
+fun script(taskRunner: ScriptTaskRunner) {
+    val initBTree = initBehaviour(taskRunner)
+    val initState = initBTree.tick()
+    Log.debug("Initialize ${initBTree.name} ?: [$initState]")
+    if (initState != BehaviorTreeStatus.SUCCESS) return
+
+    val logicBTree = logicBehaviour(taskRunner)
+    val logicState = logicBTree.tick()
+    Log.debug("LumbridgeRaider.kt ${logicBTree.name} ?: [$logicState]")
 }
 
