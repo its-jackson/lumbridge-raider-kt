@@ -1,10 +1,13 @@
 package scripts.kt.lumbridge.raider.api
 
-import org.tribot.script.sdk.*
+import org.tribot.script.sdk.Bank
+import org.tribot.script.sdk.Inventory
+import org.tribot.script.sdk.Login
+import org.tribot.script.sdk.Options
 import org.tribot.script.sdk.Waiting.waitUntil
-import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.antiban.Antiban
 import org.tribot.script.sdk.frameworks.behaviortree.*
+import org.tribot.script.sdk.frameworks.behaviortree.nodes.SelectorNode
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.query.GroundItemQuery
 import org.tribot.script.sdk.query.Query
@@ -12,7 +15,6 @@ import org.tribot.script.sdk.types.WorldTile
 import org.tribot.script.sdk.walking.GlobalWalking
 import org.tribot.script.sdk.walking.LocalWalking
 import org.tribot.script.sdk.walking.WalkState
-import scripts.waitUntilNotAnimating
 
 /**
 Composite nodes: sequence and selector, the sequence node behaves as an AND gate.
@@ -33,7 +35,7 @@ that defines the node object ref and returns unit)
 // this behaviour tree ensures the user is logged in first.
 // then it will ensure the inventory is empty
 // before entering the main script logic.
-fun initBehaviour(taskRunner: ScriptTaskRunner): IBehaviorNode = behaviorTree {
+fun initBehaviour(): IBehaviorNode = behaviorTree {
     sequence {
         selector {
             inverter { condition { !Login.isLoggedIn() } }
@@ -48,12 +50,10 @@ fun initBehaviour(taskRunner: ScriptTaskRunner): IBehaviorNode = behaviorTree {
 
 // this behaviour tree is the main logic tree for the script.
 // it decides the behaviour of the character.
-fun logicBehaviour(taskRunner: ScriptTaskRunner): IBehaviorNode = behaviorTree {
-    repeatUntil({ taskRunner.isRunnerComplete() }) {
-        sequence {
-            selector { abstractBehaviour(taskRunner) }
-            selector { specificBehaviour(taskRunner) }
-        }
+fun logicBehaviour(scriptTask: ScriptTask?): IBehaviorNode = behaviorTree {
+    sequence {
+        selector { abstractBehaviour(scriptTask) }
+        selector { specificBehaviour(scriptTask) }
     }
 }
 
@@ -62,39 +62,23 @@ fun logicBehaviour(taskRunner: ScriptTaskRunner): IBehaviorNode = behaviorTree {
  *
  * Logging in, setting the next task, turning on character run, and killing the script
  */
-fun IParentNode.abstractBehaviour(taskRunner: ScriptTaskRunner): SequenceNode = sequence("Generic behaviour") {
-    // terminate
-    selector {
-        condition { !taskRunner.isRunnerComplete() }
-        sequence { BehaviorTreeStatus.FAILURE }
-    }
-
-    // next task
-    selector {
-        inverter {
-            condition { taskRunner.isSatisfied() }
-        }
-        sequence {
-            walkToAndDepositInvBank()
-            perform { taskRunner.setNext() }
-        }
-    }
-
+fun IParentNode.abstractBehaviour(scriptTask: ScriptTask?): SequenceNode = sequence("Generic behaviour") {
     // character login
     selector {
         repeatUntil({ Login.isLoggedIn() }) { condition { Login.login() } }
     }
-
     // character running
     selector {
         condition { !Antiban.shouldTurnOnRun() || Options.isRunEnabled() }
         condition { Options.setRunEnabled(true) }
     }
+    // character banking
+    bankingBehaviour(scriptTask)
 }
 
-fun IParentNode.specificBehaviour(taskRunner: ScriptTaskRunner): SequenceNode = sequence("Specific behaviour") {
+fun IParentNode.specificBehaviour(scriptTask: ScriptTask?): SequenceNode = sequence("Specific behaviour") {
     selector {
-        combatMeleeBehaviour(taskRunner)
+        combatMeleeBehaviour(scriptTask)
     }
 }
 
@@ -103,39 +87,38 @@ fun IParentNode.specificBehaviour(taskRunner: ScriptTaskRunner): SequenceNode = 
  *
  * Melee, Ranged, Magic, Cooking, Firemaking, Woodcutting, Fishing, Mining, Smithing, and Prayer
  */
-fun IParentNode.combatMeleeBehaviour(taskRunner: ScriptTaskRunner): SequenceNode = sequence("Combat behaviour") {
+fun IParentNode.combatMeleeBehaviour(scriptTask: ScriptTask?): SequenceNode = sequence("Combat behaviour") {
     // ensure sequence is melee combat
-    condition { taskRunner.activeTask?.behaviour == Behaviour.COMBAT_MELEE }
-
+    condition { scriptTask?.behaviour == Behaviour.COMBAT_MELEE }
     // character cooking
     selector {
-        inverter { condition { isCookRawFood(taskRunner.activeTask) } }
-        repeatUntil({ !isCookRawFood(taskRunner.activeTask) }) {
+        inverter { condition { isCookRawFood(scriptTask) } }
+        repeatUntil({ !isCookRawFood(scriptTask) }) {
             walkToAndCookRange()
         }
     }
+    // character combat
+    selector {
+        walkToAndAttackNpc(scriptTask)
+    }
+    // character looting
+    selector {
+        condition { !foundLootableItems(scriptTask) }
+        condition { Inventory.isFull() }
+        condition { lootItems(scriptTask) > 0 }
+    }
+}
 
+/**
+ * Carryout the characters banking
+ */
+fun IParentNode.bankingBehaviour(scriptTask: ScriptTask?): SelectorNode = selector {
     // character banking
     selector {
         inverter {
-            condition { isBankNeeded(taskRunner.activeTask) }
+            condition { isBankNeeded(scriptTask) }
         }
         walkToAndDepositInvBank()
-    }
-
-    // character combat
-    selector {
-        condition { isCombat(taskRunner.activeTask) }
-        walkToAndAttackNpc(taskRunner.activeTask)
-    }
-
-    // character looting
-    selector {
-        repeatUntil({ !foundLootableItems(taskRunner.activeTask) || Inventory.isFull() }) {
-            sequence {
-                condition { lootItems(taskRunner.activeTask) }
-            }
-        }
     }
 }
 
@@ -156,145 +139,79 @@ fun IParentNode.walkToAndOpenBank(): SequenceNode = sequence {
     }
 }
 
+fun IParentNode.walkToAndDepositInvBank(): SequenceNode = sequence {
+    walkToAndOpenBank()
+    condition { Bank.depositInventory() && Bank.close() }
+}
 
-fun IParentNode.walkToAndDepositInvBank(): SequenceNode {
-    return sequence {
-        walkToAndOpenBank()
-        condition { Bank.depositInventory() && Bank.close() }
+fun IParentNode.walkToAndCookRange(): SequenceNode = sequence {
+    selector {
+        condition { isAtTile(Range.optimalRange.position) }
+        condition { walkTo(Range.optimalRange.position) }
     }
+    condition { Range.cookRawFood(Range.optimalRange) }
 }
 
-fun IParentNode.walkToAndCookRange(): SequenceNode {
-    return sequence {
-        selector {
-            condition { isAtTile(Range.optimalRange.position) }
-            condition { walkTo(Range.optimalRange.position) }
-        }
-        condition { Range.cookRawFood(Range.optimalRange) }
+fun IParentNode.walkToAndAttackNpc(scriptTask: ScriptTask?): SequenceNode = sequence {
+    selector {
+        condition { (scriptTask != null) && !Npc.isCombat(scriptTask.npc) }
     }
-}
-
-fun IParentNode.walkToAndAttackNpc(scriptTask: ScriptTask?): SequenceNode {
-    return walkToAndAttackNpc(
-        scriptTask?.npc?.names ?: arrayOf(),
-        scriptTask?.npc?.position ?: WorldTile(0, 0, 0)
-    )
-}
-
-fun IParentNode.walkToAndAttackNpc(npcs: Array<String>, tile: WorldTile): SequenceNode {
-    return sequence {
-        selector {
-            condition { isAtTile(tile) }
-            condition { walkTo(tile) }
-        }
-        condition { attackNpc(npcs) }
+    selector {
+        condition { (scriptTask != null) && isAtTile(scriptTask.npc.position) }
+        condition { (scriptTask != null) && walkTo(scriptTask.npc.position) }
     }
+    condition { (scriptTask != null) && Npc.attack(scriptTask.npc) }
 }
 
-fun isBankNeeded(scriptTask: ScriptTask?): Boolean {
-    return scriptTask?.bankDisposal == true && Inventory.isFull()
-            ||
-            (scriptTask?.cookThenBankDisposal == true
-                    &&
-                    (!Inventory.contains("Raw chicken", "Raw beef") && Inventory.isFull()))
-}
+fun isBankNeeded(scriptTask: ScriptTask?): Boolean = scriptTask?.bankDisposal == true
+        && Inventory.isFull()
+        ||
+        (scriptTask?.cookThenBankDisposal == true
+                &&
+                (!Inventory.contains("Raw chicken", "Raw beef") && Inventory.isFull()))
 
-fun isCookRawFood(scriptTask: ScriptTask?): Boolean {
-    return scriptTask?.cookThenBankDisposal == true && (
-            Inventory.isFull() &&
-                    Inventory.getAll()
-                        .filter { it.name.contains("Raw") }
-                        .filterNot { it.definition.isNoted }
-                        .any()
-            )
-}
 
-fun isCombat(npcs: Array<String>): Boolean {
-    return Query.npcs()
-        .nameContains(*npcs)
-        .isFacingMe
-        .isInteractingWithMe
-        .minHealthBarPercent(1.0)
-        .isAny && MyPlayer.get().map { it.hitsplats }
-        .map { it.size > 0 }
-        .orElse(false)
-}
-
-fun isCombat(scriptTask: ScriptTask?): Boolean {
-    return isCombat(
-        scriptTask?.npc?.names ?: arrayOf()
-    )
-}
-
-fun isCombat(npc: String): Boolean {
-    return isCombat(arrayOf(npc))
-}
-
-fun isAtTile(tile: WorldTile): Boolean {
-    return LocalWalking.createMap().canReach(tile)
-}
-
-fun walkTo(tile: WorldTile): Boolean {
-    return GlobalWalking.walkTo(tile) {
-        if (Antiban.shouldTurnOnRun() && !Options.isRunEnabled()) Options.setRunEnabled(true)
-        if (LocalWalking.createMap().canReach(tile)) WalkState.SUCCESS else WalkState.CONTINUE
-    }
-}
-
-fun attackNpc(npcs: Array<String>): Boolean {
-    return Query.npcs()
-        .nameContains(*npcs)
-        .isReachable
-        .isNotBeingInteractedWith
-        .findBestInteractable()
-        .map {
-            it.interact("Attack") && waitUntilAnimating(6500) &&
-                    waitUntil { it.isInteractingWithMe } &&
-                    waitUntilNotAnimating(2500, 100) &&
-                    waitUntil(2500) { !it.isValid }
-        }
-        .orElse(false)
-}
-
-fun attackNpc(npc: String): Boolean {
-    return attackNpc(arrayOf(npc))
-}
-
-fun lootItems(scriptTask: ScriptTask?): Boolean {
-    return lootItems(
-        scriptTask?.npc?.lootableGroundItems ?: arrayOf()
-    )
-}
-
-fun lootItems(items: Array<String>): Boolean {
-    return lootableItemsQuery(items)
-        .toList()
-        .all {
-            val before = Inventory.getAll()
-                .fold(0) { runningSum, item -> runningSum + item.stack }
-            return it.interact("Take") && waitUntil {
+fun isCookRawFood(scriptTask: ScriptTask?): Boolean = scriptTask?.cookThenBankDisposal == true && (
+        Inventory.isFull() &&
                 Inventory.getAll()
-                    .fold(0) { runningSum, item -> runningSum + item.stack } > before
-            }
-        }
+                    .filter { it.name.contains("Raw") }
+                    .filterNot { it.definition.isNoted }
+                    .any()
+        )
+
+fun isAtTile(tile: WorldTile): Boolean = LocalWalking.createMap().canReach(tile)
+
+fun walkTo(tile: WorldTile): Boolean = GlobalWalking.walkTo(tile) {
+    if (Antiban.shouldTurnOnRun() && !Options.isRunEnabled()) Options.setRunEnabled(true)
+    if (LocalWalking.createMap().canReach(tile)) WalkState.SUCCESS else WalkState.CONTINUE
 }
 
-fun foundLootableItems(scriptTask: ScriptTask?): Boolean {
-    return foundLootableItems(
-        scriptTask?.npc?.lootableGroundItems ?: arrayOf()
-    )
-}
+fun lootItems(scriptTask: ScriptTask?): Int = lootItems(scriptTask?.npc?.lootableGroundItems ?: arrayOf())
 
-fun foundLootableItems(items: Array<String>): Boolean {
-    return lootableItemsQuery(items).isAny
-}
+fun lootItems(items: Array<String>): Int = lootableItemsQuery(items)
+    .toList()
+    .fold(0) { runningSum, item ->
+        if (Inventory.isFull()) return runningSum
 
-fun lootableItemsQuery(items: Array<String>): GroundItemQuery {
-    return Query.groundItems()
-        .nameContains(*items)
-        .isReachable
-        .maxDistance(2.5)
-}
+        val before = Inventory.getCount(item.id)
+
+        if (!item.interact("Take")) return runningSum
+
+        if (!waitUntil(2500) { Inventory.getCount(item.id) > before }) return runningSum
+
+        val result = runningSum + item.stack
+        result
+    }
+
+fun foundLootableItems(scriptTask: ScriptTask?): Boolean =
+    foundLootableItems(scriptTask?.npc?.lootableGroundItems ?: arrayOf())
+
+fun foundLootableItems(items: Array<String>): Boolean = lootableItemsQuery(items).isAny
+
+fun lootableItemsQuery(items: Array<String>): GroundItemQuery = Query.groundItems()
+    .nameContains(*items)
+    .isReachable
+    .maxDistance(2.5)
 
 //fun IParentNode.perform(name: String = "", func: () -> Unit): Unit {
 //    val node = object : IBehaviorNode {

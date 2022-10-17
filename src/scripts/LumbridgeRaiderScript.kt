@@ -18,8 +18,6 @@ import java.awt.Font
     description = "Local"
 )
 class LumbridgeRaiderKt : TribotScript {
-    private val taskRunner: ScriptTaskRunner = ScriptTaskRunner()
-
     private val paintTemplate = PaintTextRow.builder()
         .background(java.awt.Color(66, 66, 66, 180))
         .font(Font("Segoe UI", 0, 12))
@@ -31,42 +29,59 @@ class LumbridgeRaiderKt : TribotScript {
         .row(PaintRows.runtime(paintTemplate.toBuilder()))
         .row(
             paintTemplate.toBuilder().label("Behaviour")
-                .value { taskRunner.activeTask?.behaviour?.characterBehaviour }.build()
+                .value { ScriptTaskRunner.activeTask?.behaviour?.characterBehaviour }.build()
         )
-        .row(paintTemplate.toBuilder().label("Stop").value { taskRunner.activeTask?.stop }.build())
-        .row(paintTemplate.toBuilder().label("Npc").value { taskRunner.activeTask?.npc }.build())
-        .row(paintTemplate.toBuilder().label("Remaining tasks").value { taskRunner.remaining() }.build())
+        .row(paintTemplate.toBuilder().label("Stop").value { ScriptTaskRunner.activeTask?.stop }.build())
+        .row(paintTemplate.toBuilder().label("Npc").value { ScriptTaskRunner.activeTask?.npc }.build())
+        .row(paintTemplate.toBuilder().label("Remaining tasks").value { ScriptTaskRunner.remaining() }.build())
         .build()
 
-    init {
-        Painting.addPaint(mainPaint::render)
-    }
+    init { Painting.addPaint(mainPaint::render) }
 
-    init {
-        val scriptTasks = arrayOf(
-            ScriptTask(
-                npc = Npc.CHICKENS_LUMBRIDGE_WEST,
-                behaviour = Behaviour.COMBAT_MELEE,
-                stop = TimeStopCondition(minutes = 10, seconds = 10),
-                cookThenBankDisposal = true,
-                lootGroundItems = true
+    override fun execute(args: String): Unit = script(args)
+
+    private fun script(args: String) {
+        if (args.equals("/main/test/combat/melee/", true)) {
+            val scriptTasks = arrayOf(
+
+                ScriptTask(
+                    npc = Npc.COWS_LUMBRIDGE_WEST,
+                    behaviour = Behaviour.COMBAT_MELEE,
+                    stop = TimeStopCondition(seconds = 30),
+                    cookThenBankDisposal = true,
+                    lootGroundItems = true
+                ),
+                ScriptTask(
+                    npc = Npc.CHICKENS_LUMBRIDGE_WEST,
+                    behaviour = Behaviour.COMBAT_MELEE,
+                    stop = TimeStopCondition(seconds = 10),
+                    cookThenBankDisposal = true,
+                    lootGroundItems = true
+                ),
+
+
+                ScriptTask(
+                    npc = Npc.CHICKENS_LUMBRIDGE_EAST,
+                    behaviour = Behaviour.COMBAT_MELEE,
+                    stop = TimeStopCondition(minutes = 5, seconds = 5),
+                    cookThenBankDisposal = true,
+                    lootGroundItems = true
+                ),
+                ScriptTask(
+                    npc = Npc.COWS_LUMBRIDGE_EAST,
+                    behaviour = Behaviour.COMBAT_MELEE,
+                    stop = TimeStopCondition(minutes = 4, seconds = 20),
+                    cookThenBankDisposal = true,
+                    lootGroundItems = true
+                )
+
             )
-        )
 
-        taskRunner.configure(scriptTasks)
+            ScriptTaskRunner.configure(scriptTasks)
+            ScriptTaskRunner.run { false }
+        } else {
+            // TODO
+        }
     }
-
-    override fun execute(args: String): Unit = taskRunner.run { script(it) }
-}
-
-fun script(taskRunner: ScriptTaskRunner) {
-    val initBTree = initBehaviour(taskRunner)
-    val initState = initBTree.tick()
-    Log.debug("Initialize ${initBTree.name} ?: [$initState]")
-    if (initState != BehaviorTreeStatus.SUCCESS) return
-
-    val logicBTree = logicBehaviour(taskRunner)
-    val logicState = logicBTree.tick()
-    Log.debug("LumbridgeRaider.kt ${logicBTree.name} ?: [$logicState]")
 }
 

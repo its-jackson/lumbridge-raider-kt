@@ -1,6 +1,8 @@
 package scripts.kt.lumbridge.raider.api
 
+import org.tribot.script.sdk.MyPlayer
 import org.tribot.script.sdk.Waiting
+import org.tribot.script.sdk.Waiting.waitUntil
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
 import scripts.waitUntilNotAnimating
@@ -57,17 +59,34 @@ enum class Npc(
     override fun toString(): String = "${names[0]} at ${location()}"
 
     companion object {
-        fun attack(npc: Npc): Boolean = Query.npcs()
-                .nameContains(*npc.names.sortedArray())
-                .isReachable
-                .isNotBeingInteractedWith
-                .findBestInteractable()
-                .map {
-                    it.interact("Attack") && Waiting.waitUntilAnimating(6500) &&
-                            Waiting.waitUntil { it.isInteractingWithMe } &&
-                            waitUntilNotAnimating(2000, 100) &&
-                            Waiting.waitUntil { !it.isValid }
-                }
-                .orElse(false)
+        fun attack(npc: Npc): Boolean = attack(npc.names)
+
+        fun attack(npc: String): Boolean = attack(arrayOf(npc))
+
+        private fun attack(npcs: Array<String>): Boolean = Query.npcs()
+            .nameContains(*npcs)
+            .isReachable
+            .isNotBeingInteractedWith
+            .findBestInteractable()
+            .map {
+                it.interact("Attack") && Waiting.waitUntilAnimating(6500) &&
+                        waitUntil { it.isInteractingWithMe } &&
+                        waitUntilNotAnimating(2500, 100) &&
+                        waitUntil(2500) { !it.isValid }
+            }
+            .orElse(false)
+
+        fun isCombat(npc: Npc): Boolean = isCombat(npc.names)
+
+        fun isCombat(npc: String): Boolean = isCombat(arrayOf(npc))
+
+        private fun isCombat(npcs: Array<String>): Boolean = Query.npcs()
+            .nameContains(*npcs)
+            .isFacingMe
+            .isInteractingWithMe
+            .minHealthBarPercent(1.0)
+            .isAny && MyPlayer.get().map { it.hitsplats }
+            .map { it.size > 0 }
+            .orElse(false)
     }
 }

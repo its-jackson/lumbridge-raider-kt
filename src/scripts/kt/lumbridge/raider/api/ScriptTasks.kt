@@ -1,5 +1,7 @@
 package scripts.kt.lumbridge.raider.api
 
+import org.tribot.script.sdk.Log
+import org.tribot.script.sdk.frameworks.behaviortree.*
 import java.lang.System.currentTimeMillis
 import java.util.concurrent.TimeUnit
 
@@ -70,7 +72,7 @@ class TimeStopCondition(
     }
 }
 
-class ScriptTaskRunner : Satisfiable {
+object ScriptTaskRunner : Satisfiable {
     private val taskStack: ArrayDeque<ScriptTask> = ArrayDeque()
 
     var activeTask: ScriptTask? = ScriptTask()
@@ -81,18 +83,35 @@ class ScriptTaskRunner : Satisfiable {
         setNext()
     }
 
-    fun run(taskRunner: ScriptTaskRunner = this, func: (ScriptTaskRunner) -> Unit) = func(taskRunner)
+    fun run(breakOut: () -> Boolean) {
+        val initBTree = initBehaviour()
+        val initState = initBTree.tick()
+        Log.debug("ScriptTaskRunner [Initialize] ${initBTree.name} ?: [$initState]")
+        if (initState != BehaviorTreeStatus.SUCCESS) return
+
+        var btree: IBehaviorNode = logicBehaviour(activeTask)
+        var bState: BehaviorTreeStatus? = null
+
+        while (!isRunnerComplete()) {
+            if (breakOut()) break
+            if (bState == BehaviorTreeStatus.KILL) break
+            if (isSatisfied()) {
+                setNext()
+                btree = logicBehaviour(activeTask)
+            } else {
+                bState = btree.tick()
+                Log.debug("ScriptTaskRunner ${btree.name} ?: [$bState]")
+            }
+        }
+    }
 
     fun remaining(): Int = taskStack.size
 
-    fun isRunnerComplete(): Boolean = activeTask == null && taskStack.isEmpty()
+    private fun isRunnerComplete(): Boolean = activeTask == null && taskStack.isEmpty()
 
-    fun setNext() {
-        activeTask = getNext()
+    private fun setNext() {
+        activeTask = taskStack.removeFirstOrNull()
     }
 
-    private fun getNext(): ScriptTask? = taskStack.removeFirstOrNull()
-
-    // true when the task is satisfied/done
     override fun isSatisfied(): Boolean = activeTask?.stop?.isSatisfied() == true
 }
