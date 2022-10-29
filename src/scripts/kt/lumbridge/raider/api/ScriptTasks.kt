@@ -2,6 +2,7 @@ package scripts.kt.lumbridge.raider.api
 
 import org.tribot.script.sdk.Log
 import org.tribot.script.sdk.frameworks.behaviortree.*
+import org.tribot.script.sdk.tasks.BankTask
 import java.lang.System.currentTimeMillis
 import java.util.concurrent.TimeUnit
 
@@ -14,16 +15,18 @@ import java.util.concurrent.TimeUnit
 //}
 
 data class ScriptTask(
-    val behaviour: Behaviour = Behaviour.COMBAT_MELEE,
-    val npc: Npc = Npc.CHICKENS_LUMBRIDGE_EAST,
     val stop: StopCondition = TimeStopCondition(days = Long.MAX_VALUE),
+    val behavior: Behavior = Behavior.COMBAT_MELEE,
+    val npc: Npc? = Npc.CHICKENS_LUMBRIDGE_EAST,
+    val fishSpot: FishSpot? = null,
     val buryBones: Boolean = false,
     val lootGroundItems: Boolean = false,
     val bankDisposal: Boolean = false,
-    val cookThenBankDisposal: Boolean = false
+    val cookThenBankDisposal: Boolean = false,
+    var bankTask: BankTask? = null
 )
 
-enum class Behaviour(val characterBehaviour: String) {
+enum class Behavior(val characterBehaviour: String) {
     COMBAT_MELEE("Combat melee"),
     COMBAT_RANGED("Combat ranged"),
     COMBAT_MAGIC("Combat magic"),
@@ -72,7 +75,7 @@ class TimeStopCondition(
     }
 }
 
-object ScriptTaskRunner : Satisfiable {
+class ScriptTaskRunner : Satisfiable {
     private val taskStack: ArrayDeque<ScriptTask> = ArrayDeque()
 
     var activeTask: ScriptTask? = ScriptTask()
@@ -84,12 +87,12 @@ object ScriptTaskRunner : Satisfiable {
     }
 
     fun run(breakOut: () -> Boolean) {
-        val initBTree = initBehaviour()
-        val initState = initBTree.tick()
-        Log.debug("ScriptTaskRunner [Initialize] ${initBTree.name} ?: [$initState]")
-        if (initState != BehaviorTreeStatus.SUCCESS) return
+//        val initBTree = initBehaviourTree()
+//        val initState = initBTree.tick()
+//        Log.debug("ScriptTaskRunner [Initialize] ${initBTree.name} ?: [$initState]")
+//        if (initState != BehaviorTreeStatus.SUCCESS) return
 
-        var btree: IBehaviorNode = logicBehaviour(activeTask)
+        var btree: IBehaviorNode = logicBehaviourTree(activeTask)
         var bState: BehaviorTreeStatus? = null
 
         while (!isRunnerComplete()) {
@@ -97,7 +100,7 @@ object ScriptTaskRunner : Satisfiable {
             if (bState == BehaviorTreeStatus.KILL) break
             if (isSatisfied()) {
                 setNext()
-                btree = logicBehaviour(activeTask)
+                btree = logicBehaviourTree(activeTask)
             } else {
                 bState = btree.tick()
                 Log.debug("ScriptTaskRunner ${btree.name} ?: [$bState]")

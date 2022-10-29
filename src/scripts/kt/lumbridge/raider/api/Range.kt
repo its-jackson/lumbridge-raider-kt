@@ -8,7 +8,11 @@ import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
 import scripts.waitUntilNotAnimating
 
-enum class Range(x: Int, y: Int, z: Int, val action: String, val obj: String) {
+enum class Range(
+    x: Int, y: Int, z: Int,
+    val action: String,
+    val obj: String
+) {
     LUMBRIDGE_CASTLE_RANGE(
         3211, 3215, 0,
         "Cook",
@@ -41,35 +45,25 @@ enum class Range(x: Int, y: Int, z: Int, val action: String, val obj: String) {
                     Range.values().minByOrNull { it.position.distance() }!!
             }
 
-        fun cookRawFood(optimalRange: Range): Boolean {
-            return (
-                    Query.gameObjects()
-                        .nameContains(optimalRange.obj)
-                        .isReachable
-                        .findBestInteractable()
-                        .map { range ->
-                            if (range.actions.isEmpty())
-                                Query.inventory()
-                                    .nameContains("Raw")
-                                    .findClosestToMouse()
-                                    .map { waitUntil { it.useOn(range) } }
-                                    .orElse(false)
-                            else
-                                range.interact(optimalRange.action)
-                        }
-                        .orElse(false) &&
-                            waitUntil { MakeScreen.isOpen() } &&
-                            waitUntil {
-                                MakeScreen.makeAll {
-                                    it.name.contains("Cooked") ||
-                                            it.actions.contains("Cook") ||
-                                            it.name.contains("Raw")
-                                }
-                            } &&
-                            waitUntil { !MakeScreen.isOpen() } &&
-                            waitUntilAnimating(3000) &&
-                            waitUntilNotAnimating(end = 2000)
-                    )
-        }
+        fun cookRawFood(optimalRange: Range): Boolean = Query.gameObjects()
+            .nameContains(optimalRange.obj)
+            .isReachable
+            .findBestInteractable()
+            .map { range ->
+                if (range.actions.isEmpty())
+                    Query.inventory()
+                        .nameContains("Raw")
+                        .findClosestToMouse()
+                        .map { waitUntil { it.useOn(range) } }
+                        .orElse(false)
+                else
+                    range.interact(optimalRange.action)
+            }
+            .orElse(false) &&
+                waitUntil { MakeScreen.isOpen() } &&
+                waitUntil { MakeScreen.makeAll { it.isVisible && it.actions.isNotEmpty() } } &&
+                waitUntil { !MakeScreen.isOpen() } &&
+                waitUntilAnimating(3000) &&
+                waitUntilNotAnimating(end = 1500)
     }
 }
