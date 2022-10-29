@@ -6,9 +6,6 @@ import org.tribot.script.sdk.painting.template.basic.PaintRows
 import org.tribot.script.sdk.painting.template.basic.PaintTextRow
 import org.tribot.script.sdk.script.TribotScript
 import org.tribot.script.sdk.script.TribotScriptManifest
-import org.tribot.script.sdk.tasks.Amount
-import org.tribot.script.sdk.tasks.BankTask
-import scripts.data.ItemID
 import scripts.kt.lumbridge.raider.api.*
 import java.awt.Font
 
@@ -99,42 +96,11 @@ class LumbridgeRaiderKt : TribotScript {
     private fun fishingTest() {
         val scriptTasks = arrayOf(
 
-//            ScriptTask(
-//                behavior = Behavior.FISHING,
-//                fishSpot = FishSpot.SHRIMPS_ANCHOVIES_LUMBRIDGE,
-//                cookThenBankDisposal = true,
-//                npc = null,
-//                bankTask = BankTask.builder().addInvItem(ItemID.SMALL_FISHING_NET, Amount.of(1)).build()
-//            ),
-//            ScriptTask(
-//                behavior = Behavior.FISHING,
-//                fishSpot = FishSpot.SARDINE_HERRING_LUMBRIDGE_SWAMP,
-//                cookThenBankDisposal = true,
-//                npc = null,
-//                bankTask = BankTask.builder()
-//                    .addInvItem(ItemID.FISHING_ROD, Amount.of(1))
-//                    .addInvItem(ItemID.FISHING_BAIT, Amount.fill(1))
-//                    .build()
-//            ),
-//            ScriptTask(
-//                behavior = Behavior.FISHING,
-//                fishSpot = FishSpot.PIKE_LUMBRIDGE_CASTLE,
-//                cookThenBankDisposal = true,
-//                npc = null,
-//                bankTask = BankTask.builder()
-//                    .addInvItem(ItemID.FISHING_ROD, Amount.of(1))
-//                    .addInvItem(ItemID.FISHING_BAIT, Amount.fill(1))
-//                    .build()
-//            ),
             ScriptTask(
                 behavior = Behavior.FISHING,
                 fishSpot = FishSpot.SALMON_TROUT_LUMBRIDGE_CASTLE,
                 cookThenBankDisposal = true,
-                npc = null,
-                bankTask = BankTask.builder()
-                    .addInvItem(ItemID.FLY_FISHING_ROD, Amount.of(1))
-                    .addInvItem(ItemID.FEATHER, Amount.fill(1))
-                    .build()
+                npc = null
             )
         )
 

@@ -5,26 +5,43 @@ import org.tribot.script.sdk.Waiting
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.query.Query
+import org.tribot.script.sdk.tasks.Amount
+import org.tribot.script.sdk.tasks.BankTask
 import scripts.waitUntilNotAnimating
 
 /**
  * The Fishing Behavior SequenceNode:
  *
- * Get the fishing items, multiple inv disposal methods, interacting, and waiting.
+ * Get the fishing items,
+ *  inventory disposal methods,
+ *  walking,
+ *  interacting,
+ *  and waiting.
  *
  * Fish spots covered thus far:
- *  Lumbridge swamp - shrimps/anchovies, sardine/herring
+ *  Lumbridge Swamp - shrimps/anchovies, sardine/herring
+ *  Lumbridge Castle - salmon/trout, pike
  *
  */
 fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Fishing behavior") {
     // ensure character behavior is fishing
     condition { scriptTask?.behavior == Behavior.FISHING }
 
-    // ensure the bank task is set up correctly
+    // ensure the bank task is initialized
     selector {
         condition { scriptTask?.bankTask != null }
-        // init the bank task
-        // TODO
+        sequence {
+            walkToAndOpenBank()
+            perform {
+                val bankTaskBuilder = BankTask.builder()
+                scriptTask?.fishSpot?.equipmentReq?.entries
+                    ?.forEach { equipment -> bankTaskBuilder.addInvItem(equipment.key, Amount.of(equipment.value)) }
+                scriptTask?.fishSpot?.baitReq?.entries
+                    ?.forEach { bait -> bankTaskBuilder.addInvItem(bait.key, Amount.fill(bait.value)) }
+                scriptTask?.bankTask = bankTaskBuilder.build()
+            }
+            condition { scriptTask?.bankTask?.execute()?.isEmpty }
+        }
     }
 
     // restock fishing equipment and bait from bank
@@ -58,13 +75,11 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
     selector {
         inverter { condition { scriptTask?.cookThenBankDisposal == true } }
         condition { !Inventory.isFull() }
-
         sequence {
             selector {
                 condition { !isCookRawFood() }
                 repeatUntil({ !isCookRawFood() }) { walkToAndCookRange() }
             }
-
             walkToAndOpenBank()
             condition { scriptTask?.bankTask?.execute()?.isEmpty }
         }
@@ -99,6 +114,6 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
         condition { Waiting.waitUntilAnimating(7500) }
 
         // wait until not animating
-        condition { waitUntilNotAnimating(end = 1500) }
+        condition { waitUntilNotAnimating(end = 2000) }
     }
 }
