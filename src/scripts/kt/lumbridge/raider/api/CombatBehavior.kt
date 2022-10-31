@@ -56,7 +56,7 @@ fun IParentNode.walkToAndAttackNpc(scriptTask: ScriptTask?): SequenceNode = sequ
         condition { (scriptTask != null) && scriptTask.npc?.let { Npc.isCombat(it) } == false }
     }
     selector {
-        condition { (scriptTask != null) && scriptTask.npc?.let { canReachTile(it.position) } == true }
+        condition { (scriptTask != null) && scriptTask.npc?.let { canReach(it.position) } == true }
         condition { (scriptTask != null) && scriptTask.npc?.let { walkTo(it.position) } == true }
     }
     condition { (scriptTask != null) && scriptTask.npc?.let { Npc.attack(it) } == true }

@@ -14,7 +14,7 @@ fun isCookRawFood(): Boolean = Inventory.getAll()
 
 fun IParentNode.walkToAndCookRange(): SequenceNode = sequence {
     selector {
-        condition { canReachTile(Range.optimalRange.position) }
+        condition { canReach(Range.optimalRange.position) }
         condition { walkTo(Range.optimalRange.position) }
     }
     condition { Range.cookRawFood(Range.optimalRange) }

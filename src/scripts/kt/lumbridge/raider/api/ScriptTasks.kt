@@ -22,7 +22,9 @@ data class ScriptTask(
     val buryBones: Boolean = false,
     val lootGroundItems: Boolean = false,
     val bankDisposal: Boolean = false,
+    val dropDisposal: Boolean = false,
     val cookThenBankDisposal: Boolean = false,
+    val cookThenDropDisposal: Boolean = false,
     var bankTask: BankTask? = null
 )
 
@@ -86,11 +88,12 @@ class ScriptTaskRunner : Satisfiable {
         setNext()
     }
 
-    fun run(breakOut: () -> Boolean) {
-//        val initBTree = initBehaviourTree()
-//        val initState = initBTree.tick()
-//        Log.debug("ScriptTaskRunner [Initialize] ${initBTree.name} ?: [$initState]")
-//        if (initState != BehaviorTreeStatus.SUCCESS) return
+    fun run(
+        breakOut: () -> Boolean  = { false },
+        onStart: () -> Unit = { },
+        onEnd: () -> Unit = { },
+    ) {
+        onStart.invoke() // code that should run before running the script
 
         var btree: IBehaviorNode = logicBehaviourTree(activeTask)
         var bState: BehaviorTreeStatus? = null
@@ -103,9 +106,11 @@ class ScriptTaskRunner : Satisfiable {
                 btree = logicBehaviourTree(activeTask)
             } else {
                 bState = btree.tick()
-                Log.debug("ScriptTaskRunner ${btree.name} ?: [$bState]")
+                Log.debug("[ScriptTaskRunner] ${btree.name} ?: [$bState]")
             }
         }
+
+        onEnd.invoke() // code that should run right before exiting the script
     }
 
     fun remaining(): Int = taskStack.size

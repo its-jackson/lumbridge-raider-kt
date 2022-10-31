@@ -7,6 +7,7 @@ import org.tribot.script.sdk.Waiting.waitUntil
 import org.tribot.script.sdk.antiban.Antiban
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
+import org.tribot.script.sdk.interfaces.Positionable
 import org.tribot.script.sdk.query.GroundItemQuery
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
@@ -31,7 +32,7 @@ Leaf nodes: perform, terminal node that will always return success.
 // this behaviour tree ensures the user is logged in first.
 // then it will ensure the inventory is empty
 // before entering the main script logic.
-fun initBehaviourTree(): IBehaviorNode = behaviorTree {
+fun initBehaviorTree(): IBehaviorNode = behaviorTree {
     sequence {
         selector {
             inverter { condition { !Login.isLoggedIn() } }
@@ -82,7 +83,8 @@ fun IParentNode.specificBehaviour(scriptTask: ScriptTask?): SequenceNode = seque
     }
 }
 
-fun canReachTile(tile: WorldTile): Boolean = LocalWalking.createMap().canReach(tile)
+fun canReach(p: Positionable): Boolean = LocalWalking.createMap()
+    .canReach(p)
 
 fun walkTo(tile: WorldTile) = GlobalWalking.walkTo(tile) {
     if (Antiban.shouldTurnOnRun() && !Options.isRunEnabled()) Options.setRunEnabled(true)
@@ -95,11 +97,9 @@ fun lootItems(items: Array<String>): Int = lootableItemsQuery(items)
     .toList()
     .fold(0) { runningSum, item ->
         if (Inventory.isFull()) return runningSum
-
         val before = Inventory.getCount(item.id)
 
         if (!item.interact("Take")) return runningSum
-
         if (!waitUntil(2500) { Inventory.getCount(item.id) > before }) return runningSum
 
         val result = runningSum + item.stack
@@ -116,16 +116,16 @@ fun lootableItemsQuery(items: Array<String>): GroundItemQuery = Query.groundItem
     .isReachable
     .maxDistance(2.5)
 
-fun IParentNode.perform(name: String = "", func: () -> Unit): Unit {
-
-    val node = object : IBehaviorNode {
-        override var name: String = ""
-
-        override fun tick(): BehaviorTreeStatus {
-            func()
-            return BehaviorTreeStatus.SUCCESS
-        }
-    }
-
-    this.initNode("[Perform] $name", node) {}
-}
+//fun IParentNode.perform(name: String = "", func: () -> Unit): Unit {
+//
+//    val node = object : IBehaviorNode {
+//        override var name: String = ""
+//
+//        override fun tick(): BehaviorTreeStatus {
+//            func()
+//            return BehaviorTreeStatus.SUCCESS
+//        }
+//    }
+//
+//    this.initNode("[Perform] $name", node) {}
+//}
