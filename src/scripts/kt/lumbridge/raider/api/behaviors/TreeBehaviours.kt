@@ -1,4 +1,4 @@
-package scripts.kt.lumbridge.raider.api
+package scripts.kt.lumbridge.raider.api.behaviors
 
 import org.tribot.script.sdk.Inventory
 import org.tribot.script.sdk.Login
@@ -10,10 +10,14 @@ import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.interfaces.Positionable
 import org.tribot.script.sdk.query.GroundItemQuery
 import org.tribot.script.sdk.query.Query
-import org.tribot.script.sdk.types.WorldTile
 import org.tribot.script.sdk.walking.GlobalWalking
 import org.tribot.script.sdk.walking.LocalWalking
 import org.tribot.script.sdk.walking.WalkState
+import scripts.kt.lumbridge.raider.api.ScriptTask
+import scripts.kt.lumbridge.raider.api.behaviors.cooking.cookingBehavior
+import scripts.kt.lumbridge.raider.api.behaviors.fishing.fishingBehavior
+import scripts.kt.lumbridge.raider.api.behaviors.combat.combatMeleeBehaviour
+import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
 
 /**
 Composite nodes: sequence and selector, the sequence node behaves as an AND gate.
@@ -23,7 +27,7 @@ Decorative nodes: inverter, repeatUntil, succeeder, condition.
 inverter: invert the result of the child. A child fails, and it will return success to its parent,
 or a child succeeds, and it will return failure to the parent.
 
-conditional: ensures that we can skip steps we don't need to do. So if the condition is satisfied,
+condition: ensures that we can skip steps we don't need to do. So if the condition is satisfied,
 great! We move on. If not, we do something to satisfy it.
 
 Leaf nodes: perform, terminal node that will always return success.
@@ -32,7 +36,7 @@ Leaf nodes: perform, terminal node that will always return success.
 // this behaviour tree ensures the user is logged in first.
 // then it will ensure the inventory is empty
 // before entering the main script logic.
-fun initBehaviorTree(): IBehaviorNode = behaviorTree {
+fun initScriptBehaviorTree(): IBehaviorNode = behaviorTree {
     sequence {
         selector {
             inverter { condition { !Login.isLoggedIn() } }
@@ -45,12 +49,16 @@ fun initBehaviorTree(): IBehaviorNode = behaviorTree {
     }
 }
 
-// this behaviour tree is the main logic tree for the script.
-// it decides the behaviour of the character.
-fun logicBehaviourTree(scriptTask: ScriptTask?): IBehaviorNode = behaviorTree {
+
+/**
+ * This behaviour tree is the main logic tree for the script.
+ * It decides the behaviour of the character based on the active script task.
+ * The task session will end if the character fails too many times consecutively each tick.
+ */
+fun scriptLogicBehaviorTree(scriptTask: ScriptTask?): IBehaviorNode = behaviorTree {
     sequence {
-        abstractBehaviour(scriptTask)
-        specificBehaviour(scriptTask)
+        scriptControl { abstractBehaviour() }
+        scriptControl { specificBehaviour(scriptTask) }
     }
 }
 
@@ -59,7 +67,7 @@ fun logicBehaviourTree(scriptTask: ScriptTask?): IBehaviorNode = behaviorTree {
  *
  * Logging in, setting the next task, turning on character run, and killing the script
  */
-fun IParentNode.abstractBehaviour(scriptTask: ScriptTask?): SequenceNode = sequence("Generic behaviour") {
+fun IParentNode.abstractBehaviour(): SequenceNode = sequence("Generic behaviour") {
     // character login
     selector {
         repeatUntil({ Login.isLoggedIn() }) { condition { Login.login() } }
@@ -80,13 +88,14 @@ fun IParentNode.specificBehaviour(scriptTask: ScriptTask?): SequenceNode = seque
     selector {
         combatMeleeBehaviour(scriptTask)
         fishingBehavior(scriptTask)
+        cookingBehavior(scriptTask)
     }
 }
 
 fun canReach(p: Positionable): Boolean = LocalWalking.createMap()
     .canReach(p)
 
-fun walkTo(tile: WorldTile) = GlobalWalking.walkTo(tile) {
+fun walkTo(entity: Positionable) = GlobalWalking.walkTo(entity) {
     if (Antiban.shouldTurnOnRun() && !Options.isRunEnabled()) Options.setRunEnabled(true)
     WalkState.CONTINUE
 }
@@ -116,16 +125,75 @@ fun lootableItemsQuery(items: Array<String>): GroundItemQuery = Query.groundItem
     .isReachable
     .maxDistance(2.5)
 
-//fun IParentNode.perform(name: String = "", func: () -> Unit): Unit {
-//
-//    val node = object : IBehaviorNode {
-//        override var name: String = ""
-//
-//        override fun tick(): BehaviorTreeStatus {
-//            func()
-//            return BehaviorTreeStatus.SUCCESS
-//        }
-//    }
-//
-//    this.initNode("[Perform] $name", node) {}
-//}
+/**
+ * PerformCease node that runs some code before ending the tick and reporting "KILL".
+ *
+ * Special use cases for something that has gone really, really, bad or
+ *  something that requires extra attention.
+ */
+fun IParentNode.performCease(name: String = "", func: () -> Unit) {
+    val node = object : IBehaviorNode {
+        override var name: String = ""
+
+        override fun tick(): BehaviorTreeStatus {
+            func()
+            return BehaviorTreeStatus.KILL
+        }
+    }
+
+    this.initNode("[Perform Cease] $name", node) {}
+}
+
+/**
+ * @author High Order Scripts
+ */
+fun IParentNode.scriptControl(
+    maxConsecutiveFailures: Int = 10,
+    endConditions: List<() -> Boolean> = emptyList(),
+    endScript: () -> Unit = { },
+    init: IParentNode.() -> Unit
+) = initNode("Script Control", ScriptControlNode(maxConsecutiveFailures, endConditions, endScript), init)
+
+/**
+ * @author High Order Scripts
+ */
+class ScriptControlNode(
+    private val maxConsecutiveFailures: Int = 10,
+    private val endConditions: List<() -> Boolean> = emptyList(),
+    val endScript: () -> Unit,
+) : Decorator() {
+    override var name: String = "Script Control"
+    var consecutiveFailures = 0
+
+    override fun tick(): BehaviorTreeStatus {
+        if (child == null) throw IllegalStateException("ScriptControlNode must have a child node")
+
+        if (endConditions.any { it() }) {
+            endScript()
+            return BehaviorTreeStatus.KILL
+        }
+
+        if (consecutiveFailures >= maxConsecutiveFailures) {
+            endScript()
+            return BehaviorTreeStatus.KILL
+        }
+
+        val result = child!!.tick()
+
+        when (result) {
+            BehaviorTreeStatus.KILL -> {
+                endScript()
+            }
+
+            BehaviorTreeStatus.FAILURE -> {
+                consecutiveFailures++
+            }
+
+            BehaviorTreeStatus.SUCCESS -> {
+                consecutiveFailures = 0
+            }
+        }
+
+        return result
+    }
+}

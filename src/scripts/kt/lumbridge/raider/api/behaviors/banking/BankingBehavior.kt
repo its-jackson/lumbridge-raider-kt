@@ -1,6 +1,7 @@
-package scripts.kt.lumbridge.raider.api
+package scripts.kt.lumbridge.raider.api.behaviors.banking
 
 import org.tribot.script.sdk.Bank
+import org.tribot.script.sdk.Inventory
 import org.tribot.script.sdk.frameworks.behaviortree.IParentNode
 import org.tribot.script.sdk.frameworks.behaviortree.condition
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
@@ -25,7 +26,14 @@ fun IParentNode.walkToAndOpenBank(): SequenceNode = sequence {
     }
 }
 
-fun IParentNode.walkToAndDepositInvBank(): SequenceNode = sequence {
+fun IParentNode.walkToAndDepositInvBank(closeBank: Boolean = true): SequenceNode = sequence {
     walkToAndOpenBank()
-    condition { Bank.depositInventory() && Bank.close() }
+    selector {
+        condition { Inventory.isEmpty() }
+        condition { Bank.depositInventory() }
+    }
+    selector {
+        condition { !closeBank }
+        condition { Bank.close() }
+    }
 }

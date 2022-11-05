@@ -1,8 +1,10 @@
 package scripts.kt.lumbridge.raider.api
 
 import org.tribot.script.sdk.Log
-import org.tribot.script.sdk.frameworks.behaviortree.*
+import org.tribot.script.sdk.frameworks.behaviortree.BehaviorTreeStatus
+import org.tribot.script.sdk.frameworks.behaviortree.IBehaviorNode
 import org.tribot.script.sdk.tasks.BankTask
+import scripts.kt.lumbridge.raider.api.behaviors.scriptLogicBehaviorTree
 import java.lang.System.currentTimeMillis
 import java.util.concurrent.TimeUnit
 
@@ -15,17 +17,14 @@ import java.util.concurrent.TimeUnit
 //}
 
 data class ScriptTask(
-    val stop: StopCondition = TimeStopCondition(days = Long.MAX_VALUE),
-    val behavior: Behavior = Behavior.COMBAT_MELEE,
-    val npc: Npc? = Npc.CHICKENS_LUMBRIDGE_EAST,
+    val stop: StopCondition = TimeStopCondition(days = 31),
+    val behavior: Behavior? = null,
+    val disposal: Disposal? = null,
+    val npc: Npc? = null,
     val fishSpot: FishSpot? = null,
     val buryBones: Boolean = false,
     val lootGroundItems: Boolean = false,
-    val bankDisposal: Boolean = false,
-    val dropDisposal: Boolean = false,
-    val cookThenBankDisposal: Boolean = false,
-    val cookThenDropDisposal: Boolean = false,
-    var bankTask: BankTask? = null
+    var bankTask: BankTask? = null,
 )
 
 enum class Behavior(val characterBehaviour: String) {
@@ -35,7 +34,16 @@ enum class Behavior(val characterBehaviour: String) {
     FISHING("Fishing"),
     WOODCUTTING("Woodcutting"),
     COOKING("Cooking"),
-    FIREMAKING("Firemaking")
+    FIREMAKING("Firemaking"),
+    MINING("Mining"),
+    SMITHING("Smithing"),
+}
+
+enum class Disposal(val disposalMethod: String) {
+    BANK("Bank"),
+    DROP("Drop"),
+    COOK_THEN_BANK("Cook then bank"),
+    COOK_THEN_DROP("Cook then drop")
 }
 
 interface Satisfiable {
@@ -44,7 +52,9 @@ interface Satisfiable {
 
 abstract class StopCondition : Satisfiable {
     enum class ConditionType(val con: String) {
-        TIME("Time condition");
+        TIME("Time condition"),
+        RESOURCE_GAINED("Resource gained")
+        ;
     }
 }
 
@@ -73,41 +83,77 @@ class TimeStopCondition(
         val hours = remain / 1000 / 60 / 60
         val minutes = remain / 1000 / 60 % 60
         val seconds = remain / 1000 % 60
-        return "Until time >= (hours:$hours:minutes:$minutes:seconds:$seconds)"
+        return "Until time (hours:$hours:minutes:$minutes:seconds:$seconds)"
     }
+}
+
+class ResourceGainedCondition(
+    val id: Int,
+    val amount: Int = -1 // default value is infinity
+) : StopCondition() {
+    val remainder: Int
+        get() = amount - sum
+
+    private var sum = 0
+
+    /**
+     * It is expected that anyone who creates an instance must
+     * invoke this function manually to update the remainder and sum.
+     * Or else the resource amount won't ever satisfy.
+     */
+    fun updateSum(amt: Int) {
+        if (amount < 1) return
+        sum = sum.plus(amt)
+    }
+
+    override fun isSatisfied(): Boolean =
+        amount > 0 && (remainder < 1 && sum >= amount)
+
+    override fun toString(): String =
+        "Until resource gained (id=$id, amount=$amount, remainder=$remainder, sum=$sum)"
 }
 
 class ScriptTaskRunner : Satisfiable {
     private val taskStack: ArrayDeque<ScriptTask> = ArrayDeque()
 
-    var activeTask: ScriptTask? = ScriptTask()
+    private var mainBehaviorTree: IBehaviorNode? = null
+    private var mainBehaviorTreeState: BehaviorTreeStatus? = null
+
+    var activeScriptTask: ScriptTask? = ScriptTask()
 
     fun configure(scriptTasks: Array<ScriptTask>) {
         taskStack.clear()
         taskStack.addAll(scriptTasks)
-        setNext()
+        setNextAndComposeMainBehaviorTree()
     }
 
     fun run(
-        breakOut: () -> Boolean  = { false },
+        breakOut: () -> Boolean = { false },
         onStart: () -> Unit = { },
         onEnd: () -> Unit = { },
     ) {
         onStart.invoke() // code that should run before running the script
 
-        var btree: IBehaviorNode = logicBehaviourTree(activeTask)
-        var bState: BehaviorTreeStatus? = null
-
         while (!isRunnerComplete()) {
             if (breakOut()) break
-            if (bState == BehaviorTreeStatus.KILL) break
-            if (isSatisfied()) {
-                setNext()
-                btree = logicBehaviourTree(activeTask)
-            } else {
-                bState = btree.tick()
-                Log.debug("[ScriptTaskRunner] ${btree.name} ?: [$bState]")
+
+            if (mainBehaviorTreeState == BehaviorTreeStatus.KILL) {
+                Log.error(
+                    "[ScriptTaskRunner] End task session: ${activeScriptTask?.behavior}",
+                    IllegalStateException("Too many failures")
+                )
+                setNextAndComposeMainBehaviorTree()
+                continue
             }
+
+            if (isSatisfied()) {
+                Log.debug("[ScriptTaskRunner] Task session satisfied: ${activeScriptTask?.behavior}")
+                setNextAndComposeMainBehaviorTree()
+                continue
+            }
+
+            mainBehaviorTreeState = mainBehaviorTree?.tick()
+            Log.debug("[ScriptTaskRunner] ${mainBehaviorTree?.name} ?: [$mainBehaviorTreeState]")
         }
 
         onEnd.invoke() // code that should run right before exiting the script
@@ -115,11 +161,20 @@ class ScriptTaskRunner : Satisfiable {
 
     fun remaining(): Int = taskStack.size
 
-    private fun isRunnerComplete(): Boolean = activeTask == null && taskStack.isEmpty()
+    private fun isRunnerComplete(): Boolean = activeScriptTask == null && taskStack.isEmpty()
 
     private fun setNext() {
-        activeTask = taskStack.removeFirstOrNull()
+        activeScriptTask = taskStack.removeFirstOrNull()
     }
 
-    override fun isSatisfied(): Boolean = activeTask?.stop?.isSatisfied() == true
+    private fun composeMainBehaviorTree() {
+        mainBehaviorTree = scriptLogicBehaviorTree(activeScriptTask)
+    }
+
+    private fun setNextAndComposeMainBehaviorTree() {
+        setNext()
+        composeMainBehaviorTree()
+    }
+
+    override fun isSatisfied(): Boolean = activeScriptTask?.stop?.isSatisfied() == true
 }

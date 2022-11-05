@@ -1,9 +1,17 @@
-package scripts.kt.lumbridge.raider.api
+package scripts.kt.lumbridge.raider.api.behaviors.combat
 
 import org.tribot.script.sdk.Inventory
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SelectorNode
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
+import scripts.kt.lumbridge.raider.api.*
+import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
+import scripts.kt.lumbridge.raider.api.behaviors.canReach
+import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
+import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
+import scripts.kt.lumbridge.raider.api.behaviors.foundLootableItems
+import scripts.kt.lumbridge.raider.api.behaviors.lootItems
+import scripts.kt.lumbridge.raider.api.behaviors.walkTo
 
 fun IParentNode.combatMeleeBehaviour(scriptTask: ScriptTask?): SequenceNode = sequence("Combat behavior") {
     // ensure sequence is melee combat
@@ -44,10 +52,10 @@ fun IParentNode.combatBankingBehaviour(scriptTask: ScriptTask?): SelectorNode = 
     }
 }
 
-fun isCombatBankingNeeded(scriptTask: ScriptTask?): Boolean = scriptTask?.bankDisposal == true
+fun isCombatBankingNeeded(scriptTask: ScriptTask?): Boolean = scriptTask?.disposal == Disposal.BANK
         && Inventory.isFull()
         ||
-        (scriptTask?.cookThenBankDisposal == true
+        (scriptTask?.disposal == Disposal.COOK_THEN_DROP
                 &&
                 (!Inventory.contains("Raw chicken", "Raw beef") && Inventory.isFull()))
 

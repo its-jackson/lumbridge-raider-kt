@@ -6,6 +6,7 @@ import org.tribot.script.sdk.Waiting.waitUntil
 import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
+import scripts.makeAllAvailableItems
 import scripts.waitUntilNotAnimating
 
 enum class Range(
@@ -45,25 +46,26 @@ enum class Range(
                     Range.values().minByOrNull { it.position.distance() }!!
             }
 
-        fun cookRawFood(optimalRange: Range): Boolean = Query.gameObjects()
-            .nameContains(optimalRange.obj)
-            .isReachable
-            .findBestInteractable()
-            .map { range ->
-                if (range.actions.isEmpty())
-                    Query.inventory()
-                        .nameContains("Raw")
-                        .findClosestToMouse()
-                        .map { waitUntil { it.useOn(range) } }
-                        .orElse(false)
-                else
-                    range.interact(optimalRange.action)
+        fun cookRawFood(optimalRange: Range): Boolean {
+            return if (!MakeScreen.isOpen()) {
+                Query.gameObjects()
+                    .nameContains(optimalRange.obj)
+                    .isReachable
+                    .findBestInteractable()
+                    .map { range ->
+                        if (range.actions.isEmpty())
+                            Query.inventory()
+                                .nameContains("Raw")
+                                .findClosestToMouse()
+                                .map { waitUntil { it.useOn(range) } }
+                                .orElse(false)
+                        else
+                            range.interact(optimalRange.action)
+                    }
+                    .orElse(false) && waitUntil { MakeScreen.isOpen() } && makeAllAvailableItems()
+            } else {
+                makeAllAvailableItems()
             }
-            .orElse(false) &&
-                waitUntil { MakeScreen.isOpen() } &&
-                waitUntil { MakeScreen.makeAll { it.isVisible && it.actions.isNotEmpty() } } &&
-                waitUntil { !MakeScreen.isOpen() } &&
-                waitUntilAnimating(3000) &&
-                waitUntilNotAnimating(end = 1500)
+        }
     }
 }

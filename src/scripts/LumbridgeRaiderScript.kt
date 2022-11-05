@@ -9,6 +9,7 @@ import org.tribot.script.sdk.script.ScriptConfig
 import org.tribot.script.sdk.script.TribotScript
 import org.tribot.script.sdk.script.TribotScriptManifest
 import scripts.kt.lumbridge.raider.api.*
+import scripts.kt.lumbridge.raider.api.behaviors.initScriptBehaviorTree
 import java.awt.Font
 
 @TribotScriptManifest(
@@ -31,11 +32,12 @@ class LumbridgeRaiderKt : TribotScript {
         .row(PaintRows.runtime(paintTemplate.toBuilder()))
         .row(
             paintTemplate.toBuilder().label("Behavior")
-                .value { taskRunner.activeTask?.behavior?.characterBehaviour }.build()
+                .value { taskRunner.activeScriptTask?.behavior?.characterBehaviour }.build()
         )
-        .row(paintTemplate.toBuilder().label("Stop").value { taskRunner.activeTask?.stop }.build())
-        .row(paintTemplate.toBuilder().label("Npc").value { taskRunner.activeTask?.npc }.build())
-        .row(paintTemplate.toBuilder().label("Fishing spot").value { taskRunner.activeTask?.fishSpot }.build())
+        .row(paintTemplate.toBuilder().label("Disposal").value { taskRunner.activeScriptTask?.disposal }.build())
+        .row(paintTemplate.toBuilder().label("Stop").value { taskRunner.activeScriptTask?.stop }.build())
+        .row(paintTemplate.toBuilder().label("Npc").value { taskRunner.activeScriptTask?.npc }.build())
+        .row(paintTemplate.toBuilder().label("Fish spot").value { taskRunner.activeScriptTask?.fishSpot }.build())
         .row(paintTemplate.toBuilder().label("Remaining tasks").value { taskRunner.remaining() }.build())
         .build()
 
@@ -55,95 +57,42 @@ class LumbridgeRaiderKt : TribotScript {
             combatTest()
         else if (args.equals("/fishing/test", true))
             fishingTest()
-        else
-        {
+        else if (args.equals("/cooking/test", true))
+            cookingTest()
+        else {
             // TODO
         }
     }
 
-    private fun combatTest() {
-//        val scriptTasks = arrayOf(
-//
-//            ScriptTask(
-//                npc = Npc.COWS_LUMBRIDGE_WEST,
-//                behavior = Behavior.COMBAT_MELEE,
-//                stop = TimeStopCondition(seconds = 30),
-//                cookThenBankDisposal = true,
-//                lootGroundItems = true
-//            ),
-//            ScriptTask(
-//                npc = Npc.CHICKENS_LUMBRIDGE_WEST,
-//                behavior = Behavior.COMBAT_MELEE,
-//                stop = TimeStopCondition(seconds = 10),
-//                cookThenBankDisposal = true,
-//                lootGroundItems = true
-//            ),
-//
-//
-//            ScriptTask(
-//                npc = Npc.CHICKENS_LUMBRIDGE_EAST,
-//                behavior = Behavior.COMBAT_MELEE,
-//                stop = TimeStopCondition(minutes = 5, seconds = 5),
-//                cookThenBankDisposal = true,
-//                lootGroundItems = true
-//            ),
-//            ScriptTask(
-//                npc = Npc.COWS_LUMBRIDGE_EAST,
-//                behavior = Behavior.COMBAT_MELEE,
-//                stop = TimeStopCondition(minutes = 4, seconds = 20),
-//                cookThenBankDisposal = true,
-//                lootGroundItems = true
-//            )
-//
-//        )
-//
-//        taskRunner.configure(scriptTasks)
-//
-//        taskRunner.run(
-//            breakOut = { false }, // <- default value
-//            onStart = { initBehaviorTree().tick() },
-//            onEnd = { Login.logout() }
-//        )
-    }
+    private fun combatTest() {}
 
     private fun fishingTest() {
         val scriptTasks = arrayOf(
             ScriptTask(
                 behavior = Behavior.FISHING,
-                fishSpot = FishSpot.SHRIMPS_ANCHOVIES_LUMBRIDGE_SWAMP,
-                stop = TimeStopCondition(minutes = 3),
-                dropDisposal = true,
-                npc = null,
-            ),
-            ScriptTask(
-                behavior = Behavior.FISHING,
-                fishSpot = FishSpot.SARDINE_HERRING_LUMBRIDGE_SWAMP,
-                stop = TimeStopCondition(minutes = 4),
-                cookThenDropDisposal = true,
-                npc = null,
-            ),
-
-            ScriptTask(
-                behavior = Behavior.FISHING,
-                fishSpot = FishSpot.PIKE_LUMBRIDGE_CASTLE,
-                stop = TimeStopCondition(minutes = 4),
-                bankDisposal = true,
-                npc = null,
-            ),
-            ScriptTask(
-                behavior = Behavior.FISHING,
                 fishSpot = FishSpot.SALMON_TROUT_LUMBRIDGE_CASTLE,
-                stop = TimeStopCondition(minutes = 5),
-                cookThenBankDisposal = true,
-                npc = null,
+                stop = TimeStopCondition(minutes = 120),
+                disposal = Disposal.COOK_THEN_BANK
+            )
+        )
+
+        taskRunner.configure(scriptTasks)
+
+        taskRunner.run(onStart = { initScriptBehaviorTree().tick() })
+    }
+
+    private fun cookingTest() {
+        val scriptTasks = arrayOf(
+            ScriptTask(
+                behavior = Behavior.COOKING,
+                stop = ResourceGainedCondition(377, 1000)
             )
         )
 
         taskRunner.configure(scriptTasks)
 
         taskRunner.run(
-            breakOut = { false }, // <- default value
-            onStart = { initBehaviorTree().tick() },
+            onStart = { initScriptBehaviorTree().tick() },
             onEnd = { Login.logout() }
         )
     }

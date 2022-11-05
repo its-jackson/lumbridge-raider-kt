@@ -1,4 +1,4 @@
-package scripts.kt.lumbridge.raider.api
+package scripts.kt.lumbridge.raider.api.behaviors.fishing
 
 import org.tribot.script.sdk.Inventory
 import org.tribot.script.sdk.Waiting
@@ -7,7 +7,14 @@ import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.tasks.Amount
 import org.tribot.script.sdk.tasks.BankTask
-import org.tribot.script.sdk.walking.GlobalWalking
+import scripts.kt.lumbridge.raider.api.Behavior
+import scripts.kt.lumbridge.raider.api.Disposal
+import scripts.kt.lumbridge.raider.api.ScriptTask
+import scripts.kt.lumbridge.raider.api.behaviors.canReach
+import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
+import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
+import scripts.kt.lumbridge.raider.api.behaviors.walkTo
+import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndOpenBank
 import scripts.waitUntilNotAnimating
 
 /**
@@ -32,6 +39,9 @@ import scripts.waitUntilNotAnimating
 fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Fishing behavior") {
     // ensure character behavior is fishing
     condition { scriptTask?.behavior == Behavior.FISHING }
+
+    // ensure the character has a disposal method
+    condition { scriptTask?.disposal != null }
 
     // ensure the bank task is initialized and the inventory is in good state
     selector {
@@ -66,7 +76,7 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
 
     // normal banking disposal - WORKING
     selector {
-        condition { scriptTask?.bankDisposal == false }
+        condition { scriptTask?.disposal != Disposal.BANK }
         condition { !Inventory.isFull() }
         sequence {
             walkToAndOpenBank()
@@ -76,33 +86,46 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
 
     // normal dropping - WORKING
     selector {
-        condition { scriptTask?.dropDisposal == false }
+        condition { scriptTask?.disposal != Disposal.DROP }
         condition { !Inventory.isFull() }
         condition { dropAll(scriptTask) }
     }
 
     // cook then bank disposal - WORKING
     selector {
-        condition { scriptTask?.cookThenBankDisposal == false }
+        condition { scriptTask?.disposal != Disposal.COOK_THEN_BANK }
         condition { !Inventory.isFull() }
-        sequence {
-            selector {
+        selector {
+            sequence {
                 condition { !isCookRawFood() }
-                repeatUntil({ !isCookRawFood() }) { walkToAndCookRange() }
+                walkToAndOpenBank()
+                condition { scriptTask?.bankTask?.execute()?.isEmpty }
             }
-            walkToAndOpenBank()
-            condition { scriptTask?.bankTask?.execute()?.isEmpty }
+            sequence {
+                condition { isCookRawFood() }
+                walkToAndCookRange()
+                condition { !isCookRawFood() }
+                walkToAndOpenBank()
+                condition { scriptTask?.bankTask?.execute()?.isEmpty }
+            }
         }
     }
 
     // cook then drop disposal - WORKING
     selector {
-        condition { scriptTask?.cookThenDropDisposal == false }
+        condition { scriptTask?.disposal != Disposal.COOK_THEN_DROP }
         condition { !Inventory.isFull() }
-        condition { !isCookRawFood() }
-        sequence {
-            repeatUntil({ !isCookRawFood() }) { walkToAndCookRange() }
-            condition { dropAll(scriptTask) }
+        selector {
+            sequence {
+                condition { !isCookRawFood() }
+                condition { dropAll(scriptTask) }
+            }
+            sequence {
+                condition { isCookRawFood() }
+                walkToAndCookRange()
+                condition { !isCookRawFood() }
+                condition { dropAll(scriptTask) }
+            }
         }
     }
 
@@ -150,7 +173,7 @@ private fun interactWithFishSpot(scriptTask: ScriptTask?): Boolean = Query.npcs(
     .findBestInteractable()
     .map { fishSpot ->
         if (!canReach(fishSpot))
-            return@map GlobalWalking.walkTo(fishSpot)
+            return@map walkTo(fishSpot)
         fishSpot.actions
             .any { action ->
                 scriptTask?.fishSpot?.actions?.let {
@@ -161,7 +184,7 @@ private fun interactWithFishSpot(scriptTask: ScriptTask?): Boolean = Query.npcs(
     .orElse(false)
 
 /**
- * The fishing equipment and bait to use for the active task.
+ * The necessary items for the active task.
  */
 private fun initBankTask(scriptTask: ScriptTask?) {
     val bankTaskBuilder = BankTask.builder()
