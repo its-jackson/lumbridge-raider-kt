@@ -1,6 +1,5 @@
 package scripts
 
-import dax.teleports.Teleport
 import org.tribot.script.sdk.Login
 import org.tribot.script.sdk.painting.Painting
 import org.tribot.script.sdk.painting.template.basic.BasicPaintTemplate
@@ -35,14 +34,34 @@ class LumbridgeRaiderKt : TribotScript {
         .row(PaintRows.runtime(paintTemplate.toBuilder()))
         .row(
             paintTemplate.toBuilder().label("Behavior")
-                .value { taskRunner.activeScriptTask?.behavior?.characterBehaviour }.build()
+                .value { taskRunner.activeScriptTask?.behavior?.characterBehaviour }
+                .build()
         )
-        .row(paintTemplate.toBuilder().label("Disposal").value { taskRunner.activeScriptTask?.disposal?.disposalMethod }
-            .build())
-        .row(paintTemplate.toBuilder().label("Stop").value { taskRunner.activeScriptTask?.stop }.build())
-        .row(paintTemplate.toBuilder().label("Npc").value { taskRunner.activeScriptTask?.npc }.build())
-        .row(paintTemplate.toBuilder().label("Fish spot").value { taskRunner.activeScriptTask?.fishSpot }.build())
-        .row(paintTemplate.toBuilder().label("Remaining tasks").value { taskRunner.remaining() }.build())
+        .row(
+            paintTemplate.toBuilder().label("Disposal")
+                .value { taskRunner.activeScriptTask?.disposal?.disposalMethod }
+                .build()
+        )
+        .row(
+            paintTemplate.toBuilder().label("Stop")
+                .value { taskRunner.activeScriptTask?.stop }
+                .build()
+        )
+        .row(
+            paintTemplate.toBuilder().label("Npc")
+                .value { taskRunner.activeScriptTask?.npc }
+                .build()
+        )
+        .row(
+            paintTemplate.toBuilder()
+                .label("Fish spot")
+                .value { taskRunner.activeScriptTask?.fishSpot }
+                .build()
+        )
+        .row(
+            paintTemplate.toBuilder().label("Remaining tasks")
+                .value { taskRunner.remaining() }.build()
+        )
         .build()
 
     init {
@@ -57,13 +76,18 @@ class LumbridgeRaiderKt : TribotScript {
     override fun execute(args: String): Unit = script(args)
 
     private fun script(args: String) {
+        //val adapter = DaxWalkerAdapter("", "")
+        //adapter.blockTeleports(DaxWalkerAdapter.Teleport.LUMBRIDGE_TELEPORT)
+        //GlobalWalking.setEngine(adapter)
+
         if (args.equals("/combat/melee/test", true))
             combatTest()
         else if (args.equals("/fishing/test", true))
             fishingTest()
         else if (args.equals("/cooking/test", true))
             cookingTest()
-        else {
+        else
+        {
             // TODO
         }
     }

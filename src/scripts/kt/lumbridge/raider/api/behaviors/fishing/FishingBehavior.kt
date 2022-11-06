@@ -1,6 +1,7 @@
 package scripts.kt.lumbridge.raider.api.behaviors.fishing
 
 import org.tribot.script.sdk.Inventory
+import org.tribot.script.sdk.Waiting.waitUntil
 import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
@@ -123,8 +124,8 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
 
     // ensure the fishing spot is nearby and reachable
     selector {
-        condition { scriptTask?.fishSpot?.let { canReach(it.position) && it.position.distance() < 15 } }
-        condition { scriptTask?.fishSpot?.let { walkTo(it.position) } }
+        condition { scriptTask?.fishSpot?.let { it.position.distance() < 15 && canReach(it.position) } }
+        perform { scriptTask?.fishSpot?.let { walkTo(it.position) } }
     }
 
     // interact with the fishing spot (walk to, rotate camera, and click)
@@ -135,21 +136,23 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
  * Find a reachable fish spot then attempt to interact with it.
  *  (Rotate camera, walking, and clicking).
  */
-private fun completeFishingAction(scriptTask: ScriptTask?): Boolean = Query.npcs()
-    .idEquals(*scriptTask?.fishSpot?.ids ?: intArrayOf())
-    .findBestInteractable()
-    .map { fishSpot ->
-        if (!canReach(fishSpot))
-            return@map walkTo(fishSpot)
-        fishSpot.actions
-            .any { action ->
-                scriptTask?.fishSpot?.actions?.let {
-                    it.contains(action) && fishSpot.interact(action) &&
-                            waitUntilAnimating(10000) && waitUntilNotAnimating(end = 2000)
-                } ?: false
+private fun completeFishingAction(scriptTask: ScriptTask?): Boolean = scriptTask?.fishSpot
+    ?.let {
+        Query.npcs()
+            .idEquals(*it.ids)
+            .findBestInteractable()
+            .map { fishSpot ->
+                if (!canReach(fishSpot))
+                    return@map walkTo(fishSpot)
+                fishSpot.actions
+                    .any { action ->
+                        it.actions.contains(action) && waitUntil { fishSpot.interact(action) } &&
+                                waitUntilAnimating(10000) && waitUntilNotAnimating(end = 2000)
+                    }
             }
-    }
-    .orElse(false)
+            .orElse(false)
+    } ?: false
+
 
 /**
  * Determine if the character has the required bait / net etc.

@@ -146,13 +146,19 @@ class ScriptTaskRunner : Satisfiable {
             if (breakOut()) break
 
             if (mainBehaviorTreeState == BehaviorTreeStatus.KILL) {
-                Log.error("[ScriptTaskRunner] Exit task session: ${activeScriptTask?.behavior} - too many failures!")
+                Log.error(
+                    "[ScriptTaskRunner] [${activeScriptTask?.behavior?.characterBehaviour}] " +
+                            "Kill task session, too many consecutive failures!"
+                )
                 setNextAndComposeMainBehaviorTree()
                 continue
             }
 
             if (isSatisfied()) {
-                Log.debug("[ScriptTaskRunner] Task session satisfied: ${activeScriptTask?.behavior}")
+                Log.debug(
+                    "[ScriptTaskRunner] [${activeScriptTask?.behavior?.characterBehaviour}] " +
+                            "Task session has satisfied"
+                )
                 setNextAndComposeMainBehaviorTree()
                 continue
             }
