@@ -13,7 +13,7 @@ import scripts.kt.lumbridge.raider.api.behaviors.foundLootableItems
 import scripts.kt.lumbridge.raider.api.behaviors.lootItems
 import scripts.kt.lumbridge.raider.api.behaviors.walkTo
 
-fun IParentNode.combatMeleeBehaviour(scriptTask: ScriptTask?): SequenceNode = sequence("Combat behavior") {
+fun IParentNode.combatMeleeBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Combat behavior") {
     // ensure sequence is melee combat
     condition { scriptTask?.behavior == Behavior.COMBAT_MELEE }
 

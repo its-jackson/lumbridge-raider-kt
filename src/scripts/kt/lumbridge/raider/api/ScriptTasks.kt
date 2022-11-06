@@ -25,7 +25,15 @@ data class ScriptTask(
     val buryBones: Boolean = false,
     val lootGroundItems: Boolean = false,
     var bankTask: BankTask? = null,
-)
+) {
+    val resourceGainedCondition: ResourceGainedCondition?
+        get() {
+            return if (this.stop !is ResourceGainedCondition)
+                null
+            else
+                this.stop
+        }
+}
 
 enum class Behavior(val characterBehaviour: String) {
     COMBAT_MELEE("Combat melee"),
@@ -53,7 +61,7 @@ interface Satisfiable {
 abstract class StopCondition : Satisfiable {
     enum class ConditionType(val con: String) {
         TIME("Time condition"),
-        RESOURCE_GAINED("Resource gained")
+        RESOURCE_GAINED("Resource gained condition")
         ;
     }
 }
@@ -83,7 +91,7 @@ class TimeStopCondition(
         val hours = remain / 1000 / 60 / 60
         val minutes = remain / 1000 / 60 % 60
         val seconds = remain / 1000 % 60
-        return "Until time (hours:$hours:minutes:$minutes:seconds:$seconds)"
+        return "Time (hours:$hours:minutes:$minutes:seconds:$seconds)"
     }
 }
 
@@ -110,7 +118,7 @@ class ResourceGainedCondition(
         amount > 0 && (remainder < 1 && sum >= amount)
 
     override fun toString(): String =
-        "Until resource gained (id=$id, amount=$amount, remainder=$remainder, sum=$sum)"
+        "Resource gained (id=$id, amount=$amount, remainder=$remainder, sum=$sum)"
 }
 
 class ScriptTaskRunner : Satisfiable {
@@ -138,10 +146,7 @@ class ScriptTaskRunner : Satisfiable {
             if (breakOut()) break
 
             if (mainBehaviorTreeState == BehaviorTreeStatus.KILL) {
-                Log.error(
-                    "[ScriptTaskRunner] End task session: ${activeScriptTask?.behavior}",
-                    IllegalStateException("Too many failures")
-                )
+                Log.error("[ScriptTaskRunner] Exit task session: ${activeScriptTask?.behavior} - too many failures!")
                 setNextAndComposeMainBehaviorTree()
                 continue
             }

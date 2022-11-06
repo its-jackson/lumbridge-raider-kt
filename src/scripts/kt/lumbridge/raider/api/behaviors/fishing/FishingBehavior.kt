@@ -1,7 +1,7 @@
 package scripts.kt.lumbridge.raider.api.behaviors.fishing
 
 import org.tribot.script.sdk.Inventory
-import org.tribot.script.sdk.Waiting
+import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.query.Query
@@ -10,11 +10,11 @@ import org.tribot.script.sdk.tasks.BankTask
 import scripts.kt.lumbridge.raider.api.Behavior
 import scripts.kt.lumbridge.raider.api.Disposal
 import scripts.kt.lumbridge.raider.api.ScriptTask
+import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndOpenBank
 import scripts.kt.lumbridge.raider.api.behaviors.canReach
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
 import scripts.kt.lumbridge.raider.api.behaviors.walkTo
-import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndOpenBank
 import scripts.waitUntilNotAnimating
 
 /**
@@ -59,15 +59,7 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
 
     // restock fishing equipment and bait from bank
     selector {
-        condition {
-            scriptTask?.fishSpot?.equipmentReq?.entries
-                ?.all { entry ->
-                    Inventory.getCount(entry.key) >= entry.value &&
-                            (scriptTask.fishSpot.baitReq.isEmpty() ||
-                                    scriptTask.fishSpot.baitReq.entries
-                                        .all { bait -> Inventory.getCount(bait.key) >= bait.value })
-                } == true
-        }
+        condition { isFishingEquipmentSatisfied(scriptTask) }
         sequence {
             walkToAndOpenBank()
             condition { scriptTask?.bankTask?.execute()?.isEmpty }
@@ -135,18 +127,41 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
         condition { scriptTask?.fishSpot?.let { walkTo(it.position) } }
     }
 
-    // interact with the fishing spot and start animating
-    sequence {
-        // interact with the fishing spot (walk to, rotate camera, and click)
-        condition { interactWithFishSpot(scriptTask) }
-
-        // wait until start animating
-        condition { Waiting.waitUntilAnimating(10000) }
-
-        // wait until not animating
-        condition { waitUntilNotAnimating(end = 2000) }
-    }
+    // interact with the fishing spot (walk to, rotate camera, and click)
+    condition { completeFishingAction(scriptTask) }
 }
+
+/**
+ * Find a reachable fish spot then attempt to interact with it.
+ *  (Rotate camera, walking, and clicking).
+ */
+private fun completeFishingAction(scriptTask: ScriptTask?): Boolean = Query.npcs()
+    .idEquals(*scriptTask?.fishSpot?.ids ?: intArrayOf())
+    .findBestInteractable()
+    .map { fishSpot ->
+        if (!canReach(fishSpot))
+            return@map walkTo(fishSpot)
+        fishSpot.actions
+            .any { action ->
+                scriptTask?.fishSpot?.actions?.let {
+                    it.contains(action) && fishSpot.interact(action) &&
+                            waitUntilAnimating(10000) && waitUntilNotAnimating(end = 2000)
+                } ?: false
+            }
+    }
+    .orElse(false)
+
+/**
+ * Determine if the character has the required bait / net etc.
+ */
+private fun isFishingEquipmentSatisfied(scriptTask: ScriptTask?): Boolean =
+    scriptTask?.fishSpot?.equipmentReq?.entries
+        ?.all { entry ->
+            Inventory.getCount(entry.key) >= entry.value &&
+                    (scriptTask.fishSpot.baitReq.isEmpty() ||
+                            scriptTask.fishSpot.baitReq.entries
+                                .all { bait -> Inventory.getCount(bait.key) >= bait.value })
+        } == true
 
 /**
  * Drop all items that are NOT the fishing equipment OR bait.
@@ -163,25 +178,6 @@ private fun dropAll(scriptTask: ScriptTask?): Boolean {
 
     return Inventory.drop(*toDrop.toIntArray()) > 0
 }
-
-/**
- * Find a reachable fish spot then attempt to interact with it.
- *  (Rotate camera, walking, and clicking).
- */
-private fun interactWithFishSpot(scriptTask: ScriptTask?): Boolean = Query.npcs()
-    .idEquals(*scriptTask?.fishSpot?.ids ?: intArrayOf())
-    .findBestInteractable()
-    .map { fishSpot ->
-        if (!canReach(fishSpot))
-            return@map walkTo(fishSpot)
-        fishSpot.actions
-            .any { action ->
-                scriptTask?.fishSpot?.actions?.let {
-                    it.contains(action) && fishSpot.interact(action)
-                } ?: false
-            }
-    }
-    .orElse(false)
 
 /**
  * The necessary items for the active task.

@@ -16,7 +16,7 @@ import org.tribot.script.sdk.walking.WalkState
 import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.cookingBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.fishingBehavior
-import scripts.kt.lumbridge.raider.api.behaviors.combat.combatMeleeBehaviour
+import scripts.kt.lumbridge.raider.api.behaviors.combat.combatMeleeBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
 
 /**
@@ -33,9 +33,10 @@ great! We move on. If not, we do something to satisfy it.
 Leaf nodes: perform, terminal node that will always return success.
  */
 
-// this behaviour tree ensures the user is logged in first.
-// then it will ensure the inventory is empty
-// before entering the main script logic.
+/**
+ * This behavior tree ensures the user is logged in first.
+ * Then it will ensure the inventory is empty, before entering the main script logic.
+ */
 fun initScriptBehaviorTree(): IBehaviorNode = behaviorTree {
     sequence {
         selector {
@@ -49,25 +50,24 @@ fun initScriptBehaviorTree(): IBehaviorNode = behaviorTree {
     }
 }
 
-
 /**
- * This behaviour tree is the main logic tree for the script.
+ * This behavior tree is the main logic tree for the script.
  * It decides the behaviour of the character based on the active script task.
  * The task session will end if the character fails too many times consecutively each tick.
  */
 fun scriptLogicBehaviorTree(scriptTask: ScriptTask?): IBehaviorNode = behaviorTree {
     sequence {
-        scriptControl { abstractBehaviour() }
-        scriptControl { specificBehaviour(scriptTask) }
+        scriptControl { abstractBehavior() }
+        scriptControl { specificBehavior(scriptTask) }
     }
 }
 
 /**
- * Carryout the high level abstraction behaviours
+ * Carryout the high level character abstraction behaviors.
  *
- * Logging in, setting the next task, turning on character run, and killing the script
+ * Logging in, turning on character run.
  */
-fun IParentNode.abstractBehaviour(): SequenceNode = sequence("Generic behaviour") {
+fun IParentNode.abstractBehavior(): SequenceNode = sequence("Abstract behavior") {
     // character login
     selector {
         repeatUntil({ Login.isLoggedIn() }) { condition { Login.login() } }
@@ -80,13 +80,13 @@ fun IParentNode.abstractBehaviour(): SequenceNode = sequence("Generic behaviour"
 }
 
 /**
- * Carryout the character specific tasks
+ * Carryout the character specific behaviors.
  *
  * Melee, Ranged, Magic, Cooking, Firemaking, Woodcutting, Fishing, Mining, Smithing, and Prayer
  */
-fun IParentNode.specificBehaviour(scriptTask: ScriptTask?): SequenceNode = sequence("Specific behaviour") {
+fun IParentNode.specificBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Specific behavior") {
     selector {
-        combatMeleeBehaviour(scriptTask)
+        combatMeleeBehavior(scriptTask)
         fishingBehavior(scriptTask)
         cookingBehavior(scriptTask)
     }
@@ -168,12 +168,7 @@ class ScriptControlNode(
     override fun tick(): BehaviorTreeStatus {
         if (child == null) throw IllegalStateException("ScriptControlNode must have a child node")
 
-        if (endConditions.any { it() }) {
-            endScript()
-            return BehaviorTreeStatus.KILL
-        }
-
-        if (consecutiveFailures >= maxConsecutiveFailures) {
+        if (consecutiveFailures >= maxConsecutiveFailures || endConditions.any { it() }) {
             endScript()
             return BehaviorTreeStatus.KILL
         }

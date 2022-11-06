@@ -6,7 +6,9 @@ import org.tribot.script.sdk.Waiting
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.query.Query
-import scripts.kt.lumbridge.raider.api.*
+import scripts.kt.lumbridge.raider.api.Behavior
+import scripts.kt.lumbridge.raider.api.Range
+import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
 import scripts.kt.lumbridge.raider.api.behaviors.canReach
 import scripts.kt.lumbridge.raider.api.behaviors.walkTo
@@ -30,11 +32,11 @@ fun IParentNode.cookingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
 
         // attempt to cook at the nearby and best range,
         // and update the stop condition for the script task.
-        cookingAction(scriptTask)
+        completeCookingAction(scriptTask)
     }
 }
 
-fun IParentNode.cookingAction(scriptTask: ScriptTask?): SequenceNode = sequence {
+fun IParentNode.completeCookingAction(scriptTask: ScriptTask?): SequenceNode = sequence {
     val amountBefore = getSumStacks()
     walkToAndCookRange()
     perform { updateCookingItemSum(scriptTask, amountBefore) }
@@ -53,40 +55,38 @@ fun isCookRawFood(): Boolean = Inventory.getAll()
     .filterNot { it.definition.isNoted }
     .any()
 
-fun inventoryHasCookingItems(scriptTask: ScriptTask?): Boolean {
-    if (scriptTask?.stop !is ResourceGainedCondition) return false
-    scriptTask.stop as ResourceGainedCondition
-    return scriptTask.stop.id.let { Inventory.contains(it) }
-}
+private fun inventoryHasCookingItems(scriptTask: ScriptTask?): Boolean = scriptTask?.resourceGainedCondition
+    ?.let {
+        it.id.let { item -> Inventory.contains(item) }
+    } ?: false
 
-fun bankHasCookingItems(scriptTask: ScriptTask?): Boolean {
-    if (scriptTask?.stop !is ResourceGainedCondition) return false
-    scriptTask.stop as ResourceGainedCondition
-    return scriptTask.stop.id.let { Bank.contains(it) }
-}
+private fun bankHasCookingItems(scriptTask: ScriptTask?): Boolean = scriptTask?.resourceGainedCondition
+    ?.let {
+        it.id.let { item -> Bank.contains(item) }
+    } ?: false
 
-fun withdrawCookingItems(scriptTask: ScriptTask?): Boolean {
-    if (scriptTask?.stop !is ResourceGainedCondition) return false
-    scriptTask.stop as ResourceGainedCondition
-    return if (scriptTask.stop.remainder in 1..28) {
-        scriptTask.stop.id.let {
-            Bank.withdraw(
-                it,
-                scriptTask.stop.remainder
-            ) && Waiting.waitUntil { Inventory.contains(it) }
+private fun withdrawCookingItems(scriptTask: ScriptTask?): Boolean = scriptTask?.resourceGainedCondition
+    ?.let {
+        if (it.remainder in 1..28) {
+            it.id.let { item ->
+                Bank.withdraw(
+                    item,
+                    it.remainder
+                ) && Waiting.waitUntil { Inventory.contains(item) }
+            }
+        } else {
+            it.id.let { item ->
+                Bank.withdrawAll(item) && Waiting.waitUntil { Inventory.contains(item) }
+            }
         }
-    } else {
-        scriptTask.stop.id.let { Bank.withdrawAll(it) && Waiting.waitUntil { Inventory.contains(it) } }
-    }
-}
+    } ?: false
 
-fun updateCookingItemSum(scriptTask: ScriptTask?, amountBefore: Int) {
-    if (scriptTask?.stop !is ResourceGainedCondition) return
-    scriptTask.stop as ResourceGainedCondition
-    val amountAfter = getSumStacks()
-    val updateAmount = amountAfter - amountBefore
-    scriptTask.stop.updateSum(updateAmount)
-}
+private fun updateCookingItemSum(scriptTask: ScriptTask?, amountBefore: Int) = scriptTask?.resourceGainedCondition
+    ?.let {
+        val amountAfter = getSumStacks()
+        val updateAmount = amountAfter - amountBefore
+        it.updateSum(updateAmount)
+    }
 
 private fun getSumStacks() = Query.inventory()
     .sumStacks()
