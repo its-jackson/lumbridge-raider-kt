@@ -31,7 +31,7 @@
 
 * ~~Fishing~~
 * ~~Cooking~~
-* Mining
+* ~~Mining~~
 * Smithing
 * Woodcutting
 * Firemaking
