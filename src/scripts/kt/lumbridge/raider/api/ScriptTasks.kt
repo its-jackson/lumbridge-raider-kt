@@ -1,9 +1,14 @@
 package scripts.kt.lumbridge.raider.api
 
 import org.tribot.script.sdk.Log
+import org.tribot.script.sdk.Skill
 import org.tribot.script.sdk.frameworks.behaviortree.BehaviorTreeStatus
 import org.tribot.script.sdk.frameworks.behaviortree.IBehaviorNode
 import org.tribot.script.sdk.tasks.BankTask
+import scripts.kt.lumbridge.raider.api.behaviors.combat.Npc
+import scripts.kt.lumbridge.raider.api.behaviors.fishing.FishSpot
+import scripts.kt.lumbridge.raider.api.behaviors.mining.Pickaxe
+import scripts.kt.lumbridge.raider.api.behaviors.mining.Rock
 import scripts.kt.lumbridge.raider.api.behaviors.scriptLogicBehaviorTree
 import java.lang.System.currentTimeMillis
 import java.util.concurrent.TimeUnit
@@ -16,12 +21,19 @@ import java.util.concurrent.TimeUnit
 //    return gson.fromJson(gson.toJson(ob), T::class.java)
 //}
 
+data class MiningData(
+    val rocks: List<Rock>? = null,
+    val pickaxe: Pickaxe? = null,
+    val wieldPickaxe: Boolean = false
+)
+
 data class ScriptTask(
     val stop: StopCondition = TimeStopCondition(days = 31),
     val behavior: Behavior? = null,
     val disposal: Disposal? = null,
     val npc: Npc? = null,
     val fishSpot: FishSpot? = null,
+    val miningData: MiningData? = null,
     val buryBones: Boolean = false,
     val lootGroundItems: Boolean = false,
     var bankTask: BankTask? = null,
@@ -45,13 +57,15 @@ enum class Behavior(val characterBehaviour: String) {
     FIREMAKING("Firemaking"),
     MINING("Mining"),
     SMITHING("Smithing"),
+    SMELTING("Smelting"),
 }
 
 enum class Disposal(val disposalMethod: String) {
     BANK("Bank"),
     DROP("Drop"),
     COOK_THEN_BANK("Cook then bank"),
-    COOK_THEN_DROP("Cook then drop")
+    COOK_THEN_DROP("Cook then drop"),
+    M1D1("M1D1")
 }
 
 interface Satisfiable {
@@ -61,7 +75,8 @@ interface Satisfiable {
 abstract class StopCondition : Satisfiable {
     enum class ConditionType(val con: String) {
         TIME("Time condition"),
-        RESOURCE_GAINED("Resource gained condition")
+        RESOURCE_GAINED("Resource gained condition"),
+        LEVEL_REACHED("Level reached condition"),
         ;
     }
 }
@@ -119,6 +134,22 @@ class ResourceGainedCondition(
 
     override fun toString(): String =
         "Resource gained (id=$id, amount=$amount, remainder=$remainder, sum=$sum)"
+}
+
+class SkillLevelsReachedCondition(
+    private val skills: Map<Skill, Int>, // multiple skills, multiple skill level goals
+) : StopCondition() {
+    override fun isSatisfied() = skills.entries.all {
+        val skill = it.key
+        val goal = it.value
+        skill.actualLevel >= goal
+    }
+
+    override fun toString() = "Levels reached " +
+            "(${
+                skills.entries.fold("")
+                { acc, s -> "$acc${s.key}=${s.value}, actual=${s.key.actualLevel}" }
+            })"
 }
 
 class ScriptTaskRunner : Satisfiable {

@@ -1,4 +1,4 @@
-package scripts.kt.lumbridge.raider.api
+package scripts.kt.lumbridge.raider.api.behaviors.fishing
 
 import org.tribot.script.sdk.types.WorldTile
 import scripts.data.ItemID

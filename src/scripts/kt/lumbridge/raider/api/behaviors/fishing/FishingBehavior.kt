@@ -6,11 +6,11 @@ import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.query.Query
-import org.tribot.script.sdk.tasks.Amount
-import org.tribot.script.sdk.tasks.BankTask
 import scripts.kt.lumbridge.raider.api.Behavior
 import scripts.kt.lumbridge.raider.api.Disposal
 import scripts.kt.lumbridge.raider.api.ScriptTask
+import scripts.kt.lumbridge.raider.api.behaviors.banking.initializeBankTask
+import scripts.kt.lumbridge.raider.api.behaviors.banking.normalBankingDisposal
 import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndOpenBank
 import scripts.kt.lumbridge.raider.api.behaviors.canReach
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
@@ -45,18 +45,7 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
     condition { scriptTask?.disposal != null }
 
     // ensure the bank task is initialized and the inventory is in good state
-    selector {
-        condition { scriptTask?.bankTask != null }
-        sequence {
-            perform { initBankTask(scriptTask) }
-            repeatUntil({ scriptTask?.bankTask?.isSatisfied() == true }) {
-                sequence {
-                    walkToAndOpenBank()
-                    condition { scriptTask?.bankTask?.execute()?.isEmpty }
-                }
-            }
-        }
-    }
+    initializeBankTask(scriptTask)
 
     // restock fishing equipment and bait from bank
     selector {
@@ -68,14 +57,7 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
     }
 
     // normal banking disposal - WORKING
-    selector {
-        condition { scriptTask?.disposal != Disposal.BANK }
-        condition { !Inventory.isFull() }
-        sequence {
-            walkToAndOpenBank()
-            condition { scriptTask?.bankTask?.execute()?.isEmpty }
-        }
-    }
+    normalBankingDisposal(scriptTask)
 
     // normal dropping - WORKING
     selector {
@@ -125,7 +107,10 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
     // ensure the fishing spot is nearby and reachable
     selector {
         condition { scriptTask?.fishSpot?.let { it.position.distance() < 15 && canReach(it.position) } }
-        perform { scriptTask?.fishSpot?.let { walkTo(it.position) } }
+        sequence {
+            condition { scriptTask?.fishSpot?.let { walkTo(it.position) } }
+            condition { waitUntil { scriptTask?.fishSpot?.let { canReach(it.position) } == true } }
+        }
     }
 
     // interact with the fishing spot (walk to, rotate camera, and click)
@@ -142,8 +127,7 @@ private fun completeFishingAction(scriptTask: ScriptTask?): Boolean = scriptTask
             .idEquals(*it.ids)
             .findBestInteractable()
             .map { fishSpot ->
-                if (!canReach(fishSpot))
-                    return@map walkTo(fishSpot)
+                if (!canReach(fishSpot)) return@map walkTo(fishSpot)
                 fishSpot.actions
                     .any { action ->
                         it.actions.contains(action) && waitUntil { fishSpot.interact(action) } &&
@@ -180,18 +164,4 @@ private fun dropAll(scriptTask: ScriptTask?): Boolean {
         .map { it.id }
 
     return Inventory.drop(*toDrop.toIntArray()) > 0
-}
-
-/**
- * The necessary items for the active task.
- */
-private fun initBankTask(scriptTask: ScriptTask?) {
-    val bankTaskBuilder = BankTask.builder()
-
-    scriptTask?.fishSpot?.equipmentReq?.entries
-        ?.forEach { equipment -> bankTaskBuilder.addInvItem(equipment.key, Amount.of(equipment.value)) }
-    scriptTask?.fishSpot?.baitReq?.entries
-        ?.forEach { bait -> bankTaskBuilder.addInvItem(bait.key, Amount.fill(bait.value)) }
-
-    scriptTask?.bankTask = bankTaskBuilder.build()
 }

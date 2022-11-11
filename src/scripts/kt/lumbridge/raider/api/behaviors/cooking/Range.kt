@@ -1,13 +1,11 @@
-package scripts.kt.lumbridge.raider.api
+package scripts.kt.lumbridge.raider.api.behaviors.cooking
 
 import org.tribot.script.sdk.MakeScreen
 import org.tribot.script.sdk.Quest
 import org.tribot.script.sdk.Waiting.waitUntil
-import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
 import scripts.makeAllAvailableItems
-import scripts.waitUntilNotAnimating
 
 enum class Range(
     x: Int, y: Int, z: Int,

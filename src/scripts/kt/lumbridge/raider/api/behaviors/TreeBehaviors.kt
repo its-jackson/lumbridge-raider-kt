@@ -18,6 +18,7 @@ import scripts.kt.lumbridge.raider.api.behaviors.cooking.cookingBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.fishingBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.combat.combatMeleeBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
+import scripts.kt.lumbridge.raider.api.behaviors.mining.miningBehavior
 
 /**
 Composite nodes: sequence and selector, the sequence node behaves as an AND gate.
@@ -37,7 +38,7 @@ Leaf nodes: perform, terminal node that will always return success.
  * This behavior tree ensures the user is logged in first.
  * Then it will ensure the inventory is empty, before entering the main script logic.
  */
-fun initScriptBehaviorTree(): IBehaviorNode = behaviorTree {
+fun initializeScriptBehaviorTree(): IBehaviorNode = behaviorTree {
     sequence {
         selector {
             inverter { condition { !Login.isLoggedIn() } }
@@ -57,7 +58,7 @@ fun initScriptBehaviorTree(): IBehaviorNode = behaviorTree {
  */
 fun scriptLogicBehaviorTree(scriptTask: ScriptTask?): IBehaviorNode = behaviorTree {
     sequence {
-        scriptControl { abstractBehavior() }
+        scriptControl { abstractBehavior(scriptTask) }
         scriptControl { specificBehavior(scriptTask) }
     }
 }
@@ -67,7 +68,7 @@ fun scriptLogicBehaviorTree(scriptTask: ScriptTask?): IBehaviorNode = behaviorTr
  *
  * Logging in, turning on character run.
  */
-fun IParentNode.abstractBehavior(): SequenceNode = sequence("Abstract behavior") {
+fun IParentNode.abstractBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Abstract behavior") {
     // character login
     selector {
         repeatUntil({ Login.isLoggedIn() }) { condition { Login.login() } }
@@ -89,6 +90,7 @@ fun IParentNode.specificBehavior(scriptTask: ScriptTask?): SequenceNode = sequen
         combatMeleeBehavior(scriptTask)
         fishingBehavior(scriptTask)
         cookingBehavior(scriptTask)
+        miningBehavior(scriptTask)
     }
 }
 

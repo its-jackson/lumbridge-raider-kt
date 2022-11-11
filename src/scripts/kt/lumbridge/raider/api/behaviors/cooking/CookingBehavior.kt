@@ -7,7 +7,6 @@ import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.query.Query
 import scripts.kt.lumbridge.raider.api.Behavior
-import scripts.kt.lumbridge.raider.api.Range
 import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
 import scripts.kt.lumbridge.raider.api.behaviors.canReach
