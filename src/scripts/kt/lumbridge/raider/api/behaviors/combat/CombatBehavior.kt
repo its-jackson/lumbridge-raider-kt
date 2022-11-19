@@ -4,14 +4,16 @@ import org.tribot.script.sdk.Inventory
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SelectorNode
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
-import scripts.kt.lumbridge.raider.api.*
+import scripts.kotlin.api.canReach
+import scripts.kotlin.api.walkTo
+import scripts.kt.lumbridge.raider.api.Behavior
+import scripts.kt.lumbridge.raider.api.Disposal
+import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
-import scripts.kt.lumbridge.raider.api.behaviors.canReach
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
 import scripts.kt.lumbridge.raider.api.behaviors.foundLootableItems
 import scripts.kt.lumbridge.raider.api.behaviors.lootItems
-import scripts.kt.lumbridge.raider.api.behaviors.walkTo
 
 fun IParentNode.combatMeleeBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Combat behavior") {
     // ensure sequence is melee combat

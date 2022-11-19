@@ -3,8 +3,8 @@ package scripts.kt.lumbridge.raider.api.behaviors.smithing
 import org.tribot.script.sdk.Waiting
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
-import scripts.kt.lumbridge.raider.api.behaviors.canReach
-import scripts.kt.lumbridge.raider.api.behaviors.walkTo
+import scripts.kotlin.api.canReach
+import scripts.kotlin.api.walkTo
 import scripts.kt.lumbridge.raider.api.resources.LUMBRIDGE_CASTLE
 
 enum class Furnace(

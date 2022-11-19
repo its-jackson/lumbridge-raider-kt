@@ -2,6 +2,7 @@ package scripts
 
 import org.tribot.script.sdk.Login
 import org.tribot.script.sdk.Skill
+import org.tribot.script.sdk.Tribot
 import org.tribot.script.sdk.painting.Painting
 import org.tribot.script.sdk.painting.template.basic.BasicPaintTemplate
 import org.tribot.script.sdk.painting.template.basic.PaintRows
@@ -9,11 +10,16 @@ import org.tribot.script.sdk.painting.template.basic.PaintTextRow
 import org.tribot.script.sdk.script.ScriptConfig
 import org.tribot.script.sdk.script.TribotScript
 import org.tribot.script.sdk.script.TribotScriptManifest
+import scripts.kotlin.api.ResourceGainedCondition
+import scripts.kotlin.api.SkillLevelsReachedCondition
+import scripts.kotlin.api.TimeStopCondition
 import scripts.kt.lumbridge.raider.api.*
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.FishSpot
 import scripts.kt.lumbridge.raider.api.behaviors.initializeScriptBehaviorTree
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Pickaxe
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Rock
+import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Axe
+import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Tree
 import java.awt.Font
 
 @TribotScriptManifest(
@@ -23,6 +29,8 @@ import java.awt.Font
     description = "Local"
 )
 class LumbridgeRaiderKt : TribotScript {
+    private val userWhiteList = listOf("Polymorphic")
+
     private val scriptTaskRunner = ScriptTaskRunner()
 
     private val paintTemplate = PaintTextRow.builder()
@@ -36,7 +44,7 @@ class LumbridgeRaiderKt : TribotScript {
         .row(PaintRows.runtime(paintTemplate.toBuilder()))
         .row(
             paintTemplate.toBuilder().label("Behavior")
-                .value { scriptTaskRunner.activeScriptTask?.behavior?.characterBehaviour }
+                .value { scriptTaskRunner.activeScriptTask?.behavior?.characterBehavior }
                 .build()
         )
         .row(
@@ -67,6 +75,12 @@ class LumbridgeRaiderKt : TribotScript {
                 .build()
         )
         .row(
+            paintTemplate.toBuilder()
+                .label("Trees")
+                .value { scriptTaskRunner.activeScriptTask?.woodcuttingData?.trees }
+                .build()
+        )
+        .row(
             paintTemplate.toBuilder().label("Remaining tasks")
                 .value { scriptTaskRunner.remaining() }.build()
         )
@@ -88,16 +102,22 @@ class LumbridgeRaiderKt : TribotScript {
         //adapter.blockTeleports(DaxWalkerAdapter.Teleport.LUMBRIDGE_TELEPORT)
         //GlobalWalking.setEngine(adapter)
 
+        if (Tribot.getUsername() !in userWhiteList)
+            throw RuntimeException("Username is not in whitelist: ${Tribot.getUsername()}")
+
         if (args.equals("/combat/melee/test", true))
             combatTest()
         else if (args.equals("/fishing/test", true))
             fishingTest()
         else if (args.equals("/cooking/test", true))
             cookingTest()
-        else if (args.equals("/mining/test", true)) {
+        else if (args.equals("/mining/test", true))
             miningTest()
-        } else {
-
+        else if (args.equals("/woodcutting/test", true))
+            woodcuttingTest()
+        else
+        {
+            // TODO
         }
     }
 
@@ -137,31 +157,58 @@ class LumbridgeRaiderKt : TribotScript {
             ScriptTask(
                 behavior = Behavior.MINING,
                 disposal = Disposal.BANK,
-                stop = SkillLevelsReachedCondition(mapOf(Skill.MINING to 30)),
-                miningData = MiningData(
-                    listOf(
-                        Rock.TIN_LUMBRIDGE_SWAMP,
-                        Rock.COPPER_LUMBRIDGE_SWAMP
-                    ),
-                    Pickaxe.BRONZE,
-                    true
-                ),
-            ),
-
-            ScriptTask(
-                behavior = Behavior.MINING,
-                disposal = Disposal.BANK,
-                stop = SkillLevelsReachedCondition(mapOf(Skill.MINING to 60)),
+                stop = SkillLevelsReachedCondition(mapOf(Skill.MINING to 99)),
                 miningData = MiningData(
                     listOf(Rock.COAL_LUMBRIDGE_SWAMP),
-                    Pickaxe.BRONZE,
-                    true
+                    Pickaxe.RUNE,
+                    false
                 ),
             )
         )
 
         scriptTaskRunner.configure(scriptTasks)
-        scriptTaskRunner.run { }
+        scriptTaskRunner.run()
+    }
+
+    private fun woodcuttingTest() {
+        val scriptTasks = arrayOf(
+            ScriptTask(
+                behavior = Behavior.WOODCUTTING,
+                disposal = Disposal.BANK,
+                stop = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 30)),
+                woodcuttingData = WoodcuttingData(
+                    trees = listOf(Tree.OAK_LUMBRIDGE_CASTLE),
+                    Axe.BRONZE,
+                    true
+                ),
+            ),
+            ScriptTask(
+                behavior = Behavior.WOODCUTTING,
+                disposal = Disposal.BANK,
+                stop = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 60)),
+                woodcuttingData = WoodcuttingData(
+                    trees = listOf(Tree.WILLOW_LUMBRIDGE_CASTLE_BAR),
+                    Axe.BRONZE,
+                    true
+                ),
+            ),
+            ScriptTask(
+                behavior = Behavior.WOODCUTTING,
+                disposal = Disposal.BANK,
+                stop = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 99)),
+                woodcuttingData = WoodcuttingData(
+                    trees = listOf(Tree.YEW_LUMBRIDGE_CASTLE),
+                    Axe.BRONZE,
+                    true
+                ),
+            )
+        )
+
+        scriptTaskRunner.configure(scriptTasks = scriptTasks)
+        scriptTaskRunner.run(
+            onStart = { initializeScriptBehaviorTree().tick() },
+            onEnd = { Login.logout() }
+        )
     }
 }
 

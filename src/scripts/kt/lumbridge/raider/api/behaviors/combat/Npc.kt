@@ -4,7 +4,7 @@ import org.tribot.script.sdk.MyPlayer
 import org.tribot.script.sdk.Waiting
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
-import scripts.waitUntilNotAnimating
+import scripts.kotlin.api.waitUntilNotAnimating
 
 private const val LUMBRIDGE_EAST = "Lumbridge East"
 private const val LUMBRIDGE_WEST = "Lumbridge West"

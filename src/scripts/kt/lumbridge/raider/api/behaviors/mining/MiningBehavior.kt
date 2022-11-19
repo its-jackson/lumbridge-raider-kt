@@ -5,15 +5,28 @@ import org.tribot.script.sdk.Waiting.waitUntil
 import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.util.TribotRandom
+import scripts.kotlin.api.canReach
 import scripts.kt.lumbridge.raider.api.Behavior
 import scripts.kt.lumbridge.raider.api.Disposal
 import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.initializeBankTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.normalBankingDisposal
-import scripts.kt.lumbridge.raider.api.behaviors.canReach
-import scripts.kt.lumbridge.raider.api.behaviors.walkTo
-import scripts.waitUntilNotAnimating
+import scripts.kotlin.api.waitUntilNotAnimating
+import scripts.kotlin.api.walkTo
 
+/**
+ * The Mining Behavior Sequence
+ *
+ * -All rocks in lumbridge (tin, copper, coal, mithril, and addy).
+ *
+ * -All pickaxes (bronze thru crystal).
+ *
+ * -Multiple inventory disposals (banking, power mining, and M1D1).
+ *
+ * -Rock priority (mine rocks based on priority and competitively mine,
+ *                  meaning the bot will interrupt the current mining action
+ *                      to mine a higher priority rock if it spawns).
+ */
 fun IParentNode.miningBehavior(scriptTask: ScriptTask?) = sequence {
     condition { scriptTask?.behavior == Behavior.MINING }
     initializeBankTask(scriptTask)

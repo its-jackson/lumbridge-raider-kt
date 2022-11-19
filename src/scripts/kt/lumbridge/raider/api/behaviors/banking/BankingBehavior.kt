@@ -75,7 +75,6 @@ private fun initBankTask(scriptTask: ScriptTask?) {
     val bankTaskBuilder = BankTask.builder()
 
     when (scriptTask?.behavior) {
-
         Behavior.FISHING -> {
             scriptTask.fishSpot?.equipmentReq?.entries
                 ?.forEach { equipment -> bankTaskBuilder.addInvItem(equipment.key, Amount.of(equipment.value)) }
@@ -93,6 +92,20 @@ private fun initBankTask(scriptTask: ScriptTask?) {
                         )
                     else
                         bankTaskBuilder.addInvItem(it.id, Amount.of(1))
+                }
+        }
+
+        Behavior.WOODCUTTING -> {
+            scriptTask.woodcuttingData?.axe
+                ?.let {
+                    if (scriptTask.woodcuttingData.wieldAxe) {
+                        bankTaskBuilder.addEquipmentItem(
+                            EquipmentReq.slot(Equipment.Slot.WEAPON)
+                                .item(it.id, Amount.of(1))
+                        )
+                    } else {
+                        bankTaskBuilder.addInvItem(it.id, Amount.of(1))
+                    }
                 }
         }
 

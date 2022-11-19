@@ -6,17 +6,17 @@ import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.query.Query
+import scripts.kotlin.api.canReach
 import scripts.kt.lumbridge.raider.api.Behavior
 import scripts.kt.lumbridge.raider.api.Disposal
 import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.initializeBankTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.normalBankingDisposal
 import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndOpenBank
-import scripts.kt.lumbridge.raider.api.behaviors.canReach
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
-import scripts.kt.lumbridge.raider.api.behaviors.walkTo
-import scripts.waitUntilNotAnimating
+import scripts.kotlin.api.waitUntilNotAnimating
+import scripts.kotlin.api.walkTo
 
 /**
  * The Fishing Behavior SequenceNode:

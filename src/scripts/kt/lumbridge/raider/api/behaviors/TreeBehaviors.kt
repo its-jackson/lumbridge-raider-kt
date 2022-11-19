@@ -1,5 +1,6 @@
 package scripts.kt.lumbridge.raider.api.behaviors
 
+import org.tribot.script.sdk.Camera
 import org.tribot.script.sdk.Inventory
 import org.tribot.script.sdk.Login
 import org.tribot.script.sdk.Options
@@ -7,18 +8,17 @@ import org.tribot.script.sdk.Waiting.waitUntil
 import org.tribot.script.sdk.antiban.Antiban
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
-import org.tribot.script.sdk.interfaces.Positionable
 import org.tribot.script.sdk.query.GroundItemQuery
 import org.tribot.script.sdk.query.Query
-import org.tribot.script.sdk.walking.GlobalWalking
-import org.tribot.script.sdk.walking.LocalWalking
-import org.tribot.script.sdk.walking.WalkState
+import scripts.kotlin.api.performKill
+import scripts.kotlin.api.scriptControl
 import scripts.kt.lumbridge.raider.api.ScriptTask
+import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
+import scripts.kt.lumbridge.raider.api.behaviors.combat.combatMeleeBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.cookingBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.fishingBehavior
-import scripts.kt.lumbridge.raider.api.behaviors.combat.combatMeleeBehavior
-import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
 import scripts.kt.lumbridge.raider.api.behaviors.mining.miningBehavior
+import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.woodcuttingBehavior
 
 /**
 Composite nodes: sequence and selector, the sequence node behaves as an AND gate.
@@ -39,14 +39,17 @@ Leaf nodes: perform, terminal node that will always return success.
  * Then it will ensure the inventory is empty, before entering the main script logic.
  */
 fun initializeScriptBehaviorTree(): IBehaviorNode = behaviorTree {
-    sequence {
-        selector {
-            inverter { condition { !Login.isLoggedIn() } }
-            repeatUntil({ Login.isLoggedIn() }) { condition { Login.login() } }
-        }
-        selector {
-            inverter { condition { !Inventory.isEmpty() } }
-            repeatUntil({ Inventory.isEmpty() }) { walkToAndDepositInvBank() }
+    repeatUntil(BehaviorTreeStatus.KILL) {
+        sequence {
+            selector {
+                inverter { condition { !Login.isLoggedIn() } }
+                condition { Login.login() }
+            }
+            selector {
+                inverter { condition { !Inventory.isEmpty() } }
+                walkToAndDepositInvBank()
+            }
+            performKill { Camera.setZoomPercent(0.00) }
         }
     }
 }
@@ -71,7 +74,8 @@ fun scriptLogicBehaviorTree(scriptTask: ScriptTask?): IBehaviorNode = behaviorTr
 fun IParentNode.abstractBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Abstract behavior") {
     // character login
     selector {
-        repeatUntil({ Login.isLoggedIn() }) { condition { Login.login() } }
+        condition { Login.isLoggedIn() }
+        condition { Login.login() }
     }
     // character running
     selector {
@@ -91,15 +95,8 @@ fun IParentNode.specificBehavior(scriptTask: ScriptTask?): SequenceNode = sequen
         fishingBehavior(scriptTask)
         cookingBehavior(scriptTask)
         miningBehavior(scriptTask)
+        woodcuttingBehavior(scriptTask)
     }
-}
-
-fun canReach(p: Positionable): Boolean = LocalWalking.createMap()
-    .canReach(p)
-
-fun walkTo(entity: Positionable) = GlobalWalking.walkTo(entity) {
-    if (Antiban.shouldTurnOnRun() && !Options.isRunEnabled()) Options.setRunEnabled(true)
-    WalkState.CONTINUE
 }
 
 fun lootItems(scriptTask: ScriptTask?): Int = lootItems(scriptTask?.npc?.lootableGroundItems ?: arrayOf())
@@ -126,71 +123,3 @@ fun lootableItemsQuery(items: Array<String>): GroundItemQuery = Query.groundItem
     .nameContains(*items)
     .isReachable
     .maxDistance(2.5)
-
-/**
- * PerformCease node that runs some code before ending the tick and reporting "KILL".
- *
- * Special use cases for something that has gone really, really, bad or
- *  something that requires extra attention.
- */
-fun IParentNode.performCease(name: String = "", func: () -> Unit) {
-    val node = object : IBehaviorNode {
-        override var name: String = ""
-
-        override fun tick(): BehaviorTreeStatus {
-            func()
-            return BehaviorTreeStatus.KILL
-        }
-    }
-
-    this.initNode("[Perform Cease] $name", node) {}
-}
-
-/**
- * @author High Order Scripts
- */
-fun IParentNode.scriptControl(
-    maxConsecutiveFailures: Int = 10,
-    endConditions: List<() -> Boolean> = emptyList(),
-    endScript: () -> Unit = { },
-    init: IParentNode.() -> Unit
-) = initNode("Script Control", ScriptControlNode(maxConsecutiveFailures, endConditions, endScript), init)
-
-/**
- * @author High Order Scripts
- */
-class ScriptControlNode(
-    private val maxConsecutiveFailures: Int = 10,
-    private val endConditions: List<() -> Boolean> = emptyList(),
-    val endScript: () -> Unit,
-) : Decorator() {
-    override var name: String = "Script Control"
-    var consecutiveFailures = 0
-
-    override fun tick(): BehaviorTreeStatus {
-        if (child == null) throw IllegalStateException("ScriptControlNode must have a child node")
-
-        if (consecutiveFailures >= maxConsecutiveFailures || endConditions.any { it() }) {
-            endScript()
-            return BehaviorTreeStatus.KILL
-        }
-
-        val result = child!!.tick()
-
-        when (result) {
-            BehaviorTreeStatus.KILL -> {
-                endScript()
-            }
-
-            BehaviorTreeStatus.FAILURE -> {
-                consecutiveFailures++
-            }
-
-            BehaviorTreeStatus.SUCCESS -> {
-                consecutiveFailures = 0
-            }
-        }
-
-        return result
-    }
-}

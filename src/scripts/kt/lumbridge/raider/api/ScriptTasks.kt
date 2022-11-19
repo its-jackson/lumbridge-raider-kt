@@ -1,17 +1,20 @@
 package scripts.kt.lumbridge.raider.api
 
 import org.tribot.script.sdk.Log
-import org.tribot.script.sdk.Skill
 import org.tribot.script.sdk.frameworks.behaviortree.BehaviorTreeStatus
 import org.tribot.script.sdk.frameworks.behaviortree.IBehaviorNode
 import org.tribot.script.sdk.tasks.BankTask
+import scripts.kotlin.api.ResourceGainedCondition
+import scripts.kotlin.api.Satisfiable
+import scripts.kotlin.api.StopCondition
+import scripts.kotlin.api.TimeStopCondition
 import scripts.kt.lumbridge.raider.api.behaviors.combat.Npc
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.FishSpot
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Pickaxe
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Rock
 import scripts.kt.lumbridge.raider.api.behaviors.scriptLogicBehaviorTree
-import java.lang.System.currentTimeMillis
-import java.util.concurrent.TimeUnit
+import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Axe
+import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Tree
 
 //inline fun <reified T> deepCopy(ob: T): T {
 //    val gson = GsonBuilder()
@@ -27,6 +30,12 @@ data class MiningData(
     val wieldPickaxe: Boolean = false
 )
 
+data class WoodcuttingData(
+    val trees: List<Tree>? = null,
+    val axe: Axe? = null,
+    val wieldAxe: Boolean = false
+)
+
 data class ScriptTask(
     val stop: StopCondition = TimeStopCondition(days = 31),
     val behavior: Behavior? = null,
@@ -34,6 +43,7 @@ data class ScriptTask(
     val npc: Npc? = null,
     val fishSpot: FishSpot? = null,
     val miningData: MiningData? = null,
+    val woodcuttingData: WoodcuttingData? = null,
     val buryBones: Boolean = false,
     val lootGroundItems: Boolean = false,
     var bankTask: BankTask? = null,
@@ -47,7 +57,7 @@ data class ScriptTask(
         }
 }
 
-enum class Behavior(val characterBehaviour: String) {
+enum class Behavior(val characterBehavior: String) {
     COMBAT_MELEE("Combat melee"),
     COMBAT_RANGED("Combat ranged"),
     COMBAT_MAGIC("Combat magic"),
@@ -68,97 +78,13 @@ enum class Disposal(val disposalMethod: String) {
     M1D1("M1D1")
 }
 
-interface Satisfiable {
-    fun isSatisfied(): Boolean
-}
-
-abstract class StopCondition : Satisfiable {
-    enum class ConditionType(val con: String) {
-        TIME("Time condition"),
-        RESOURCE_GAINED("Resource gained condition"),
-        LEVEL_REACHED("Level reached condition"),
-        ;
-    }
-}
-
-class TimeStopCondition(
-    days: Long = 0,
-    hours: Long = 0,
-    minutes: Long = 0,
-    seconds: Long = 0
-) : StopCondition() {
-    private var startTime: Long = -1
-
-    private val toMillis = TimeUnit.DAYS.toMillis(days)
-        .plus(TimeUnit.HOURS.toMillis(hours))
-        .plus(TimeUnit.MINUTES.toMillis(minutes))
-        .plus(TimeUnit.SECONDS.toMillis(seconds))
-
-    // true if the time has surpassed
-    override fun isSatisfied(): Boolean {
-        if (startTime == -1L) startTime = currentTimeMillis()
-        return currentTimeMillis() - startTime >= toMillis
-    }
-
-    override fun toString(): String {
-        if (startTime == -1L) return "(hours:00:minutes:00:seconds:00)"
-        val remain = toMillis - (currentTimeMillis() - startTime)
-        val hours = remain / 1000 / 60 / 60
-        val minutes = remain / 1000 / 60 % 60
-        val seconds = remain / 1000 % 60
-        return "Time (hours:$hours:minutes:$minutes:seconds:$seconds)"
-    }
-}
-
-class ResourceGainedCondition(
-    val id: Int,
-    val amount: Int = -1 // default value is infinity
-) : StopCondition() {
-    val remainder: Int
-        get() = amount - sum
-
-    private var sum = 0
-
-    /**
-     * It is expected that anyone who creates an instance must
-     * invoke this function manually to update the remainder and sum.
-     * Or else the resource amount won't ever satisfy.
-     */
-    fun updateSum(amt: Int) {
-        if (amount < 1) return
-        sum = sum.plus(amt)
-    }
-
-    override fun isSatisfied(): Boolean =
-        amount > 0 && (remainder < 1 && sum >= amount)
-
-    override fun toString(): String =
-        "Resource gained (id=$id, amount=$amount, remainder=$remainder, sum=$sum)"
-}
-
-class SkillLevelsReachedCondition(
-    private val skills: Map<Skill, Int>, // multiple skills, multiple skill level goals
-) : StopCondition() {
-    override fun isSatisfied() = skills.entries.all {
-        val skill = it.key
-        val goal = it.value
-        skill.actualLevel >= goal
-    }
-
-    override fun toString() = "Levels reached " +
-            "(${
-                skills.entries.fold("")
-                { acc, s -> "$acc${s.key}=${s.value}, actual=${s.key.actualLevel}" }
-            })"
-}
-
 class ScriptTaskRunner : Satisfiable {
     private val taskStack: ArrayDeque<ScriptTask> = ArrayDeque()
 
     private var mainBehaviorTree: IBehaviorNode? = null
     private var mainBehaviorTreeState: BehaviorTreeStatus? = null
 
-    var activeScriptTask: ScriptTask? = ScriptTask()
+    var activeScriptTask: ScriptTask? = null
 
     fun configure(scriptTasks: Array<ScriptTask>) {
         taskStack.clear()
@@ -171,14 +97,14 @@ class ScriptTaskRunner : Satisfiable {
         onStart: () -> Unit = { },
         onEnd: () -> Unit = { },
     ) {
-        onStart.invoke() // code that should run before running the script
+        onStart()
 
         while (!isRunnerComplete()) {
             if (breakOut()) break
 
             if (mainBehaviorTreeState == BehaviorTreeStatus.KILL) {
                 Log.error(
-                    "[ScriptTaskRunner] [${activeScriptTask?.behavior?.characterBehaviour}] " +
+                    "[ScriptTaskRunner] [${activeScriptTask?.behavior?.characterBehavior}] " +
                             "Kill task session, too many consecutive failures!"
                 )
                 setNextAndComposeMainBehaviorTree()
@@ -187,7 +113,7 @@ class ScriptTaskRunner : Satisfiable {
 
             if (isSatisfied()) {
                 Log.debug(
-                    "[ScriptTaskRunner] [${activeScriptTask?.behavior?.characterBehaviour}] " +
+                    "[ScriptTaskRunner] [${activeScriptTask?.behavior?.characterBehavior}] " +
                             "Task session has satisfied"
                 )
                 setNextAndComposeMainBehaviorTree()
@@ -198,7 +124,7 @@ class ScriptTaskRunner : Satisfiable {
             Log.debug("[ScriptTaskRunner] ${mainBehaviorTree?.name} ?: [$mainBehaviorTreeState]")
         }
 
-        onEnd.invoke() // code that should run right before exiting the script
+        onEnd()
     }
 
     fun remaining(): Int = taskStack.size

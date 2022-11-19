@@ -5,7 +5,7 @@ import org.tribot.script.sdk.Quest
 import org.tribot.script.sdk.Waiting.waitUntil
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
-import scripts.makeAllAvailableItems
+import scripts.kotlin.api.makeAllAvailableItems
 
 enum class Range(
     x: Int, y: Int, z: Int,
