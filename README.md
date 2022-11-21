@@ -7,14 +7,14 @@
 <p>Following a "progressive" structure for leveling up skills efficiently.</p>
 
 ### Current Combat Functionality
-
-* Slaying NPC's (Cows, Chickens)
-* Looting after NPC death
-* Cooking raw meat
+* Slaying Monsters (Cows, Chickens, Rats, Goblins)
+* Looting 
 * Banking
 
-### Current Fishing Functionality
+### Current Combat Magic Function
+* Auto castable spells
 
+### Current Fishing Functionality
 * Lumbridge Swamp (shrimps, anchovies, sardine, herring)
 * Lumbridge Castle (salmon, trout, pike)
 * Normal banking
@@ -23,16 +23,32 @@
 * Cook then drop
 
 ### Current Cooking Functionality
-
 * Any "Raw" inventory item that is not noted
 * Withdraw from bank and cook at lumbridge castle range, until cooked amount satisfied
 
-### Functionality In-Progress
+### Current Mining Functionality
+* All rock types (Lumbridge swamp)
+* All pickaxes
+* Rock priority system
+* M1D1
+* Power mining
+* Banking
 
+### Current Woodcutting Functionality
+* All tree types (Lumbridge castle)
+* ~~All pickaxes~~
+* Power chopping
+* Banking
+
+### Current Questing Functionality
+* Cooks' Assistant
+
+### Functionality In-Progress
 * ~~Fishing~~
 * ~~Cooking~~
 * ~~Mining~~
 * Smithing
-* Woodcutting
-* Firemaking
-* Combat (Melee/Ranged/Magic)
+* Prayer
+* ~~Woodcutting~~
+* ~~Combat (Melee/Ranged/Magic)~~
+* ~~Questing (Cook's Assistant)~~
