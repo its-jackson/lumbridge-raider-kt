@@ -4,20 +4,18 @@ import org.tribot.script.sdk.Camera
 import org.tribot.script.sdk.Inventory
 import org.tribot.script.sdk.Login
 import org.tribot.script.sdk.Options
-import org.tribot.script.sdk.Waiting.waitUntil
 import org.tribot.script.sdk.antiban.Antiban
 import org.tribot.script.sdk.frameworks.behaviortree.*
-import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
-import org.tribot.script.sdk.query.GroundItemQuery
-import org.tribot.script.sdk.query.Query
 import scripts.kotlin.api.performKill
 import scripts.kotlin.api.scriptControl
 import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
-import scripts.kt.lumbridge.raider.api.behaviors.combat.combatMeleeBehavior
+import scripts.kt.lumbridge.raider.api.behaviors.combat.magic.combatMagicBehavior
+import scripts.kt.lumbridge.raider.api.behaviors.combat.melee.combatMeleeBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.cookingBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.fishingBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.mining.miningBehavior
+import scripts.kt.lumbridge.raider.api.behaviors.questing.cooks.assistant.cooksAssistantBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.woodcuttingBehavior
 
 /**
@@ -38,7 +36,7 @@ Leaf nodes: perform, terminal node that will always return success.
  * This behavior tree ensures the user is logged in first.
  * Then it will ensure the inventory is empty, before entering the main script logic.
  */
-fun initializeScriptBehaviorTree(): IBehaviorNode = behaviorTree {
+fun initializeScriptBehaviorTree() = behaviorTree {
     repeatUntil(BehaviorTreeStatus.KILL) {
         sequence {
             selector {
@@ -59,7 +57,7 @@ fun initializeScriptBehaviorTree(): IBehaviorNode = behaviorTree {
  * It decides the behaviour of the character based on the active script task.
  * The task session will end if the character fails too many times consecutively each tick.
  */
-fun scriptLogicBehaviorTree(scriptTask: ScriptTask?): IBehaviorNode = behaviorTree {
+fun scriptLogicBehaviorTree(scriptTask: ScriptTask?) = behaviorTree {
     sequence {
         scriptControl { abstractBehavior(scriptTask) }
         scriptControl { specificBehavior(scriptTask) }
@@ -71,7 +69,7 @@ fun scriptLogicBehaviorTree(scriptTask: ScriptTask?): IBehaviorNode = behaviorTr
  *
  * Logging in, turning on character run.
  */
-fun IParentNode.abstractBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Abstract behavior") {
+fun IParentNode.abstractBehavior(scriptTask: ScriptTask?) = sequence("Abstract behavior") {
     // character login
     selector {
         condition { Login.isLoggedIn() }
@@ -87,39 +85,18 @@ fun IParentNode.abstractBehavior(scriptTask: ScriptTask?): SequenceNode = sequen
 /**
  * Carryout the character specific behaviors.
  *
- * Melee, Ranged, Magic, Cooking, Firemaking, Woodcutting, Fishing, Mining, Smithing, and Prayer
+ * Melee, Ranged, Magic,
+ * Cooking, Woodcutting, Fishing,
+ * Mining, Prayer, and Questing.
  */
-fun IParentNode.specificBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Specific behavior") {
+fun IParentNode.specificBehavior(scriptTask: ScriptTask?) = sequence("Specific behavior") {
     selector {
         combatMeleeBehavior(scriptTask)
-        fishingBehavior(scriptTask)
+        combatMagicBehavior(scriptTask)
+        cooksAssistantBehavior(scriptTask)
         cookingBehavior(scriptTask)
+        fishingBehavior(scriptTask)
         miningBehavior(scriptTask)
         woodcuttingBehavior(scriptTask)
     }
 }
-
-fun lootItems(scriptTask: ScriptTask?): Int = lootItems(scriptTask?.npc?.lootableGroundItems ?: arrayOf())
-
-fun lootItems(items: Array<String>): Int = lootableItemsQuery(items)
-    .toList()
-    .fold(0) { runningSum, item ->
-        if (Inventory.isFull()) return runningSum
-        val before = Inventory.getCount(item.id)
-
-        if (!item.interact("Take")) return runningSum
-        if (!waitUntil(2500) { Inventory.getCount(item.id) > before }) return runningSum
-
-        val result = runningSum + item.stack
-        result
-    }
-
-fun foundLootableItems(scriptTask: ScriptTask?): Boolean =
-    foundLootableItems(scriptTask?.npc?.lootableGroundItems ?: arrayOf())
-
-fun foundLootableItems(items: Array<String>): Boolean = lootableItemsQuery(items).isAny
-
-fun lootableItemsQuery(items: Array<String>): GroundItemQuery = Query.groundItems()
-    .nameContains(*items)
-    .isReachable
-    .maxDistance(2.5)

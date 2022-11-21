@@ -1,73 +1,50 @@
 package scripts.kt.lumbridge.raider.api.behaviors.combat
 
 import org.tribot.script.sdk.Inventory
+import org.tribot.script.sdk.Waiting
 import org.tribot.script.sdk.frameworks.behaviortree.*
-import org.tribot.script.sdk.frameworks.behaviortree.nodes.SelectorNode
-import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
-import scripts.kotlin.api.canReach
-import scripts.kotlin.api.walkTo
-import scripts.kt.lumbridge.raider.api.Behavior
-import scripts.kt.lumbridge.raider.api.Disposal
+import scripts.kotlin.api.isLootableItemsFound
+import scripts.kotlin.api.lootItems
 import scripts.kt.lumbridge.raider.api.ScriptTask
-import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
-import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
-import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
-import scripts.kt.lumbridge.raider.api.behaviors.foundLootableItems
-import scripts.kt.lumbridge.raider.api.behaviors.lootItems
+import scripts.kt.lumbridge.raider.api.behaviors.banking.executeBankTask
 
-fun IParentNode.combatMeleeBehavior(scriptTask: ScriptTask?): SequenceNode = sequence("Combat behavior") {
-    // ensure sequence is melee combat
-    condition { scriptTask?.behavior == Behavior.COMBAT_MELEE }
+fun IParentNode.completeCombatAction(scriptTask: ScriptTask?) = sequence {
+    // ensure the inventory is in good state
+    executeBankTask(
+        scriptTask = scriptTask,
+        bankCondition = {
+            scriptTask?.bankTask?.isSatisfied() == false ||
+                    (scriptTask?.combatData?.lootGroundItems == true && Inventory.isFull())
+        }
+    )
 
-    // character combat banking
-    combatBankingBehaviour(scriptTask)
-
-    // character cooking
-    // TODO FIX
-    selector {
-        inverter { condition { isCookRawFood() } }
-        repeatUntil({ !isCookRawFood() }) {
-            walkToAndCookRange()
+    // complete the combat action
+    sequence {
+        // ensure the monster location is nearby and reachable
+        selector {
+            condition { scriptTask?.combatData?.monsters?.any { it.isCentralPositionNearby() && it.canReachCentralPosition() } }
+            condition { scriptTask?.combatData?.monsters?.any { it.walkToCentralPosition() } }
+        }
+        // ensure the monster is available and ready to be attacked
+        selector {
+            condition { scriptTask?.combatData?.monsters?.any { it.getMonsterNpcQuery().isAny } }
+            perform { scriptTask?.combatData?.monsters?.any { Waiting.waitUntil { it.getMonsterNpcQuery().isAny } } }
+        }
+        // attack the monster
+        selector {
+            // TODO Eating food inside the inventory that is "Eatable" while in combat
+            condition { scriptTask?.combatData?.monsters?.any { it.isFighting() } }
+            perform { scriptTask?.combatData?.monsters?.any { it.attack() } }
         }
     }
-    // character combat
-    selector {
-        walkToAndAttackNpc(scriptTask)
-    }
-    // character looting
-    selector {
-        condition { !foundLootableItems(scriptTask) }
-        condition { Inventory.isFull() }
-        condition { lootItems(scriptTask) > 0 }
-    }
+
+    // loot any items that are dropped after monster death
+    lootingAction(scriptTask)
 }
 
-/**
- * Carryout the characters banking
- */
-fun IParentNode.combatBankingBehaviour(scriptTask: ScriptTask?): SelectorNode = selector {
-    selector {
-        inverter {
-            condition { isCombatBankingNeeded(scriptTask) }
-        }
-        walkToAndDepositInvBank()
-    }
-}
-
-fun isCombatBankingNeeded(scriptTask: ScriptTask?): Boolean = scriptTask?.disposal == Disposal.BANK
-        && Inventory.isFull()
-        ||
-        (scriptTask?.disposal == Disposal.COOK_THEN_DROP
-                &&
-                (!Inventory.contains("Raw chicken", "Raw beef") && Inventory.isFull()))
-
-fun IParentNode.walkToAndAttackNpc(scriptTask: ScriptTask?): SequenceNode = sequence {
-    selector {
-        condition { (scriptTask != null) && scriptTask.npc?.let { Npc.isCombat(it) } == false }
-    }
-    selector {
-        condition { (scriptTask != null) && scriptTask.npc?.let { canReach(it.position) } == true }
-        condition { (scriptTask != null) && scriptTask.npc?.let { walkTo(it.position) } == true }
-    }
-    condition { (scriptTask != null) && scriptTask.npc?.let { Npc.attack(it) } == true }
+private fun IParentNode.lootingAction(scriptTask: ScriptTask?) = selector {
+    condition { scriptTask?.combatData?.lootGroundItems == false }
+    condition { Inventory.isFull() }
+    condition { scriptTask?.combatData?.monsters?.none { isLootableItemsFound(it.monsterLootableGroundItems) } }
+    condition { scriptTask?.combatData?.monsters?.any { lootItems(it.monsterLootableGroundItems) > 0 } }
 }

@@ -17,6 +17,7 @@ import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
 import scripts.kotlin.api.waitUntilNotAnimating
 import scripts.kotlin.api.walkTo
+import scripts.kt.lumbridge.raider.api.behaviors.banking.executeBankTask
 
 /**
  * The Fishing Behavior SequenceNode:
@@ -49,11 +50,10 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
 
     // restock fishing equipment and bait from bank
     selector {
-        condition { isFishingEquipmentSatisfied(scriptTask) }
-        sequence {
-            walkToAndOpenBank()
-            condition { scriptTask?.bankTask?.execute()?.isEmpty }
-        }
+        executeBankTask(
+            scriptTask = scriptTask,
+            bankCondition = { !isFishingEquipmentSatisfied(scriptTask) }
+        )
     }
 
     // normal banking disposal - WORKING
@@ -106,10 +106,10 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
 
     // ensure the fishing spot is nearby and reachable
     selector {
-        condition { scriptTask?.fishSpot?.let { it.position.distance() < 15 && canReach(it.position) } }
+        condition { scriptTask?.fishingData?.fishSpot?.let { it.position.distance() < 15 && canReach(it.position) } }
         sequence {
-            condition { scriptTask?.fishSpot?.let { walkTo(it.position) } }
-            condition { waitUntil { scriptTask?.fishSpot?.let { canReach(it.position) } == true } }
+            condition { scriptTask?.fishingData?.fishSpot?.let { walkTo(it.position) } }
+            condition { waitUntil { scriptTask?.fishingData?.fishSpot?.let { canReach(it.position) } == true } }
         }
     }
 
@@ -121,7 +121,7 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
  * Find a reachable fish spot then attempt to interact with it.
  *  (Rotate camera, walking, and clicking).
  */
-private fun completeFishingAction(scriptTask: ScriptTask?): Boolean = scriptTask?.fishSpot
+private fun completeFishingAction(scriptTask: ScriptTask?): Boolean = scriptTask?.fishingData?.fishSpot
     ?.let {
         Query.npcs()
             .idEquals(*it.ids)
@@ -142,11 +142,11 @@ private fun completeFishingAction(scriptTask: ScriptTask?): Boolean = scriptTask
  * Determine if the character has the required bait / net etc.
  */
 private fun isFishingEquipmentSatisfied(scriptTask: ScriptTask?): Boolean =
-    scriptTask?.fishSpot?.equipmentReq?.entries
+    scriptTask?.fishingData?.fishSpot?.equipmentReq?.entries
         ?.all { entry ->
             Inventory.getCount(entry.key) >= entry.value &&
-                    (scriptTask.fishSpot.baitReq.isEmpty() ||
-                            scriptTask.fishSpot.baitReq.entries
+                    (scriptTask.fishingData.fishSpot.baitReq.isEmpty() ||
+                            scriptTask.fishingData.fishSpot.baitReq.entries
                                 .all { bait -> Inventory.getCount(bait.key) >= bait.value })
         } == true
 
@@ -156,9 +156,9 @@ private fun isFishingEquipmentSatisfied(scriptTask: ScriptTask?): Boolean =
 private fun dropAll(scriptTask: ScriptTask?): Boolean {
     val toDrop = Inventory.getAll()
         .filter {
-            scriptTask?.fishSpot?.equipmentReq
+            scriptTask?.fishingData?.fishSpot?.equipmentReq
                 ?.containsKey(it.id) == false &&
-                    !scriptTask.fishSpot.baitReq
+                    !scriptTask.fishingData.fishSpot.baitReq
                         .containsKey(it.id)
         }
         .map { it.id }

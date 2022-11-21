@@ -1,28 +1,54 @@
 package scripts.kt.lumbridge.raider.api
 
+import com.google.gson.GsonBuilder
+import org.tribot.script.sdk.Combat
 import org.tribot.script.sdk.Log
 import org.tribot.script.sdk.frameworks.behaviortree.BehaviorTreeStatus
 import org.tribot.script.sdk.frameworks.behaviortree.IBehaviorNode
 import org.tribot.script.sdk.tasks.BankTask
+import org.tribot.script.sdk.types.EquipmentItem
+import org.tribot.script.sdk.types.InventoryItem
+import org.tribot.script.sdk.util.serialization.StateTypeAdapterFactory
 import scripts.kotlin.api.ResourceGainedCondition
 import scripts.kotlin.api.Satisfiable
 import scripts.kotlin.api.StopCondition
 import scripts.kotlin.api.TimeStopCondition
-import scripts.kt.lumbridge.raider.api.behaviors.combat.Npc
+import scripts.kt.lumbridge.raider.api.behaviors.combat.Monster
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.FishSpot
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Pickaxe
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Rock
+import scripts.kt.lumbridge.raider.api.behaviors.questing.Quest
 import scripts.kt.lumbridge.raider.api.behaviors.scriptLogicBehaviorTree
 import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Axe
 import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Tree
 
-//inline fun <reified T> deepCopy(ob: T): T {
-//    val gson = GsonBuilder()
-//        .registerTypeAdapterFactory(StateTypeAdapterFactory())
-//        .create()
-//
-//    return gson.fromJson(gson.toJson(ob), T::class.java)
-//}
+/**
+ * @author Nullable
+ */
+inline fun <reified T> deepCopy(ob: T): T {
+    val gson = GsonBuilder()
+        .registerTypeAdapterFactory(StateTypeAdapterFactory())
+        .create()
+
+    return gson.fromJson(gson.toJson(ob), T::class.java)
+}
+
+data class CombatData(
+    val monsters: List<Monster>? = null,
+    val equipmentItems: List<EquipmentItem>? = null,
+    val inventoryItems: List<InventoryItem>? = null,
+    val buryLootedBones: Boolean = false,
+    val lootGroundItems: Boolean = false
+)
+
+data class CombatMeleeData(
+    val attackStyle: Combat.AttackStyle? = null,
+)
+
+data class CombatMagicData(
+    val autoCastableSpell: Combat.AutocastableSpell? = null,
+    val spellName: String? = null,
+)
 
 data class MiningData(
     val rocks: List<Rock>? = null,
@@ -36,16 +62,25 @@ data class WoodcuttingData(
     val wieldAxe: Boolean = false
 )
 
+data class FishingData(
+    val fishSpot: FishSpot? = null
+)
+
+data class QuestingData(
+    val quest: Quest? = null,
+)
+
 data class ScriptTask(
-    val stop: StopCondition = TimeStopCondition(days = 31),
+    val stop: StopCondition = TimeStopCondition(days = 28),
     val behavior: Behavior? = null,
     val disposal: Disposal? = null,
-    val npc: Npc? = null,
-    val fishSpot: FishSpot? = null,
+    val combatData: CombatData? = null,
+    val combatMeleeData: CombatMeleeData? = null,
+    val combatMagicData: CombatMagicData? = null,
     val miningData: MiningData? = null,
     val woodcuttingData: WoodcuttingData? = null,
-    val buryBones: Boolean = false,
-    val lootGroundItems: Boolean = false,
+    val fishingData: FishingData? = null,
+    val questingData: QuestingData? = null,
     var bankTask: BankTask? = null,
 ) {
     val resourceGainedCondition: ResourceGainedCondition?
@@ -59,15 +94,17 @@ data class ScriptTask(
 
 enum class Behavior(val characterBehavior: String) {
     COMBAT_MELEE("Combat melee"),
-    COMBAT_RANGED("Combat ranged"),
     COMBAT_MAGIC("Combat magic"),
+    COMBAT_RANGED("Combat ranged"),
     FISHING("Fishing"),
     WOODCUTTING("Woodcutting"),
     COOKING("Cooking"),
     FIREMAKING("Firemaking"),
     MINING("Mining"),
+    PRAYER("Prayer"),
     SMITHING("Smithing"),
     SMELTING("Smelting"),
+    QUESTING("Questing")
 }
 
 enum class Disposal(val disposalMethod: String) {
@@ -103,9 +140,9 @@ class ScriptTaskRunner : Satisfiable {
             if (breakOut()) break
 
             if (mainBehaviorTreeState == BehaviorTreeStatus.KILL) {
-                Log.error(
+                Log.debug(
                     "[ScriptTaskRunner] [${activeScriptTask?.behavior?.characterBehavior}] " +
-                            "Kill task session, too many consecutive failures!"
+                            "Killing task session"
                 )
                 setNextAndComposeMainBehaviorTree()
                 continue
@@ -127,9 +164,9 @@ class ScriptTaskRunner : Satisfiable {
         onEnd()
     }
 
-    fun remaining(): Int = taskStack.size
+    fun remaining() = taskStack.size
 
-    private fun isRunnerComplete(): Boolean = activeScriptTask == null && taskStack.isEmpty()
+    private fun isRunnerComplete() = activeScriptTask == null && taskStack.isEmpty()
 
     private fun setNext() {
         activeScriptTask = taskStack.removeFirstOrNull()
@@ -144,5 +181,5 @@ class ScriptTaskRunner : Satisfiable {
         composeMainBehaviorTree()
     }
 
-    override fun isSatisfied(): Boolean = activeScriptTask?.stop?.isSatisfied() == true
+    override fun isSatisfied() = activeScriptTask?.stop?.isSatisfied() == true
 }

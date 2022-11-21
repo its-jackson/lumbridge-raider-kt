@@ -43,13 +43,23 @@ fun IParentNode.walkToAndDepositInvBank(closeBank: Boolean = true): SequenceNode
     }
 }
 
-fun IParentNode.normalBankingDisposal(scriptTask: ScriptTask?): SelectorNode = selector {
-    condition { scriptTask?.disposal != Disposal.BANK }
-    condition { !Inventory.isFull() }
+fun IParentNode.executeBankTask(
+    scriptTask: ScriptTask?,
+    bankCondition: () -> Boolean = { scriptTask?.bankTask?.isSatisfied() == false },
+) = selector {
+    condition { !bankCondition() }
     sequence {
         walkToAndOpenBank()
         condition { scriptTask?.bankTask?.execute()?.isEmpty }
     }
+}
+
+fun IParentNode.normalBankingDisposal(scriptTask: ScriptTask?): SelectorNode = selector {
+    condition { scriptTask?.disposal != Disposal.BANK }
+    executeBankTask(
+        scriptTask = scriptTask,
+        bankCondition = { Inventory.isFull() }
+    )
 }
 
 /**
@@ -60,12 +70,35 @@ fun IParentNode.initializeBankTask(scriptTask: ScriptTask?): SelectorNode = sele
     sequence {
         perform { initBankTask(scriptTask) }
         repeatUntil({ scriptTask?.bankTask?.isSatisfied() == true }) {
-            sequence {
-                walkToAndOpenBank()
-                condition { scriptTask?.bankTask?.execute()?.isEmpty }
-            }
+            executeBankTask(scriptTask)
         }
     }
+}
+
+private fun getAddInvItem(
+    bankTaskBuilder: BankTask.Builder,
+    id: Int,
+    amount: Int
+) {
+    bankTaskBuilder.addInvItem(
+        id = id,
+        amount = Amount.range(1, amount)
+    )
+}
+
+private fun getAddEquipItem(
+    bankTaskBuilder: BankTask.Builder,
+    slot: Equipment.Slot,
+    id: Int,
+    amount: Int
+) {
+    bankTaskBuilder.addEquipmentItem(
+        EquipmentReq.slot(slot)
+            .item(
+                id = id,
+                amount = Amount.range(1, amount)
+            )
+    )
 }
 
 /**
@@ -75,10 +108,50 @@ private fun initBankTask(scriptTask: ScriptTask?) {
     val bankTaskBuilder = BankTask.builder()
 
     when (scriptTask?.behavior) {
+        Behavior.COMBAT_MELEE,
+        Behavior.COMBAT_MAGIC,
+        Behavior.COMBAT_RANGED -> {
+            scriptTask.combatData?.inventoryItems
+                ?.forEach {
+                    getAddInvItem(
+                        bankTaskBuilder = bankTaskBuilder,
+                        id = it.id,
+                        amount = it.stack
+                    )
+                }
+                ?: Inventory.getAll()
+                    .forEach {
+                        getAddInvItem(
+                            bankTaskBuilder = bankTaskBuilder,
+                            id = it.id,
+                            amount = it.stack
+                        )
+                    }
+
+
+            scriptTask.combatData?.equipmentItems
+                ?.forEach {
+                    getAddEquipItem(
+                        bankTaskBuilder = bankTaskBuilder,
+                        slot = it.slot,
+                        id = it.id,
+                        amount = it.stack
+                    )
+                } ?: Equipment.getAll()
+                .forEach {
+                    getAddEquipItem(
+                        bankTaskBuilder = bankTaskBuilder,
+                        slot = it.slot,
+                        id = it.id,
+                        amount = it.stack
+                    )
+                }
+        }
+
         Behavior.FISHING -> {
-            scriptTask.fishSpot?.equipmentReq?.entries
+            scriptTask.fishingData?.fishSpot?.equipmentReq?.entries
                 ?.forEach { equipment -> bankTaskBuilder.addInvItem(equipment.key, Amount.of(equipment.value)) }
-            scriptTask.fishSpot?.baitReq?.entries
+            scriptTask.fishingData?.fishSpot?.baitReq?.entries
                 ?.forEach { bait -> bankTaskBuilder.addInvItem(bait.key, Amount.fill(bait.value)) }
         }
 
@@ -88,7 +161,10 @@ private fun initBankTask(scriptTask: ScriptTask?) {
                     if (scriptTask.miningData.wieldPickaxe)
                         bankTaskBuilder.addEquipmentItem(
                             EquipmentReq.slot(Equipment.Slot.WEAPON)
-                                .item(it.id, Amount.of(1))
+                                .item(
+                                    it.id,
+                                    Amount.of(1)
+                                )
                         )
                     else
                         bankTaskBuilder.addInvItem(it.id, Amount.of(1))
@@ -109,7 +185,8 @@ private fun initBankTask(scriptTask: ScriptTask?) {
                 }
         }
 
-        else -> {
+        else ->
+        {
             throw IllegalArgumentException("Behavior must be supported.")
         }
     }
