@@ -134,8 +134,8 @@ class LumbridgeRaiderKt : TribotScript {
         val combatMeleeTask = ScriptTask(
             behavior = Behavior.COMBAT_MELEE,
             combatData = CombatData(
-                monsters = listOf(Monster.CHICKEN_LUMBRIDGE_EAST),
-                lootGroundItems = false
+                monsters = listOf(Monster.BIG_FROG_LUMBRIDGE_SWAMP_EAST),
+                lootGroundItems = true
             ),
             combatMeleeData = CombatMeleeData(
                 attackStyle = Combat.AttackStyle.AGGRESSIVE

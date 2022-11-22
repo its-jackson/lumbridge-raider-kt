@@ -99,11 +99,8 @@ enum class Behavior(val characterBehavior: String) {
     FISHING("Fishing"),
     WOODCUTTING("Woodcutting"),
     COOKING("Cooking"),
-    FIREMAKING("Firemaking"),
     MINING("Mining"),
     PRAYER("Prayer"),
-    SMITHING("Smithing"),
-    SMELTING("Smelting"),
     QUESTING("Questing")
 }
 

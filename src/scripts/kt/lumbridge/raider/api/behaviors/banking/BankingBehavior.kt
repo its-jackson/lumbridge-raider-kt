@@ -9,6 +9,7 @@ import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import org.tribot.script.sdk.tasks.Amount
 import org.tribot.script.sdk.tasks.BankTask
 import org.tribot.script.sdk.tasks.EquipmentReq
+import org.tribot.script.sdk.types.InventoryItem
 import org.tribot.script.sdk.walking.GlobalWalking
 import scripts.kt.lumbridge.raider.api.Behavior
 import scripts.kt.lumbridge.raider.api.Disposal
@@ -69,7 +70,7 @@ fun IParentNode.initializeBankTask(scriptTask: ScriptTask?): SelectorNode = sele
     condition { scriptTask?.bankTask != null }
     sequence {
         perform { initBankTask(scriptTask) }
-        repeatUntil({ scriptTask?.bankTask?.isSatisfied() == true }) {
+        repeatUntil(BehaviorTreeStatus.SUCCESS) {
             executeBankTask(scriptTask)
         }
     }
@@ -82,7 +83,7 @@ private fun getAddInvItem(
 ) {
     bankTaskBuilder.addInvItem(
         id = id,
-        amount = Amount.range(1, amount)
+        amount = Amount.of(amount)
     )
 }
 
@@ -96,7 +97,7 @@ private fun getAddEquipItem(
         EquipmentReq.slot(slot)
             .item(
                 id = id,
-                amount = Amount.range(1, amount)
+                amount = Amount.of(amount)
             )
     )
 }
@@ -112,21 +113,22 @@ private fun initBankTask(scriptTask: ScriptTask?) {
         Behavior.COMBAT_MAGIC,
         Behavior.COMBAT_RANGED -> {
             scriptTask.combatData?.inventoryItems
-                ?.forEach {
-                    getAddInvItem(
-                        bankTaskBuilder = bankTaskBuilder,
-                        id = it.id,
-                        amount = it.stack
-                    )
-                }
-                ?: Inventory.getAll()
-                    .forEach {
+                ?.let { inventoryItems ->
+                    getInventoryMap(inventoryItems).forEach {
                         getAddInvItem(
                             bankTaskBuilder = bankTaskBuilder,
-                            id = it.id,
-                            amount = it.stack
+                            id = it.key,
+                            amount = it.value
                         )
                     }
+                } ?: getInventoryMap()
+                .forEach {
+                    getAddInvItem(
+                        bankTaskBuilder = bankTaskBuilder,
+                        id = it.key,
+                        amount = it.value
+                    )
+                }
 
 
             scriptTask.combatData?.equipmentItems
@@ -185,11 +187,27 @@ private fun initBankTask(scriptTask: ScriptTask?) {
                 }
         }
 
-        else ->
-        {
+        else -> {
             throw IllegalArgumentException("Behavior must be supported.")
         }
     }
 
     scriptTask.bankTask = bankTaskBuilder.build()
+}
+
+fun getInventoryMap(
+    current: List<InventoryItem> = Inventory.getAll()
+): Map<Int, Int> {
+    val map = mutableMapOf<Int, Int>()
+
+    current.forEach {
+        if (map.containsKey(it.id)) {
+            val value = map[it.id]!!
+            map[it.id] = value + it.stack
+        } else {
+            map[it.id] = it.stack
+        }
+    }
+
+    return map
 }

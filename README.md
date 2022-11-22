@@ -7,16 +7,25 @@
 <p>Following a "progressive" structure for leveling up skills efficiently.</p>
 
 ### Current Combat Functionality
-* Slaying Monsters (Cows, Chickens, Rats, Goblins)
-* Looting 
+* Slaying Monsters (
+  * Cows, 
+  * Chickens, 
+  * Giant rats, 
+  * Goblins,
+  * Frogs,
+  * Big frogs,
+  * Giant frogs
+* )
+* Looting
+* Eating
 * Banking
 
-### Current Combat Magic Function
+### Current Combat Magic Functionality
 * Auto castable spells
 
 ### Current Fishing Functionality
-* Lumbridge Swamp (shrimps, anchovies, sardine, herring)
-* Lumbridge Castle (salmon, trout, pike)
+* Lumbridge swamp (shrimps, anchovies, sardine, herring)
+* Lumbridge castle (salmon, trout, pike)
 * Normal banking
 * Normal dropping
 * Cook then bank
@@ -36,12 +45,12 @@
 
 ### Current Woodcutting Functionality
 * All tree types (Lumbridge castle)
-* ~~All pickaxes~~
+* ~~All axes~~
 * Power chopping
 * Banking
 
 ### Current Questing Functionality
-* Cooks' Assistant
+* Cook's Assistant
 
 ### Functionality In-Progress
 * ~~Fishing~~
