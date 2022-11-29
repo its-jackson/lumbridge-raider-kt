@@ -7,16 +7,10 @@ import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.GroundItem
 import org.tribot.script.sdk.types.WorldTile
-import scripts.kotlin.api.canReach
-import scripts.kotlin.api.performKill
-import scripts.kotlin.api.waitUntilNotAnimating
-import scripts.kotlin.api.walkTo
-import scripts.kt.lumbridge.raider.api.Behavior
+import scripts.kotlin.api.*
 import scripts.kt.lumbridge.raider.api.ScriptTask
-import scripts.kt.lumbridge.raider.api.behaviors.banking.walkToAndDepositInvBank
 import scripts.kt.lumbridge.raider.api.behaviors.combat.Monster
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.Range
-import scripts.kt.lumbridge.raider.api.behaviors.questing.Quest
 
 private const val ITEM_1 = "Bucket"
 private const val ITEM_2 = "Pot"
@@ -36,9 +30,6 @@ fun IParentNode.cooksAssistantBehavior(
     scriptTask: ScriptTask?,
     bag: MutableSet<String> = mutableSetOf()
 ) = sequence {
-    condition { scriptTask?.behavior == Behavior.QUESTING }
-    condition { scriptTask?.questingData?.quest?.let { it == Quest.COOKS_ASSISTANT } }
-
     // clean inventory for quest
     selector {
         condition { Inventory.getEmptySlots() >= 4 }
@@ -106,13 +97,10 @@ fun IParentNode.cooksAssistantBehavior(
     finishQuest(scriptTask)
 
     // end task session
-    performKill { Log.debug("Quest completed successfully: ${scriptTask?.questingData?.quest}") }
+    performKill { Log.debug("Quest completed successfully: ${scriptTask?.scriptQuestingData?.quest}") }
 }
 
-private fun IParentNode.walkToAndTakeGroundItem(
-    position: WorldTile,
-    itemName: String
-) = sequence {
+private fun IParentNode.walkToAndTakeGroundItem(position: WorldTile, itemName: String) = sequence {
     selector {
         condition { canReach(position) }
         condition { walkTo(position) }
@@ -148,7 +136,7 @@ private fun IParentNode.walkToAndMilkCow() = sequence {
             .nameEquals("Dairy cow")
             .findBestInteractable()
             .map {
-                it.interact("Milk") && // milk me daddy
+                it.interact("Milk") &&
                         Waiting.waitUntilAnimating(10000) &&
                         waitUntilNotAnimating() && Waiting.waitUntil { Inventory.contains(ITEM_4) }
             }
@@ -231,10 +219,10 @@ private fun IParentNode.finishQuest(scriptTask: ScriptTask?) = sequence {
     repeatUntil({ Query.widgets().textContains("Congratulations!").isAny }) {
         sequence {
             selector {
-                condition { scriptTask?.questingData?.quest?.let { it.isQuestNpcPositionNearby() && it.canReachQuestNpcPosition() } }
-                condition { scriptTask?.questingData?.quest?.walkToQuestNpcPosition() }
+                condition { scriptTask?.scriptQuestingData?.quest?.let { it.isQuestNpcPositionNearby() && it.canReachQuestNpcPosition() } }
+                condition { scriptTask?.scriptQuestingData?.quest?.walkToQuestNpcPosition() }
             }
-            condition { scriptTask?.questingData?.quest?.handleQuestNpcDialog() }
+            condition { scriptTask?.scriptQuestingData?.quest?.handleQuestNpcDialog() }
         }
     }
 }

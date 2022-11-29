@@ -1,10 +1,9 @@
 package scripts.kt.lumbridge.raider.api.behaviors.combat
 
 import org.tribot.script.sdk.Inventory
-import org.tribot.script.sdk.MyPlayer
 import org.tribot.script.sdk.Waiting
 import org.tribot.script.sdk.frameworks.behaviortree.*
-import org.tribot.script.sdk.query.Query
+import scripts.kotlin.api.eatingAction
 import scripts.kotlin.api.isLootableItemsFound
 import scripts.kotlin.api.lootItems
 import scripts.kt.lumbridge.raider.api.ScriptTask
@@ -15,8 +14,8 @@ fun IParentNode.completeCombatAction(scriptTask: ScriptTask?) = sequence {
     executeBankTask(
         scriptTask = scriptTask,
         bankCondition = {
-            scriptTask?.bankTask?.isSatisfied() == false ||
-                    (scriptTask?.combatData?.lootGroundItems == true && Inventory.isFull())
+            scriptTask?.scriptBankTask?.isSatisfied() == false ||
+                    (scriptTask?.scriptCombatData?.lootGroundItems == true && Inventory.isFull())
         }
     )
 
@@ -24,19 +23,19 @@ fun IParentNode.completeCombatAction(scriptTask: ScriptTask?) = sequence {
     sequence {
         // ensure the monster location is nearby and reachable
         selector {
-            condition { scriptTask?.combatData?.monsters?.any { it.isCentralPositionNearby() && it.canReachCentralPosition() } }
-            condition { scriptTask?.combatData?.monsters?.any { it.walkToCentralPosition() } }
+            condition { scriptTask?.scriptCombatData?.monsters?.any { it.isCentralPositionNearby() && it.canReachCentralPosition() } }
+            condition { scriptTask?.scriptCombatData?.monsters?.any { it.walkToCentralPosition() } }
         }
         // ensure the monster is available and ready to be attacked
         selector {
-            condition { scriptTask?.combatData?.monsters?.any { it.getMonsterNpcQuery().isAny } }
-            perform { scriptTask?.combatData?.monsters?.any { Waiting.waitUntil { it.getMonsterNpcQuery().isAny } } }
+            condition { scriptTask?.scriptCombatData?.monsters?.any { it.getMonsterNpcQuery().isAny } }
+            perform { scriptTask?.scriptCombatData?.monsters?.any { Waiting.waitUntil { it.getMonsterNpcQuery().isAny } } }
         }
         // attack the monster
         selector {
-            condition { scriptTask?.combatData?.monsters?.any { it.isFighting() } }
+            condition { scriptTask?.scriptCombatData?.monsters?.any { it.isFighting() } }
             perform {
-                scriptTask?.combatData?.monsters?.any {
+                scriptTask?.scriptCombatData?.monsters?.any {
                     it.attack(actions = listOf { eatingAction().tick() })
                 }
             }
@@ -48,18 +47,7 @@ fun IParentNode.completeCombatAction(scriptTask: ScriptTask?) = sequence {
 }
 
 fun IParentNode.lootingAction(scriptTask: ScriptTask?) = selector {
-    condition { scriptTask?.combatData?.lootGroundItems == false }
-    condition { Inventory.isFull() }
+    condition { scriptTask?.scriptCombatData?.lootGroundItems == false }
     condition { !isLootableItemsFound() }
     condition { lootItems() > 0 }
 }
-
-fun IParentNode.eatingAction() = selector {
-    condition { !isEatableInventoryQuery().isAny }
-    condition { MyPlayer.getCurrentHealthPercent() > 49.9 }
-    perform { isEatableInventoryQuery().findClosestToMouse().ifPresent { it.click() } }
-}
-
-fun isEatableInventoryQuery() = Query.inventory()
-    .actionContains("Eat")
-    .isNotNoted

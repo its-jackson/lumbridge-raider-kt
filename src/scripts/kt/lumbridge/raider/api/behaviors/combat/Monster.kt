@@ -142,6 +142,5 @@ enum class Monster(
         .nameEquals(this@Monster.monsterName)
         .minHealthBarPercent(1.0)
         .isInteractingWithMe
-        .isFacingMe
         .isAny
 }

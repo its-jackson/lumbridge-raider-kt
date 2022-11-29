@@ -1,11 +1,15 @@
 package scripts.kt.lumbridge.raider.api.behaviors.fishing
 
+import org.tribot.script.sdk.Waiting
+import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
 import scripts.data.ItemID
-import scripts.data.NpcID.*
+import scripts.kotlin.api.canReach
+import scripts.kotlin.api.waitUntilNotAnimating
+import scripts.kotlin.api.walkTo
+import scripts.kt.lumbridge.raider.api.resources.LUMBRIDGE_CASTLE
+import scripts.kt.lumbridge.raider.api.resources.LUMBRIDGE_SWAMP
 
-private const val LUMBRIDGE_SWAMP = "Lumbridge Swamp"
-private const val LUMBRIDGE_CASTLE = "Lumbridge Castle"
 private const val USE_ACTION = "Use"
 
 private val lumbridgeSwampFishingCoords = intArrayOf(3238, 3158, 0)
@@ -22,14 +26,7 @@ private val flyFishingRodBaitReq = mapOf(ItemID.FEATHER to 1)
 private val flyFishingRodFishSpotActions = arrayOf("Lure")
 
 //shrimps/anchovies
-private val shrimpsAnchoviesFishSpotIds = intArrayOf(
-    FISHING_SPOT_1514, FISHING_SPOT_1517, FISHING_SPOT_1518,
-    FISHING_SPOT_1521, FISHING_SPOT_1523, FISHING_SPOT_1524,
-    FISHING_SPOT_1525, FISHING_SPOT_1528, FISHING_SPOT_1530,
-    FISHING_SPOT_1544, FISHING_SPOT_3913, FISHING_SPOT_7155,
-    FISHING_SPOT_7459, FISHING_SPOT_7462, FISHING_SPOT_7467,
-    FISHING_SPOT_7469, FISHING_SPOT_7947, FISHING_SPOT_10513
-)
+private val shrimpsAnchoviesSardineHerringFishSpotIds = intArrayOf(1530)
 private val shrimpAnchoviesFishSpotActions = arrayOf(
     "Small Net", "Net"
 )
@@ -41,15 +38,6 @@ private val shrimpAnchoviesFishSpriteNames = arrayOf(
 )
 //
 
-//sardine/herring
-private val sardineHerringFishSpotIds = intArrayOf(
-    FISHING_SPOT_1514, FISHING_SPOT_1517, FISHING_SPOT_1518,
-    FISHING_SPOT_1521, FISHING_SPOT_1523, FISHING_SPOT_1524,
-    FISHING_SPOT_1525, FISHING_SPOT_1528, FISHING_SPOT_1530,
-    FISHING_SPOT_1544, FISHING_SPOT_3913, FISHING_SPOT_7155,
-    FISHING_SPOT_7459, FISHING_SPOT_7462, FISHING_SPOT_7467,
-    FISHING_SPOT_7469, FISHING_SPOT_7947, FISHING_SPOT_10513
-)
 private val sardineHerringFishSpriteIds = intArrayOf(
     ItemID.RAW_SARDINE, ItemID.RAW_HERRING
 )
@@ -59,12 +47,7 @@ private val sardineHerringFishSpriteNames = arrayOf(
 //
 
 //pike
-private val pikeSalmonTroutFishSpotIds = intArrayOf(
-    ROD_FISHING_SPOT, ROD_FISHING_SPOT_1508, ROD_FISHING_SPOT_1509,
-    ROD_FISHING_SPOT_1513, ROD_FISHING_SPOT_1515, ROD_FISHING_SPOT_1516,
-    ROD_FISHING_SPOT_1526, ROD_FISHING_SPOT_1527, ROD_FISHING_SPOT_7463,
-    ROD_FISHING_SPOT_7464, ROD_FISHING_SPOT_7468, ROD_FISHING_SPOT_8524
-)
+private val pikeSalmonTroutFishSpotIds = intArrayOf(1527)
 private val pikeFishSpriteIds = intArrayOf(ItemID.RAW_PIKE)
 private val pikeFishSpriteNames = arrayOf("Raw pike")
 //
@@ -88,9 +71,8 @@ enum class FishSpot(
     val baitReq: Map<Int, Int>, // key: bait id, value: minimum bait amount required
     x: Int, y: Int, z: Int
 ) {
-
     SHRIMPS_ANCHOVIES_LUMBRIDGE_SWAMP(
-        shrimpsAnchoviesFishSpotIds,
+        shrimpsAnchoviesSardineHerringFishSpotIds,
         shrimpAnchoviesFishSpotActions,
         shrimpAnchoviesFishSpriteIds,
         shrimpAnchoviesFishSpriteNames,
@@ -102,7 +84,7 @@ enum class FishSpot(
         override fun location(): String = LUMBRIDGE_SWAMP
     },
     SARDINE_HERRING_LUMBRIDGE_SWAMP(
-        sardineHerringFishSpotIds,
+        shrimpsAnchoviesSardineHerringFishSpotIds,
         fishingRodFishSpotActions,
         sardineHerringFishSpriteIds,
         sardineHerringFishSpriteNames,
@@ -142,6 +124,21 @@ enum class FishSpot(
     val position = WorldTile(x, y, z)
 
     open fun location() = ""
+
+    fun fish(): Boolean = getFishSpotQuery()
+        .findBestInteractable()
+        .map { fishSpot ->
+            if (!canReach(fishSpot)) return@map walkTo(fishSpot)
+            fishSpot.actions
+                .any { action ->
+                    this@FishSpot.actions.contains(action) && Waiting.waitUntil { fishSpot.interact(action) } &&
+                            Waiting.waitUntilAnimating(10000) && waitUntilNotAnimating(end = 2000)
+                }
+        }
+        .orElse(false)
+
+    fun getFishSpotQuery() = Query.npcs()
+        .idEquals(*this@FishSpot.ids)
 
     override fun toString(): String = "${spriteNames.fold("") { acc, s -> "$acc/$s" }} at ${location()}"
 }

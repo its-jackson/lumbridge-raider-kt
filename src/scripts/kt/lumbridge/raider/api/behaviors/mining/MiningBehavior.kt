@@ -6,8 +6,7 @@ import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.util.TribotRandom
 import scripts.kotlin.api.canReach
-import scripts.kt.lumbridge.raider.api.Behavior
-import scripts.kt.lumbridge.raider.api.Disposal
+import scripts.kt.lumbridge.raider.api.ScriptDisposal
 import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.initializeBankTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.normalBankingDisposal
@@ -28,7 +27,6 @@ import scripts.kotlin.api.walkTo
  *                      to mine a higher priority rock if it spawns).
  */
 fun IParentNode.miningBehavior(scriptTask: ScriptTask?) = sequence {
-    condition { scriptTask?.behavior == Behavior.MINING }
     initializeBankTask(scriptTask)
     normalBankingDisposal(scriptTask)
     normalOreDroppingDisposal(scriptTask)
@@ -43,12 +41,12 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
     // ensure the rocks are nearby and reachable
     selector {
         condition {
-            scriptTask?.miningData?.rocks
+            scriptTask?.scriptMiningData?.rocks
                 ?.map { it.position }
                 ?.any { it.distance() < 10 && canReach(it) }
         }
         condition {
-            scriptTask?.miningData?.rocks
+            scriptTask?.scriptMiningData?.rocks
                 ?.map { it.position }
                 ?.any { walkTo(it) }
         }
@@ -59,13 +57,13 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
         // if all rock object queries have no elements then wait until any rock spawns
         sequence {
             condition {
-                scriptTask?.miningData?.rocks
+                scriptTask?.scriptMiningData?.rocks
                     ?.map { it.getRockGameObjectQuery() }
                     ?.all { !it.isAny }
             }
             perform {
                 waitUntil {
-                    scriptTask?.miningData?.rocks
+                    scriptTask?.scriptMiningData?.rocks
                         ?.map { it.getRockGameObjectQuery() }
                         ?.any { it.isAny } == true
                 }
@@ -77,9 +75,9 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
         // if a higher priority rock spawns
         sequence {
             condition {
-                scriptTask?.miningData?.rocks?.indices
+                scriptTask?.scriptMiningData?.rocks?.indices
                     ?.firstOrNull {
-                        scriptTask.miningData.rocks[it].mineOre()
+                        scriptTask.scriptMiningData.rocks[it].mineOre()
                     }.let {
                         if (it == null) return@let false
                         rockPriority = it
@@ -91,7 +89,7 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
                 waitUntilNotAnimating(
                     end = TribotRandom.uniform(10, 600).toLong(),
                     interrupt = {
-                        scriptTask?.miningData?.rocks
+                        scriptTask?.scriptMiningData?.rocks
                             ?.map { it.getRockGameObjectQuery() }
                             ?.filterIndexed { priority, rockQuery -> priority < rockPriority && rockQuery.isAny }
                             ?.any() == true
@@ -103,24 +101,24 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
 }
 
 private fun IParentNode.normalOreDroppingDisposal(scriptTask: ScriptTask?) = selector {
-    condition { scriptTask?.disposal != Disposal.DROP }
+    condition { scriptTask?.scriptDisposal != ScriptDisposal.DROP }
     condition { !Inventory.isFull() }
     condition {
-        scriptTask?.miningData?.rocks
+        scriptTask?.scriptMiningData?.rocks
             ?.map { it.dropOre() }
             ?.any()
     }
 }
 
 private fun IParentNode.mineOneDropOneDisposal(scriptTask: ScriptTask?) = selector {
-    condition { scriptTask?.disposal != Disposal.M1D1 }
+    condition { scriptTask?.scriptDisposal != ScriptDisposal.M1D1 }
     condition {
-        scriptTask?.miningData?.rocks
+        scriptTask?.scriptMiningData?.rocks
             ?.map { it.getOreInventoryQuery() }
             ?.all { !it.isAny }
     }
     condition {
-        scriptTask?.miningData?.rocks
+        scriptTask?.scriptMiningData?.rocks
             ?.map { it.dropOre() }
             ?.any()
     }
