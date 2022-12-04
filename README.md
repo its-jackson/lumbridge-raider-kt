@@ -3,11 +3,11 @@
 ### Purpose
 
 <p>A behaviour tree script that trains several skills in the Lumbridge area of RuneScape.</p>
-<p>Having minimal user interactions, with fully automated script tasks, unique for each profile.</p>
+<p>Premium UI/UX with fully automated script tasks.</p>
 <p>Following a "progressive" structure for leveling up skills efficiently.</p>
 
 ### Current Combat Functionality
-* Slaying Monsters (
+* Slaying Monsters
   * Cows, 
   * Chickens, 
   * Giant rats, 
@@ -15,7 +15,7 @@
   * Frogs,
   * Big frogs,
   * Giant frogs
-* )
+  
 * Looting
 * Eating
 * Banking
@@ -45,19 +45,22 @@
 
 ### Current Woodcutting Functionality
 * All tree types (Lumbridge castle)
-* ~~All axes~~
+* All axes
 * Power chopping
 * Banking
 
 ### Current Questing Functionality
 * Cook's Assistant
 
+### Current Prayer Functionality
+* All bones
+* Several bury patterns
+
 ### Functionality In-Progress
 * ~~Fishing~~
 * ~~Cooking~~
 * ~~Mining~~
-* Smithing
-* Prayer
+* ~~Prayer~~
 * ~~Woodcutting~~
 * ~~Combat (Melee/Ranged/Magic)~~
 * ~~Questing (Cook's Assistant)~~
