@@ -2,6 +2,7 @@ package scripts.kt.lumbridge.raider.api.behaviors.woodcutting
 
 import org.tribot.script.sdk.Inventory
 import org.tribot.script.sdk.Waiting
+import org.tribot.script.sdk.antiban.PlayerPreferences
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.util.TribotRandom
 import scripts.kotlin.api.waitUntilNotAnimating
@@ -10,11 +11,27 @@ import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.initializeBankTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.normalBankingDisposal
 
+private val woodcuttingWaitMean: Int =
+    PlayerPreferences.preference(
+        "scripts.kt.lumbridge.raider.api.behaviors.woodcutting.WoodcuttingBehavior.woodcuttingWaitMean"
+    )
+    { g: PlayerPreferences.Generator ->
+        g.uniform(300, 5000)
+    }
+
+private val woodcuttingWaitStd: Int =
+    PlayerPreferences.preference(
+        "scripts.kt.lumbridge.raider.api.behaviors.woodcutting.WoodcuttingBehavior.woodcuttingWaitStd"
+    ) { g: PlayerPreferences.Generator ->
+        g.uniform(5, 30)
+    }
+
 fun IParentNode.woodcuttingBehavior(scriptTask: ScriptTask?) = sequence {
     initializeBankTask(scriptTask)
     normalBankingDisposal(scriptTask)
     normalDropLogsDisposal(scriptTask)
     completeWoodcuttingAction(scriptTask)
+    perform { Waiting.waitNormal(woodcuttingWaitMean, woodcuttingWaitStd) }
 }
 
 private fun IParentNode.completeWoodcuttingAction(scriptTask: ScriptTask?) = sequence {

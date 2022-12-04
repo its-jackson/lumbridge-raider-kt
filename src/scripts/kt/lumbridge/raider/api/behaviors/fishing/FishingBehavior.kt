@@ -1,9 +1,10 @@
 package scripts.kt.lumbridge.raider.api.behaviors.fishing
 
 import org.tribot.script.sdk.Inventory
+import org.tribot.script.sdk.Waiting
 import org.tribot.script.sdk.Waiting.waitUntil
+import org.tribot.script.sdk.antiban.PlayerPreferences
 import org.tribot.script.sdk.frameworks.behaviortree.*
-import org.tribot.script.sdk.frameworks.behaviortree.nodes.SequenceNode
 import scripts.kotlin.api.canReach
 import scripts.kotlin.api.walkTo
 import scripts.kotlin.api.walkToAndOpenBank
@@ -14,6 +15,21 @@ import scripts.kt.lumbridge.raider.api.behaviors.banking.initializeBankTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.normalBankingDisposal
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
+
+private val fishingWaitMean: Int =
+    PlayerPreferences.preference(
+        "scripts.kt.lumbridge.raider.api.behaviors.fishing.FishingBehavior.fishingWaitMean"
+    )
+    { g: PlayerPreferences.Generator ->
+        g.uniform(200, 4000)
+    }
+
+private val fishingWaitStd: Int =
+    PlayerPreferences.preference(
+        "scripts.kt.lumbridge.raider.api.behaviors.fishing.FishingBehavior.fishingWaitStd"
+    ) { g: PlayerPreferences.Generator ->
+        g.uniform(20, 30)
+    }
 
 /**
  * The Fishing Behavior SequenceNode:
@@ -34,7 +50,7 @@ import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
  *  Cook then bank,
  *  Cook then drop
  */
-fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequence {
+fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
     // ensure the bank task is initialized and the inventory is in good state
     initializeBankTask(scriptTask)
 
@@ -42,7 +58,7 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
     selector {
         executeBankTask(
             scriptTask = scriptTask,
-            bankCondition = { !isFishingEquipmentSatisfied(scriptTask) }
+            bankingConditions = listOf { !isFishingEquipmentSatisfied(scriptTask) }
         )
     }
 
@@ -68,7 +84,7 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
             }
             sequence {
                 condition { isCookRawFood() }
-                walkToAndCookRange()
+                walkToAndCookRange(scriptTask)
                 condition { !isCookRawFood() }
                 walkToAndOpenBank()
                 condition { scriptTask?.scriptBankTask?.execute()?.isEmpty }
@@ -87,7 +103,7 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
             }
             sequence {
                 condition { isCookRawFood() }
-                walkToAndCookRange()
+                walkToAndCookRange(scriptTask)
                 condition { !isCookRawFood() }
                 condition { dropAll(scriptTask) }
             }
@@ -102,6 +118,8 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?): SequenceNode = sequenc
 
     // interact with the fishing spot (walk to, rotate camera, and click)
     completeFishingAction(scriptTask)
+
+    perform { Waiting.waitNormal(fishingWaitMean, fishingWaitStd) }
 }
 
 /**
@@ -120,7 +138,7 @@ private fun IParentNode.completeFishingAction(scriptTask: ScriptTask?) = sequenc
 /**
  * Determine if the character has the required bait / net etc.
  */
-private fun isFishingEquipmentSatisfied(scriptTask: ScriptTask?): Boolean =
+private fun isFishingEquipmentSatisfied(scriptTask: ScriptTask?) =
     scriptTask?.scriptFishingData?.fishSpot?.equipmentReq?.entries
         ?.all { entry ->
             Inventory.getCount(entry.key) >= entry.value &&

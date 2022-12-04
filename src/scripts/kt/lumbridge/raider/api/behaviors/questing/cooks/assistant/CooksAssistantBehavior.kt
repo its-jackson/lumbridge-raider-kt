@@ -28,12 +28,16 @@ private val hopperTile = flourBinTile.translate(0, 0, 2)
 
 fun IParentNode.cooksAssistantBehavior(
     scriptTask: ScriptTask?,
-    bag: MutableSet<String> = mutableSetOf()
+    bag: MutableSet<String> = mutableSetOf(),
+    init: BooleanArray = booleanArrayOf(false)
 ) = sequence {
     // clean inventory for quest
     selector {
-        condition { Inventory.getEmptySlots() >= 4 }
-        walkToAndDepositInvBank()
+        condition { init[0] }
+        sequence {
+            walkToAndDepositInvBank()
+            perform { init[0] = true }
+        }
     }
 
     // get item_1

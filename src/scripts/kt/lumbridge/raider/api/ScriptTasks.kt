@@ -12,16 +12,14 @@ import org.tribot.script.sdk.types.InventoryItem
 import org.tribot.script.sdk.util.serialization.StateTypeAdapterFactory
 import scripts.kotlin.api.*
 import scripts.kt.lumbridge.raider.api.behaviors.combat.Monster
+import scripts.kt.lumbridge.raider.api.behaviors.combat.combatBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.combat.magic.combatMagicBehavior
-import scripts.kt.lumbridge.raider.api.behaviors.combat.melee.combatMeleeBehavior
-import scripts.kt.lumbridge.raider.api.behaviors.combat.ranged.combatRangedBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.cookingBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.FishSpot
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.fishingBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Pickaxe
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Rock
 import scripts.kt.lumbridge.raider.api.behaviors.mining.miningBehavior
-import scripts.kt.lumbridge.raider.api.behaviors.prayer.Bone
 import scripts.kt.lumbridge.raider.api.behaviors.prayer.prayerBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.questing.Quest
 import scripts.kt.lumbridge.raider.api.behaviors.questing.cooks.assistant.cooksAssistantBehavior
@@ -41,24 +39,39 @@ inline fun <reified T> deepCopy(ob: T): T {
 }
 
 data class ScriptCombatData(
+    var equipmentItems: List<EquipmentItem>? = null,
+    var inventoryItems: List<InventoryItem>? = null,
+    var inventoryMap: Map<Int, Int>? = null,
+    val attackStyle: Combat.AttackStyle?,
     val monsters: List<Monster>? = null,
-    val equipmentItems: List<EquipmentItem>? = null,
-    val inventoryItems: List<InventoryItem>? = null,
-    val buryLootedBones: Boolean = false,
     val lootGroundItems: Boolean = false
-)
+) {
+    class Builder {
+        private var equipmentItems: List<EquipmentItem>? = null
+        private var inventoryItems: List<InventoryItem>? = null
+        private var attackStyle: Combat.AttackStyle? = null
+        private var monsters: List<Monster>? = null
+        private var lootGroundItems: Boolean = false
 
-data class ScriptCombatMeleeData(
-    val attackStyle: Combat.AttackStyle? = null,
-)
+        fun equipmentItems(equipmentItems: List<EquipmentItem>?) = apply { this.equipmentItems = equipmentItems }
+        fun inventoryItems(inventoryItems: List<InventoryItem>?) = apply { this.inventoryItems = inventoryItems }
+
+        fun attackStyle(attackStyle: Combat.AttackStyle?) = apply { this.attackStyle = attackStyle }
+        fun monsters(monsters: List<Monster>?) = apply { this.monsters = monsters }
+        fun lootGroundItems(lootGroundItems: Boolean) = apply { this.lootGroundItems = lootGroundItems }
+
+        fun build() = ScriptCombatData(
+            attackStyle = this.attackStyle,
+            monsters = this.monsters,
+            lootGroundItems = this.lootGroundItems,
+            equipmentItems = this.equipmentItems,
+            inventoryItems = this.inventoryItems
+        )
+    }
+}
 
 data class ScriptCombatMagicData(
     val autoCastableSpell: Combat.AutocastableSpell? = null,
-    val spellName: String? = null,
-)
-
-data class ScriptCombatRangedData(
-    val rangedStyle: Combat.AttackStyle? = null
 )
 
 data class ScriptMiningData(
@@ -78,7 +91,6 @@ data class ScriptFishingData(
 )
 
 data class ScriptPrayerData(
-    val bone: Bone? = null,
     val buryPattern: Inventory.DropPattern? = null,
 )
 
@@ -86,28 +98,51 @@ data class ScriptQuestingData(
     val quest: Quest? = null,
 )
 
-data class ScriptTask(
-    val scriptStopCondition: StopCondition = TimeStopCondition(days = 28),
+data class ScriptTask (
+    val scriptAbstractStopCondition: AbstractStopCondition = TimeStopCondition(days = 28),
     val scriptBehavior: ScriptBehavior? = null,
     val scriptDisposal: ScriptDisposal? = null,
     val scriptCombatData: ScriptCombatData? = null,
-    val scriptCombatMeleeData: ScriptCombatMeleeData? = null,
     val scriptCombatMagicData: ScriptCombatMagicData? = null,
-    val scriptCombatRangedData: ScriptCombatRangedData? = null,
     val scriptMiningData: ScriptMiningData? = null,
     val scriptWoodcuttingData: ScriptWoodcuttingData? = null,
     val scriptFishingData: ScriptFishingData? = null,
     val scriptPrayerData: ScriptPrayerData? = null,
     val scriptQuestingData: ScriptQuestingData? = null,
     var scriptBankTask: BankTask? = null,
-) {
+)  {
     val resourceGainedCondition: ResourceGainedCondition?
         get() {
-            return if (this.scriptStopCondition !is ResourceGainedCondition)
+            return if (this.scriptAbstractStopCondition !is ResourceGainedCondition)
                 null
             else
-                this.scriptStopCondition
+                this.scriptAbstractStopCondition
         }
+
+    // For Java
+    class Builder {
+        private var stopCondition: AbstractStopCondition = TimeStopCondition(days = 28)
+        private var behavior: ScriptBehavior? = null
+        private var disposal: ScriptDisposal? = null
+        private var combatData: ScriptCombatData? = null
+        private var combatMagicData: ScriptCombatMagicData? = null
+        private var miningData: ScriptMiningData? = null
+        private var woodcuttingData: ScriptWoodcuttingData? = null
+        private var fishingData: ScriptFishingData? = null
+        private var prayerData: ScriptPrayerData? = null
+        private var questingData: ScriptQuestingData? = null
+
+        fun stopCondition(stop: AbstractStopCondition) = apply { this.stopCondition = stop }
+        fun behavior(behavior: ScriptBehavior) = apply { this.behavior = behavior }
+
+        fun combatData(combatData: ScriptCombatData) = apply { this.combatData = combatData }
+
+        fun build() = ScriptTask(
+            scriptAbstractStopCondition = this.stopCondition,
+            scriptBehavior = this.behavior,
+            scriptCombatData = this.combatData
+        )
+    }
 }
 
 enum class ScriptBehavior(val behavior: String) {
@@ -122,14 +157,11 @@ enum class ScriptBehavior(val behavior: String) {
     PRAYER("Prayer");
 
     fun getScriptBehaviorTree(activeScriptTask: ScriptTask?) = when (this) {
-        COMBAT_MELEE ->
-            scriptLogicBehaviorTree { combatMeleeBehavior(activeScriptTask) }
+        COMBAT_MELEE, COMBAT_RANGED ->
+            scriptLogicBehaviorTree { combatBehavior(activeScriptTask) }
 
         COMBAT_MAGIC ->
             scriptLogicBehaviorTree { combatMagicBehavior(activeScriptTask) }
-
-        COMBAT_RANGED ->
-            scriptLogicBehaviorTree { combatRangedBehavior(activeScriptTask) }
 
         COOKING ->
             scriptLogicBehaviorTree { cookingBehavior(activeScriptTask) }
@@ -163,7 +195,7 @@ enum class ScriptDisposal(val disposal: String) {
     M1D1("M1D1")
 }
 
-class ScriptTaskRunner : Satisfiable {
+class ScriptTaskRunner : ISatisfiable {
     private val taskStack: ArrayDeque<ScriptTask> = ArrayDeque()
 
     private var mainScriptBehaviorTree: IBehaviorNode? = null
@@ -230,5 +262,5 @@ class ScriptTaskRunner : Satisfiable {
         composeMainScriptBehaviorTree()
     }
 
-    override fun isSatisfied() = activeScriptTask?.scriptStopCondition?.isSatisfied() == true
+    override fun isSatisfied() = activeScriptTask?.scriptAbstractStopCondition?.isSatisfied() == true
 }

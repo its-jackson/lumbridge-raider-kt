@@ -7,6 +7,8 @@ import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
 import scripts.kotlin.api.makeAllAvailableItems
 
+private val cookableWhiteList = arrayOf("Cooked", "Raw")
+
 enum class Range(
     x: Int, y: Int, z: Int,
     val action: String,
@@ -60,9 +62,9 @@ enum class Range(
                         else
                             range.interact(optimalRange.action)
                     }
-                    .orElse(false) && waitUntil { MakeScreen.isOpen() } && makeAllAvailableItems()
+                    .orElse(false) && waitUntil { MakeScreen.isOpen() } && makeAllAvailableItems(cookableWhiteList)
             } else {
-                makeAllAvailableItems()
+                makeAllAvailableItems(cookableWhiteList)
             }
         }
     }

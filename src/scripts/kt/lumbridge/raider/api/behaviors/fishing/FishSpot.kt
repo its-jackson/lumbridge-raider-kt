@@ -3,6 +3,7 @@ package scripts.kt.lumbridge.raider.api.behaviors.fishing
 import org.tribot.script.sdk.Waiting
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.types.WorldTile
+import org.tribot.script.sdk.util.TribotRandom
 import scripts.data.ItemID
 import scripts.kotlin.api.canReach
 import scripts.kotlin.api.waitUntilNotAnimating
@@ -132,7 +133,7 @@ enum class FishSpot(
             fishSpot.actions
                 .any { action ->
                     this@FishSpot.actions.contains(action) && Waiting.waitUntil { fishSpot.interact(action) } &&
-                            Waiting.waitUntilAnimating(10000) && waitUntilNotAnimating(end = 2000)
+                            Waiting.waitUntilAnimating(10000) && waitUntilNotAnimating(end = TribotRandom.normal(2000, 187).toLong())
                 }
         }
         .orElse(false)

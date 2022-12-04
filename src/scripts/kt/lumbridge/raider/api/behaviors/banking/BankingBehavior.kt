@@ -15,9 +15,9 @@ import scripts.kt.lumbridge.raider.api.ScriptTask
 
 fun IParentNode.executeBankTask(
     scriptTask: ScriptTask?,
-    bankCondition: () -> Boolean = { scriptTask?.scriptBankTask?.isSatisfied() == false },
+    bankingConditions: List<() -> Boolean> = listOf { scriptTask?.scriptBankTask?.isSatisfied() == false }
 ) = selector {
-    condition { !bankCondition() }
+    condition { bankingConditions.all { !it() } }
     sequence {
         walkToAndOpenBank()
         condition { scriptTask?.scriptBankTask?.execute()?.isEmpty }
@@ -28,7 +28,7 @@ fun IParentNode.normalBankingDisposal(scriptTask: ScriptTask?): SelectorNode = s
     condition { scriptTask?.scriptDisposal != ScriptDisposal.BANK }
     executeBankTask(
         scriptTask = scriptTask,
-        bankCondition = { Inventory.isFull() }
+        bankingConditions = listOf { Inventory.isFull() }
     )
 }
 
@@ -57,41 +57,45 @@ private fun initBankTask(scriptTask: ScriptTask?) {
         ScriptBehavior.COMBAT_RANGED -> {
             scriptTask.scriptCombatData?.inventoryItems
                 ?.let { inventoryItems ->
-                    getInventoryMap(inventoryItems)
+                    scriptTask.scriptCombatData.inventoryMap = getInventoryMap(inventoryItems)
+                    scriptTask.scriptCombatData.inventoryMap!!
                         .forEach {
-                        getAddInvItem(
-                            bankTaskBuilder = bankTaskBuilder,
-                            id = it.key,
-                            amount = it.value
-                        )
-                    }
-                } ?: getInventoryMap()
-                .forEach {
-                    getAddInvItem(
-                        bankTaskBuilder = bankTaskBuilder,
-                        id = it.key,
-                        amount = it.value
-                    )
+                            getAddInvItem(
+                                bankTaskBuilder = bankTaskBuilder,
+                                id = it.key,
+                                amount = it.value
+                            )
+                        }
+                } ?: run {
+                    scriptTask.scriptCombatData?.inventoryMap = getInventoryMap()
+                    scriptTask.scriptCombatData?.inventoryMap!!
+                        .forEach {
+                            getAddInvItem(
+                                bankTaskBuilder = bankTaskBuilder,
+                                id = it.key,
+                                amount = it.value
+                            )
+                        }
                 }
-
 
             scriptTask.scriptCombatData?.equipmentItems
                 ?.forEach {
                     getAddEquipItem(
                         bankTaskBuilder = bankTaskBuilder,
                         slot = it.slot,
-                        id = it.id,
-                        amount = it.stack
+                        id = it.id
                     )
-                } ?: Equipment.getAll()
-                .forEach {
-                    getAddEquipItem(
-                        bankTaskBuilder = bankTaskBuilder,
-                        slot = it.slot,
-                        id = it.id,
-                        amount = it.stack
-                    )
-                }
+                } ?: run {
+                scriptTask.scriptCombatData?.equipmentItems = Equipment.getAll()
+                scriptTask.scriptCombatData?.equipmentItems!!
+                    .forEach {
+                        getAddEquipItem(
+                            bankTaskBuilder = bankTaskBuilder,
+                            slot = it.slot,
+                            id = it.id
+                        )
+                    }
+            }
         }
 
         ScriptBehavior.FISHING -> {
@@ -131,8 +135,7 @@ private fun initBankTask(scriptTask: ScriptTask?) {
                 }
         }
 
-        else ->
-        {
+        else -> {
             throw IllegalArgumentException("Behavior must be supported.")
         }
     }
@@ -171,14 +174,13 @@ private fun getAddInvItem(
 private fun getAddEquipItem(
     bankTaskBuilder: BankTask.Builder,
     slot: Equipment.Slot,
-    id: Int,
-    amount: Int
+    id: Int
 ) {
     bankTaskBuilder.addEquipmentItem(
         EquipmentReq.slot(slot)
             .item(
                 id = id,
-                amount = Amount.of(amount)
+                amount = Amount.fill(1)
             )
     )
 }

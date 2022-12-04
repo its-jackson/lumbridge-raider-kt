@@ -22,7 +22,7 @@ private val lumbridgeSwampWestCoords = arrayOf(3170, 3189, 0)
 
 enum class Monster(
     x: Int, y: Int, z: Int,
-    private val monsterName: String,
+    val monsterName: String,
 ) {
     CHICKEN_LUMBRIDGE_EAST(
         3230, 3297, 0,
@@ -107,7 +107,7 @@ enum class Monster(
 
     open fun location() = ""
 
-    override fun toString(): String = this@Monster.monsterName
+    override fun toString(): String = "${this@Monster.monsterName} at ${this@Monster.location()}"
 
     fun getMonsterNpcQuery() = Query.npcs()
         .nameEquals(this@Monster.monsterName)
@@ -130,8 +130,8 @@ enum class Monster(
                     Waiting.waitUntil(6500) { it.isInteractingWithMe } &&
                     Waiting.waitUntilAnimating(3000) &&
                     waitUntilNotAnimating(
-                        end = 2000,
-                        step = 250,
+                        end = 2500,
+                        step = 200,
                         actions = actions
                     ) &&
                     Waiting.waitUntil(2500) { !it.isValid }
@@ -140,7 +140,6 @@ enum class Monster(
 
     fun isFighting() = Query.npcs()
         .nameEquals(this@Monster.monsterName)
-        .minHealthBarPercent(1.0)
         .isInteractingWithMe
         .isAny
 }
