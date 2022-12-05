@@ -37,7 +37,7 @@ private fun getBonesInventoryQuery(scriptTask: ScriptTask?) = scriptTask?.resour
  */
 private fun buryAll(
     scriptTask: ScriptTask?,
-    buryPattern: Inventory.DropPattern? = scriptTask?.scriptPrayerData?.buryPattern,
+    buryPattern: Inventory.DropPattern? = scriptTask?.prayerData?.buryPattern,
     buryMean: Int = PlayerPreferences.preference("buryMean") { g: Generator -> g.uniform(150, 200) },
     buryStd: Int = PlayerPreferences.preference("buryStd") { g: Generator -> g.uniform(15, 30) },
 ): Int {

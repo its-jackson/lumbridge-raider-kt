@@ -15,17 +15,17 @@ import scripts.kt.lumbridge.raider.api.ScriptTask
 
 fun IParentNode.executeBankTask(
     scriptTask: ScriptTask?,
-    bankingConditions: List<() -> Boolean> = listOf { scriptTask?.scriptBankTask?.isSatisfied() == false }
+    bankingConditions: List<() -> Boolean> = listOf { scriptTask?.bankTask?.isSatisfied() == false }
 ) = selector {
     condition { bankingConditions.all { !it() } }
     sequence {
         walkToAndOpenBank()
-        condition { scriptTask?.scriptBankTask?.execute()?.isEmpty }
+        condition { scriptTask?.bankTask?.execute()?.isEmpty }
     }
 }
 
 fun IParentNode.normalBankingDisposal(scriptTask: ScriptTask?): SelectorNode = selector {
-    condition { scriptTask?.scriptDisposal != ScriptDisposal.BANK }
+    condition { scriptTask?.disposal != ScriptDisposal.BANK }
     executeBankTask(
         scriptTask = scriptTask,
         bankingConditions = listOf { Inventory.isFull() }
@@ -36,7 +36,7 @@ fun IParentNode.normalBankingDisposal(scriptTask: ScriptTask?): SelectorNode = s
  * Ensure the bank task is initialized and the inventory is in good state.
  */
 fun IParentNode.initializeBankTask(scriptTask: ScriptTask?): SelectorNode = selector {
-    condition { scriptTask?.scriptBankTask != null }
+    condition { scriptTask?.bankTask != null }
     sequence {
         perform { initBankTask(scriptTask) }
         repeatUntil(BehaviorTreeStatus.SUCCESS) {
@@ -51,14 +51,14 @@ fun IParentNode.initializeBankTask(scriptTask: ScriptTask?): SelectorNode = sele
 private fun initBankTask(scriptTask: ScriptTask?) {
     val bankTaskBuilder = BankTask.builder()
 
-    when (scriptTask?.scriptBehavior) {
+    when (scriptTask?.behavior) {
         ScriptBehavior.COMBAT_MELEE,
         ScriptBehavior.COMBAT_MAGIC,
         ScriptBehavior.COMBAT_RANGED -> {
-            scriptTask.scriptCombatData?.inventoryItems
+            scriptTask.combatData?.inventoryItems
                 ?.let { inventoryItems ->
-                    scriptTask.scriptCombatData.inventoryMap = getInventoryMap(inventoryItems)
-                    scriptTask.scriptCombatData.inventoryMap!!
+                    scriptTask.combatData.inventoryMap = getInventoryMap(inventoryItems)
+                    scriptTask.combatData.inventoryMap!!
                         .forEach {
                             getAddInvItem(
                                 bankTaskBuilder = bankTaskBuilder,
@@ -67,8 +67,8 @@ private fun initBankTask(scriptTask: ScriptTask?) {
                             )
                         }
                 } ?: run {
-                    scriptTask.scriptCombatData?.inventoryMap = getInventoryMap()
-                    scriptTask.scriptCombatData?.inventoryMap!!
+                    scriptTask.combatData?.inventoryMap = getInventoryMap()
+                    scriptTask.combatData?.inventoryMap!!
                         .forEach {
                             getAddInvItem(
                                 bankTaskBuilder = bankTaskBuilder,
@@ -78,7 +78,7 @@ private fun initBankTask(scriptTask: ScriptTask?) {
                         }
                 }
 
-            scriptTask.scriptCombatData?.equipmentItems
+            scriptTask.combatData?.equipmentItems
                 ?.forEach {
                     getAddEquipItem(
                         bankTaskBuilder = bankTaskBuilder,
@@ -86,8 +86,8 @@ private fun initBankTask(scriptTask: ScriptTask?) {
                         id = it.id
                     )
                 } ?: run {
-                scriptTask.scriptCombatData?.equipmentItems = Equipment.getAll()
-                scriptTask.scriptCombatData?.equipmentItems!!
+                scriptTask.combatData?.equipmentItems = Equipment.getAll()
+                scriptTask.combatData?.equipmentItems!!
                     .forEach {
                         getAddEquipItem(
                             bankTaskBuilder = bankTaskBuilder,
@@ -99,16 +99,16 @@ private fun initBankTask(scriptTask: ScriptTask?) {
         }
 
         ScriptBehavior.FISHING -> {
-            scriptTask.scriptFishingData?.fishSpot?.equipmentReq?.entries
+            scriptTask.fishingData?.fishSpot?.equipmentReq?.entries
                 ?.forEach { equipment -> bankTaskBuilder.addInvItem(equipment.key, Amount.of(equipment.value)) }
-            scriptTask.scriptFishingData?.fishSpot?.baitReq?.entries
+            scriptTask.fishingData?.fishSpot?.baitReq?.entries
                 ?.forEach { bait -> bankTaskBuilder.addInvItem(bait.key, Amount.fill(bait.value)) }
         }
 
         ScriptBehavior.MINING -> {
-            scriptTask.scriptMiningData?.pickaxe
+            scriptTask.miningData?.pickaxe
                 ?.let {
-                    if (scriptTask.scriptMiningData.wieldPickaxe)
+                    if (scriptTask.miningData.wieldPickaxe)
                         bankTaskBuilder.addEquipmentItem(
                             EquipmentReq.slot(Equipment.Slot.WEAPON)
                                 .item(
@@ -122,9 +122,9 @@ private fun initBankTask(scriptTask: ScriptTask?) {
         }
 
         ScriptBehavior.WOODCUTTING -> {
-            scriptTask.scriptWoodcuttingData?.axe
+            scriptTask.woodcuttingData?.axe
                 ?.let {
-                    if (scriptTask.scriptWoodcuttingData.wieldAxe) {
+                    if (scriptTask.woodcuttingData.wieldAxe) {
                         bankTaskBuilder.addEquipmentItem(
                             EquipmentReq.slot(Equipment.Slot.WEAPON)
                                 .item(it.id, Amount.of(1))
@@ -140,7 +140,7 @@ private fun initBankTask(scriptTask: ScriptTask?) {
         }
     }
 
-    scriptTask.scriptBankTask = bankTaskBuilder.build()
+    scriptTask.bankTask = bankTaskBuilder.build()
 }
 
 private fun getInventoryMap(

@@ -14,14 +14,14 @@ fun IParentNode.combatMagicBehavior(scriptTask: ScriptTask?) = sequence {
     // ensure spell is auto selected
     selector {
         condition {
-            scriptTask?.scriptCombatMagicData?.autoCastableSpell
+            scriptTask?.combatMagicData?.autoCastableSpell
                 ?.let {
                     Combat.getAutocastSpell()
                         .map { spell -> spell == it }
                         .orElse(false)
                 }
         }
-        condition { scriptTask?.scriptCombatMagicData?.autoCastableSpell?.let { Combat.setAutocastSpell(it) } }
+        condition { scriptTask?.combatMagicData?.autoCastableSpell?.let { Combat.setAutocastSpell(it) } }
     }
 
     // execute the complete combat action {

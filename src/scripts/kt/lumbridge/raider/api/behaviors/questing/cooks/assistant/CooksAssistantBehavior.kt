@@ -101,7 +101,7 @@ fun IParentNode.cooksAssistantBehavior(
     finishQuest(scriptTask)
 
     // end task session
-    performKill { Log.debug("Quest completed successfully: ${scriptTask?.scriptQuestingData?.quest}") }
+    performKill { Log.debug("Quest completed successfully: ${scriptTask?.questingData?.quest}") }
 }
 
 private fun IParentNode.walkToAndTakeGroundItem(position: WorldTile, itemName: String) = sequence {
@@ -223,10 +223,10 @@ private fun IParentNode.finishQuest(scriptTask: ScriptTask?) = sequence {
     repeatUntil({ Query.widgets().textContains("Congratulations!").isAny }) {
         sequence {
             selector {
-                condition { scriptTask?.scriptQuestingData?.quest?.let { it.isQuestNpcPositionNearby() && it.canReachQuestNpcPosition() } }
-                condition { scriptTask?.scriptQuestingData?.quest?.walkToQuestNpcPosition() }
+                condition { scriptTask?.questingData?.quest?.let { it.isQuestNpcPositionNearby() && it.canReachQuestNpcPosition() } }
+                condition { scriptTask?.questingData?.quest?.walkToQuestNpcPosition() }
             }
-            condition { scriptTask?.scriptQuestingData?.quest?.handleQuestNpcDialog() }
+            condition { scriptTask?.questingData?.quest?.handleQuestNpcDialog() }
         }
     }
 }

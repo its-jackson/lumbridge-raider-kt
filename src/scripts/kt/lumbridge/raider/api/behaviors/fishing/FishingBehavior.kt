@@ -67,34 +67,34 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
 
     // normal dropping - WORKING
     selector {
-        condition { scriptTask?.scriptDisposal != ScriptDisposal.DROP }
+        condition { scriptTask?.disposal != ScriptDisposal.DROP }
         condition { !Inventory.isFull() }
         condition { dropAll(scriptTask) }
     }
 
     // cook then bank disposal - WORKING
     selector {
-        condition { scriptTask?.scriptDisposal != ScriptDisposal.COOK_THEN_BANK }
+        condition { scriptTask?.disposal != ScriptDisposal.COOK_THEN_BANK }
         condition { !Inventory.isFull() }
         selector {
             sequence {
                 condition { !isCookRawFood() }
                 walkToAndOpenBank()
-                condition { scriptTask?.scriptBankTask?.execute()?.isEmpty }
+                condition { scriptTask?.bankTask?.execute()?.isEmpty }
             }
             sequence {
                 condition { isCookRawFood() }
                 walkToAndCookRange(scriptTask)
                 condition { !isCookRawFood() }
                 walkToAndOpenBank()
-                condition { scriptTask?.scriptBankTask?.execute()?.isEmpty }
+                condition { scriptTask?.bankTask?.execute()?.isEmpty }
             }
         }
     }
 
     // cook then drop disposal - WORKING
     selector {
-        condition { scriptTask?.scriptDisposal != ScriptDisposal.COOK_THEN_DROP }
+        condition { scriptTask?.disposal != ScriptDisposal.COOK_THEN_DROP }
         condition { !Inventory.isFull() }
         selector {
             sequence {
@@ -112,8 +112,8 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
 
     // ensure the fishing spot is nearby and reachable
     selector {
-        condition { scriptTask?.scriptFishingData?.fishSpot?.let { it.position.distance() < 15 && canReach(it.position) } }
-        condition { scriptTask?.scriptFishingData?.fishSpot?.let { walkTo(it.position) } }
+        condition { scriptTask?.fishingData?.fishSpot?.let { it.position.distance() < 15 && canReach(it.position) } }
+        condition { scriptTask?.fishingData?.fishSpot?.let { walkTo(it.position) } }
     }
 
     // interact with the fishing spot (walk to, rotate camera, and click)
@@ -128,10 +128,10 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
  */
 private fun IParentNode.completeFishingAction(scriptTask: ScriptTask?) = sequence {
     selector {
-        condition { scriptTask?.scriptFishingData?.fishSpot?.getFishSpotQuery()?.isAny }
-        perform { waitUntil { scriptTask?.scriptFishingData?.fishSpot?.getFishSpotQuery()?.isAny == true } }
+        condition { scriptTask?.fishingData?.fishSpot?.getFishSpotQuery()?.isAny }
+        perform { waitUntil { scriptTask?.fishingData?.fishSpot?.getFishSpotQuery()?.isAny == true } }
     }
-    condition { scriptTask?.scriptFishingData?.fishSpot?.fish() }
+    condition { scriptTask?.fishingData?.fishSpot?.fish() }
 }
 
 
@@ -139,11 +139,11 @@ private fun IParentNode.completeFishingAction(scriptTask: ScriptTask?) = sequenc
  * Determine if the character has the required bait / net etc.
  */
 private fun isFishingEquipmentSatisfied(scriptTask: ScriptTask?) =
-    scriptTask?.scriptFishingData?.fishSpot?.equipmentReq?.entries
+    scriptTask?.fishingData?.fishSpot?.equipmentReq?.entries
         ?.all { entry ->
             Inventory.getCount(entry.key) >= entry.value &&
-                    (scriptTask.scriptFishingData.fishSpot.baitReq.isEmpty() ||
-                            scriptTask.scriptFishingData.fishSpot.baitReq.entries
+                    (scriptTask.fishingData.fishSpot.baitReq.isEmpty() ||
+                            scriptTask.fishingData.fishSpot.baitReq.entries
                                 .all { bait -> Inventory.getCount(bait.key) >= bait.value })
         } == true
 
@@ -153,9 +153,9 @@ private fun isFishingEquipmentSatisfied(scriptTask: ScriptTask?) =
 private fun dropAll(scriptTask: ScriptTask?): Boolean {
     val toDrop = Inventory.getAll()
         .filter {
-            scriptTask?.scriptFishingData?.fishSpot?.equipmentReq
+            scriptTask?.fishingData?.fishSpot?.equipmentReq
                 ?.containsKey(it.id) == false &&
-                    !scriptTask.scriptFishingData.fishSpot.baitReq
+                    !scriptTask.fishingData.fishSpot.baitReq
                         .containsKey(it.id)
         }
         .map { it.id }

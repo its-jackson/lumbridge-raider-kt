@@ -13,13 +13,14 @@ import scripts.kt.lumbridge.raider.api.ScriptBehavior;
 import scripts.kt.lumbridge.raider.api.ScriptCombatData;
 import scripts.kt.lumbridge.raider.api.ScriptTask;
 import scripts.kt.lumbridge.raider.api.behaviors.combat.Monster;
-import scripts.kt.lumbridge.raider.api.ui.MainGui;
+import scripts.kt.lumbridge.raider.api.ui.ScriptTaskGui;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,18 +28,18 @@ import java.util.stream.Collectors;
  * @author Polymorphic
  */
 public class CombatTaskGui extends JFrame {
-    private final MainGui rootFrame;
+    private final ScriptTaskGui rootFrame;
     private final DefaultListModel<Monster> monsterDefaultListModel = new DefaultListModel<>();
 
-    private List<InventoryItem> inventoryItemList;
-    private List<EquipmentItem> equipmentItemList;
+    private List<InventoryItem> inventoryItemList = Collections.emptyList();
+    private List<EquipmentItem> equipmentItemList = Collections.emptyList();
 
     private boolean editMode;
     private int editIndex;
 
-    public CombatTaskGui(MainGui rootFrame) {
-        initComponents();
+    public CombatTaskGui(ScriptTaskGui rootFrame) {
         this.rootFrame = rootFrame;
+        initComponents();
 
         Arrays.stream(Combat.AttackStyle.values())
                 .forEach(attackStyle -> comboBox2.addItem(attackStyle));
@@ -49,39 +50,74 @@ public class CombatTaskGui extends JFrame {
         list2.setModel(monsterDefaultListModel);
     }
 
-    public DefaultListModel<Monster> getMonsterDefaultListModel() {
+    public void showAddForm() {
+        getMonsterDefaultListModel().clear();
+        setMonster(Monster.CHICKEN_LUMBRIDGE_EAST);
+        setAttackStyle(Combat.AttackStyle.ACCURATE);
+        setInventoryItemList(Collections.emptyList());
+        setEquipmentItemList(Collections.emptyList());
+        setLootItemsCheckBox(false);
+        setEditMode(false);
+        setEditIndex(-1);
+        setOkButtonText("Add");
+        setVisible(true);
+    }
+
+    public void showEditForm(ScriptTask selectedTask, int selectedIndex) {
+        if (selectedTask == null || selectedIndex == -1) return;
+        if (selectedTask.getCombatData() == null) return;
+        if (selectedTask.getCombatData().getAttackStyle() == null) return;
+        if (selectedTask.getCombatData().getMonsters() == null) return;
+
+        setAttackStyle(selectedTask.getCombatData().getAttackStyle());
+        getMonsterDefaultListModel().clear();
+        getMonsterDefaultListModel().addAll(selectedTask.getCombatData().getMonsters());
+        setLootItemsCheckBox(selectedTask.getCombatData().getLootGroundItems());
+        setEquipmentItemList(selectedTask.getCombatData().getEquipmentItems());
+        setInventoryItemList(selectedTask.getCombatData().getInventoryItems());
+        setEditIndex(selectedIndex);
+        setEditMode(true);
+        setOkButtonText("Save");
+        setVisible(true);
+    }
+
+    private DefaultListModel<Monster> getMonsterDefaultListModel() {
         return monsterDefaultListModel;
     }
 
-    public void setInventoryItemList(List<InventoryItem> inventoryItemList) {
+    private void setInventoryItemList(List<InventoryItem> inventoryItemList) {
         this.inventoryItemList = inventoryItemList;
     }
 
-    public void setEquipmentItemList(List<EquipmentItem> equipmentItemList) {
+    private void setEquipmentItemList(List<EquipmentItem> equipmentItemList) {
         this.equipmentItemList = equipmentItemList;
     }
 
-    public void setAttackStyle(Combat.AttackStyle attackStyle) {
-        comboBox3.setSelectedItem(attackStyle);
+    private void setAttackStyle(Combat.AttackStyle attackStyle) {
+        comboBox2.setSelectedItem(attackStyle);
     }
 
-    public void setLootItemsCheckBox(boolean loot) {
+    private void setMonster(Monster monster) {
+        this.comboBox3.setSelectedItem(monster);
+    }
+
+    private void setLootItemsCheckBox(boolean loot) {
         checkBox1.setSelected(loot);
     }
 
-    public boolean isEditMode() {
+    private boolean isEditMode() {
         return editMode;
     }
 
-    public void setEditMode(boolean editMode) {
+    private void setEditMode(boolean editMode) {
         this.editMode = editMode;
     }
 
-    public void setEditIndex(int editIndex) {
+    private void setEditIndex(int editIndex) {
         this.editIndex = editIndex;
     }
 
-    public void setOkButtonText(String txt) {
+    private void setOkButtonText(String txt) {
         okButton.setText(txt);
     }
 
@@ -118,12 +154,6 @@ public class CombatTaskGui extends JFrame {
         else
             rootFrame.getScriptTaskDefaultListModel().addElement(combatScriptTask);
 
-        monsterDefaultListModel.clear();
-        equipmentItemList.clear();
-        inventoryItemList.clear();
-        checkBox1.setSelected(false);
-        setEditMode(false);
-        setEditIndex(-1);
         setVisible(false);
     }
 
@@ -186,95 +216,95 @@ public class CombatTaskGui extends JFrame {
         {
             dialogPane.setBorder(new EmptyBorder(12, 12, 12, 12));
             dialogPane.setLayout(new GridBagLayout());
-            ((GridBagLayout) dialogPane.getLayout()).columnWidths = new int[]{0, 0};
-            ((GridBagLayout) dialogPane.getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
-            ((GridBagLayout) dialogPane.getLayout()).columnWeights = new double[]{1.0, 1.0E-4};
-            ((GridBagLayout) dialogPane.getLayout()).rowWeights = new double[]{1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0E-4};
+            ((GridBagLayout)dialogPane.getLayout()).columnWidths = new int[] {0, 0};
+            ((GridBagLayout)dialogPane.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0};
+            ((GridBagLayout)dialogPane.getLayout()).columnWeights = new double[] {1.0, 1.0E-4};
+            ((GridBagLayout)dialogPane.getLayout()).rowWeights = new double[] {1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0E-4};
 
             //======== panel1 ========
             {
                 panel1.setLayout(new GridBagLayout());
-                ((GridBagLayout) panel1.getLayout()).columnWidths = new int[]{0, 0, 0, 0};
-                ((GridBagLayout) panel1.getLayout()).rowHeights = new int[]{0, 0, 0, 0, 0};
-                ((GridBagLayout) panel1.getLayout()).columnWeights = new double[]{0.0, 0.0, 0.0, 1.0E-4};
-                ((GridBagLayout) panel1.getLayout()).rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 1.0E-4};
+                ((GridBagLayout)panel1.getLayout()).columnWidths = new int[] {0, 0, 0, 0};
+                ((GridBagLayout)panel1.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0};
+                ((GridBagLayout)panel1.getLayout()).columnWeights = new double[] {0.0, 0.0, 0.0, 1.0E-4};
+                ((GridBagLayout)panel1.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 1.0E-4};
 
                 //---- label3 ----
                 label3.setText("Attack Style To Use");
                 panel1.add(label3, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
                 panel1.add(comboBox2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- label4 ----
                 label4.setText("Monsters To Kill");
                 panel1.add(label4, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- comboBox3 ----
                 comboBox3.addActionListener(e -> comboBox3(e));
                 panel1.add(comboBox3, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 5), 0, 0));
             }
             dialogPane.add(panel1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.NORTHWEST, GridBagConstraints.NONE,
-                    new Insets(0, 0, 0, 0), 0, 0));
+                GridBagConstraints.NORTHWEST, GridBagConstraints.NONE,
+                new Insets(0, 0, 0, 0), 0, 0));
 
             //---- label5 ----
             label5.setText("Kill List");
             dialogPane.add(label5, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 0, 0), 0, 0));
+                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                new Insets(0, 0, 0, 0), 0, 0));
 
             //======== scrollPane2 ========
             {
                 scrollPane2.setViewportView(list2);
             }
             dialogPane.add(scrollPane2, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 0, 0), 0, 0));
+                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                new Insets(0, 0, 0, 0), 0, 0));
 
             //======== buttonBar ========
             {
                 buttonBar.setBorder(new EmptyBorder(12, 0, 0, 0));
                 buttonBar.setLayout(new GridBagLayout());
-                ((GridBagLayout) buttonBar.getLayout()).columnWidths = new int[]{0, 0, 0, 80};
-                ((GridBagLayout) buttonBar.getLayout()).columnWeights = new double[]{1.0, 0.0, 0.0, 0.0};
+                ((GridBagLayout)buttonBar.getLayout()).columnWidths = new int[] {0, 0, 0, 80};
+                ((GridBagLayout)buttonBar.getLayout()).columnWeights = new double[] {1.0, 0.0, 0.0, 0.0};
 
                 //---- checkBox1 ----
                 checkBox1.setText("Loot Drops");
                 buttonBar.add(checkBox1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 5), 0, 0));
 
                 //---- button2 ----
                 button2.setText("Remove Selected Monster");
                 button2.addActionListener(e -> button2(e));
                 buttonBar.add(button2, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 5), 0, 0));
 
                 //---- button1 ----
                 button1.setText("Get Current Gear/Inventory");
                 button1.addActionListener(e -> button1(e));
                 buttonBar.add(button1, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 5), 0, 0));
 
                 //---- okButton ----
                 okButton.setText("OK");
                 okButton.addActionListener(e -> ok(e));
                 buttonBar.add(okButton, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 0), 0, 0));
-            }
-            dialogPane.add(buttonBar, new GridBagConstraints(0, 5, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 0), 0, 0));
+            }
+            dialogPane.add(buttonBar, new GridBagConstraints(0, 5, 1, 1, 0.0, 0.0,
+                GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                new Insets(0, 0, 0, 0), 0, 0));
         }
         contentPane.add(dialogPane, BorderLayout.CENTER);
         pack();

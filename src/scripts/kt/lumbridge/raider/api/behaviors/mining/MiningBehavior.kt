@@ -41,12 +41,12 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
     // ensure the rocks are nearby and reachable
     selector {
         condition {
-            scriptTask?.scriptMiningData?.rocks
+            scriptTask?.miningData?.rocks
                 ?.map { it.position }
                 ?.any { it.distance() < 10 && canReach(it) }
         }
         condition {
-            scriptTask?.scriptMiningData?.rocks
+            scriptTask?.miningData?.rocks
                 ?.map { it.position }
                 ?.any { walkTo(it) }
         }
@@ -57,13 +57,13 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
         // if all rock object queries have no elements then wait until any rock spawns
         sequence {
             condition {
-                scriptTask?.scriptMiningData?.rocks
+                scriptTask?.miningData?.rocks
                     ?.map { it.getRockGameObjectQuery() }
                     ?.all { !it.isAny }
             }
             perform {
                 waitUntil {
-                    scriptTask?.scriptMiningData?.rocks
+                    scriptTask?.miningData?.rocks
                         ?.map { it.getRockGameObjectQuery() }
                         ?.any { it.isAny } == true
                 }
@@ -75,9 +75,9 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
         // if a higher priority rock spawns
         sequence {
             condition {
-                scriptTask?.scriptMiningData?.rocks?.indices
+                scriptTask?.miningData?.rocks?.indices
                     ?.firstOrNull {
-                        scriptTask.scriptMiningData.rocks[it].mineOre()
+                        scriptTask.miningData.rocks[it].mineOre()
                     }.let {
                         if (it == null) return@let false
                         rockPriority = it
@@ -89,7 +89,7 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
                 waitUntilNotAnimating(
                     end = TribotRandom.uniform(10, 600).toLong(),
                     interrupt = {
-                        scriptTask?.scriptMiningData?.rocks
+                        scriptTask?.miningData?.rocks
                             ?.map { it.getRockGameObjectQuery() }
                             ?.filterIndexed { priority, rockQuery -> priority < rockPriority && rockQuery.isAny }
                             ?.any() == true
@@ -101,24 +101,24 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
 }
 
 private fun IParentNode.normalOreDroppingDisposal(scriptTask: ScriptTask?) = selector {
-    condition { scriptTask?.scriptDisposal != ScriptDisposal.DROP }
+    condition { scriptTask?.disposal != ScriptDisposal.DROP }
     condition { !Inventory.isFull() }
     condition {
-        scriptTask?.scriptMiningData?.rocks
+        scriptTask?.miningData?.rocks
             ?.map { it.dropOre() }
             ?.any()
     }
 }
 
 private fun IParentNode.mineOneDropOneDisposal(scriptTask: ScriptTask?) = selector {
-    condition { scriptTask?.scriptDisposal != ScriptDisposal.M1D1 }
+    condition { scriptTask?.disposal != ScriptDisposal.M1D1 }
     condition {
-        scriptTask?.scriptMiningData?.rocks
+        scriptTask?.miningData?.rocks
             ?.map { it.getOreInventoryQuery() }
             ?.all { !it.isAny }
     }
     condition {
-        scriptTask?.scriptMiningData?.rocks
+        scriptTask?.miningData?.rocks
             ?.map { it.dropOre() }
             ?.any()
     }

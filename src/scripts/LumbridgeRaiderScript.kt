@@ -1,10 +1,7 @@
 package scripts
 
 import org.tribot.script.sdk.*
-import org.tribot.script.sdk.frameworks.behaviortree.BehaviorTreeStatus
-import org.tribot.script.sdk.frameworks.behaviortree.behaviorTree
-import org.tribot.script.sdk.frameworks.behaviortree.perform
-import org.tribot.script.sdk.frameworks.behaviortree.repeatUntil
+import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.painting.Painting
 import org.tribot.script.sdk.painting.template.basic.BasicPaintTemplate
 import org.tribot.script.sdk.painting.template.basic.PaintRows
@@ -12,10 +9,7 @@ import org.tribot.script.sdk.painting.template.basic.PaintTextRow
 import org.tribot.script.sdk.script.ScriptConfig
 import org.tribot.script.sdk.script.TribotScript
 import org.tribot.script.sdk.script.TribotScriptManifest
-import scripts.kotlin.api.ResourceGainedCondition
-import scripts.kotlin.api.SkillLevelsReachedCondition
-import scripts.kotlin.api.TimeStopCondition
-import scripts.kotlin.api.initializeScriptBehaviorTree
+import scripts.kotlin.api.*
 import scripts.kt.lumbridge.raider.api.*
 import scripts.kt.lumbridge.raider.api.behaviors.combat.Monster
 import scripts.kt.lumbridge.raider.api.behaviors.fishing.FishSpot
@@ -24,7 +18,7 @@ import scripts.kt.lumbridge.raider.api.behaviors.mining.Rock
 import scripts.kt.lumbridge.raider.api.behaviors.questing.Quest
 import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Axe
 import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Tree
-import scripts.kt.lumbridge.raider.api.ui.MainGui
+import scripts.kt.lumbridge.raider.api.ui.ScriptTaskGui
 import scripts.kt.lumbridge.raider.api.ui.SwingGuiState
 import java.awt.Font
 
@@ -39,7 +33,7 @@ class LumbridgeRaiderKt : TribotScript {
 
     private val scriptTaskRunner = ScriptTaskRunner()
 
-    private val scriptTaskGui = MainGui()
+    private var scriptTaskGui: ScriptTaskGui? = ScriptTaskGui()
 
     private val paintTemplate = PaintTextRow.builder()
         .background(java.awt.Color(66, 66, 66, 180))
@@ -52,46 +46,46 @@ class LumbridgeRaiderKt : TribotScript {
         .row(PaintRows.runtime(paintTemplate.toBuilder()))
         .row(
             paintTemplate.toBuilder().label("Behavior")
-                .value { scriptTaskRunner.activeScriptTask?.scriptBehavior?.behavior }
+                .value { scriptTaskRunner.activeScriptTask?.behavior?.behavior }
                 .build()
         )
         .row(
             paintTemplate.toBuilder().label("Disposal")
-                .value { scriptTaskRunner.activeScriptTask?.scriptDisposal?.disposal }
+                .value { scriptTaskRunner.activeScriptTask?.disposal?.disposal }
                 .build()
         )
         .row(
             paintTemplate.toBuilder().label("Stop")
-                .value { scriptTaskRunner.activeScriptTask?.scriptAbstractStopCondition }
+                .value { scriptTaskRunner.activeScriptTask?.stopCondition }
                 .build()
         )
         .row(
             paintTemplate.toBuilder().label("Monsters")
-                .value { scriptTaskRunner.activeScriptTask?.scriptCombatData?.monsters?.map { it.monsterName } }
+                .value { scriptTaskRunner.activeScriptTask?.combatData?.monsters?.map { it.monsterName } }
                 .build()
         )
         .row(
             paintTemplate.toBuilder()
                 .label("Rocks")
-                .value { scriptTaskRunner.activeScriptTask?.scriptMiningData?.rocks }
+                .value { scriptTaskRunner.activeScriptTask?.miningData?.rocks }
                 .build()
         )
         .row(
             paintTemplate.toBuilder()
                 .label("Trees")
-                .value { scriptTaskRunner.activeScriptTask?.scriptWoodcuttingData?.trees }
+                .value { scriptTaskRunner.activeScriptTask?.woodcuttingData?.trees }
                 .build()
         )
         .row(
             paintTemplate.toBuilder()
                 .label("Fish spot")
-                .value { scriptTaskRunner.activeScriptTask?.scriptFishingData?.fishSpot }
+                .value { scriptTaskRunner.activeScriptTask?.fishingData?.fishSpot }
                 .build()
         )
         .row(
             paintTemplate.toBuilder()
                 .label("Quest")
-                .value { scriptTaskRunner.activeScriptTask?.scriptQuestingData?.quest }
+                .value { scriptTaskRunner.activeScriptTask?.questingData?.quest }
                 .build()
         )
         .row(
@@ -135,24 +129,28 @@ class LumbridgeRaiderKt : TribotScript {
             cooksAssistantQuestTest()
         else
         {
-            scriptTaskGui.isVisible = true
+            scriptTaskGui?.isVisible = true
 
             val behaviorTreeGuiState = behaviorTree {
-                repeatUntil({ !scriptTaskGui.isVisible }) {
-                    perform { Waiting.wait(1000) }
+                repeatUntil({ scriptTaskGui?.isVisible == false }) {
+                    sequence {
+                        loginAction()
+                        perform { Waiting.wait(1000) }
+                    }
                 }
             }.tick()
 
             if (behaviorTreeGuiState != BehaviorTreeStatus.SUCCESS) return
-            if (scriptTaskGui.guiState != SwingGuiState.STARTED) return
+            if (scriptTaskGui?.guiState != SwingGuiState.STARTED) return
 
-            val model = scriptTaskGui.list1.model
+            val model = scriptTaskGui?.list1?.model
             val scriptTaskList: MutableList<ScriptTask> = mutableListOf()
 
-            for (i in 0 until model.size) {
+            for (i in 0 until model?.size!!) {
                 scriptTaskList.add(model.getElementAt(i))
             }
 
+            scriptTaskGui = null // de-reference the script gui (assist garbage collection early)
             scriptTaskRunner.configure(scriptTaskList.toTypedArray())
             scriptTaskRunner.run()
         }
@@ -160,8 +158,8 @@ class LumbridgeRaiderKt : TribotScript {
 
     private fun combatMeleeTest() {
         val combatMeleeTask = ScriptTask(
-            scriptBehavior = ScriptBehavior.COMBAT_MELEE,
-            scriptCombatData = ScriptCombatData(
+            behavior = ScriptBehavior.COMBAT_MELEE,
+            combatData = ScriptCombatData(
                 attackStyle = Combat.AttackStyle.ACCURATE,
                 monsters = listOf(Monster.GIANT_FROG_LUMBRIDGE_SWAMP),
                 lootGroundItems = true
@@ -176,12 +174,12 @@ class LumbridgeRaiderKt : TribotScript {
 
     private fun combatMagicTest() {
         val combatMagicTask = ScriptTask(
-            scriptBehavior = ScriptBehavior.COMBAT_MAGIC,
-            scriptCombatData = ScriptCombatData(
+            behavior = ScriptBehavior.COMBAT_MAGIC,
+            combatData = ScriptCombatData(
                 monsters = listOf(Monster.CHICKEN_LUMBRIDGE_EAST),
                 attackStyle = null
             ),
-            scriptCombatMagicData = ScriptCombatMagicData(
+            combatMagicData = ScriptCombatMagicData(
                 autoCastableSpell = Combat.AutocastableSpell.FIRE_STRIKE
             )
         )
@@ -192,8 +190,8 @@ class LumbridgeRaiderKt : TribotScript {
 
     private fun combatRangedTest() {
         val combatRangedTask = ScriptTask(
-            scriptBehavior = ScriptBehavior.COMBAT_RANGED,
-            scriptCombatData = ScriptCombatData(
+            behavior = ScriptBehavior.COMBAT_RANGED,
+            combatData = ScriptCombatData(
                 monsters = listOf(Monster.CHICKEN_LUMBRIDGE_EAST),
                 attackStyle = Combat.AttackStyle.RANGED_ACCURATE,
                 lootGroundItems = true
@@ -207,10 +205,10 @@ class LumbridgeRaiderKt : TribotScript {
     private fun fishingTest() {
         val scriptTasks = arrayOf(
             ScriptTask(
-                scriptAbstractStopCondition = TimeStopCondition(hours = 6),
-                scriptBehavior = ScriptBehavior.FISHING,
-                scriptFishingData = ScriptFishingData(fishSpot = FishSpot.SHRIMPS_ANCHOVIES_LUMBRIDGE_SWAMP),
-                scriptDisposal = ScriptDisposal.COOK_THEN_BANK
+                stopCondition = TimeStopCondition(hours = 6),
+                behavior = ScriptBehavior.FISHING,
+                fishingData = ScriptFishingData(fishSpot = FishSpot.SHRIMPS_ANCHOVIES_LUMBRIDGE_SWAMP),
+                disposal = ScriptDisposal.COOK_THEN_BANK
             )
         )
 
@@ -221,8 +219,8 @@ class LumbridgeRaiderKt : TribotScript {
     private fun cookingTest() {
         val scriptTasks = arrayOf(
             ScriptTask(
-                scriptBehavior = ScriptBehavior.COOKING,
-                scriptAbstractStopCondition = ResourceGainedCondition(2132, 100)
+                behavior = ScriptBehavior.COOKING,
+                stopCondition = ResourceGainedCondition(2132, 100)
             )
         )
 
@@ -233,10 +231,10 @@ class LumbridgeRaiderKt : TribotScript {
     private fun miningTest() {
         val scriptTasks = arrayOf(
             ScriptTask(
-                scriptBehavior = ScriptBehavior.MINING,
-                scriptDisposal = ScriptDisposal.BANK,
-                scriptAbstractStopCondition = SkillLevelsReachedCondition(mapOf(Skill.MINING to 99)),
-                scriptMiningData = ScriptMiningData(
+                behavior = ScriptBehavior.MINING,
+                disposal = ScriptDisposal.BANK,
+                stopCondition = SkillLevelsReachedCondition(mapOf(Skill.MINING to 99)),
+                miningData = ScriptMiningData(
                     listOf(Rock.COAL_LUMBRIDGE_SWAMP),
                     Pickaxe.RUNE,
                     false
@@ -251,20 +249,20 @@ class LumbridgeRaiderKt : TribotScript {
     private fun woodcuttingTest() {
         val scriptTasks = arrayOf(
             ScriptTask(
-                scriptBehavior = ScriptBehavior.WOODCUTTING,
-                scriptDisposal = ScriptDisposal.DROP,
-                scriptAbstractStopCondition = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 60)),
-                scriptWoodcuttingData = ScriptWoodcuttingData(
+                behavior = ScriptBehavior.WOODCUTTING,
+                disposal = ScriptDisposal.DROP,
+                stopCondition = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 60)),
+                woodcuttingData = ScriptWoodcuttingData(
                     trees = listOf(Tree.WILLOW_LUMBRIDGE_CASTLE_HOPS_PATCH),
                     Axe.BRONZE,
                     true
                 ),
             ),
             ScriptTask(
-                scriptBehavior = ScriptBehavior.WOODCUTTING,
-                scriptDisposal = ScriptDisposal.BANK,
-                scriptAbstractStopCondition = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 99)),
-                scriptWoodcuttingData = ScriptWoodcuttingData(
+                behavior = ScriptBehavior.WOODCUTTING,
+                disposal = ScriptDisposal.BANK,
+                stopCondition = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 99)),
+                woodcuttingData = ScriptWoodcuttingData(
                     trees = listOf(Tree.YEW_LUMBRIDGE_CASTLE),
                     Axe.BRONZE,
                     true
@@ -281,8 +279,8 @@ class LumbridgeRaiderKt : TribotScript {
 
     private fun cooksAssistantQuestTest() {
         val questTask = ScriptTask(
-            scriptQuestingData = ScriptQuestingData(quest = Quest.COOKS_ASSISTANT),
-            scriptBehavior = ScriptBehavior.QUESTING
+            questingData = ScriptQuestingData(quest = Quest.COOKS_ASSISTANT),
+            behavior = ScriptBehavior.QUESTING
         )
 
         scriptTaskRunner.configure(arrayOf(questTask))
@@ -291,8 +289,8 @@ class LumbridgeRaiderKt : TribotScript {
 
     private fun prayerTest() {
         val prayerTask = ScriptTask(
-            scriptBehavior = ScriptBehavior.PRAYER,
-            scriptAbstractStopCondition = ResourceGainedCondition(526)
+            behavior = ScriptBehavior.PRAYER,
+            stopCondition = ResourceGainedCondition(526)
         )
 
         scriptTaskRunner.configure(arrayOf(prayerTask))

@@ -37,24 +37,24 @@ fun IParentNode.woodcuttingBehavior(scriptTask: ScriptTask?) = sequence {
 private fun IParentNode.completeWoodcuttingAction(scriptTask: ScriptTask?) = sequence {
     // ensure the character is within the cutting region
     selector {
-        condition { scriptTask?.scriptWoodcuttingData?.trees?.any { it.isCharacterAtRegion() && it.canReachCentralTile() } }
-        condition { scriptTask?.scriptWoodcuttingData?.trees?.any { it.walkToCentralRegionTile() } }
+        condition { scriptTask?.woodcuttingData?.trees?.any { it.isCharacterAtRegion() && it.canReachCentralTile() } }
+        condition { scriptTask?.woodcuttingData?.trees?.any { it.walkToCentralRegionTile() } }
     }
     // ensure tree is available
     selector {
-        condition { scriptTask?.scriptWoodcuttingData?.trees?.any { it.getTreeGameObjectQuery().isAny } }
-        perform { scriptTask?.scriptWoodcuttingData?.trees?.any { Waiting.waitUntil { it.getTreeGameObjectQuery().isAny } } }
+        condition { scriptTask?.woodcuttingData?.trees?.any { it.getTreeGameObjectQuery().isAny } }
+        perform { scriptTask?.woodcuttingData?.trees?.any { Waiting.waitUntil { it.getTreeGameObjectQuery().isAny } } }
     }
     // complete the woodcutting action
     sequence {
-        condition { scriptTask?.scriptWoodcuttingData?.trees?.any { it.chop() } }
+        condition { scriptTask?.woodcuttingData?.trees?.any { it.chop() } }
         condition { Waiting.waitUntilAnimating(TribotRandom.uniform(7500, 10000)) }
         condition { waitUntilNotAnimating(end = TribotRandom.uniform(50.0, 600.0).toLong()) }
     }
 }
 
 private fun IParentNode.normalDropLogsDisposal(scriptTask: ScriptTask?) = selector {
-    condition { scriptTask?.scriptDisposal != ScriptDisposal.DROP }
+    condition { scriptTask?.disposal != ScriptDisposal.DROP }
     condition { !Inventory.isFull() }
-    condition { scriptTask?.scriptWoodcuttingData?.trees?.map { it.dropLogs() }?.any() == true }
+    condition { scriptTask?.woodcuttingData?.trees?.map { it.dropLogs() }?.any() == true }
 }

@@ -18,14 +18,14 @@ import javax.swing.border.*;
 /**
  * @author Polymorphic
  */
-public class MainGui extends JFrame {
-    private SwingGuiState guiState;
+public class ScriptTaskGui extends JFrame {
+    private SwingGuiState guiState = SwingGuiState.CLOSED;
 
     private final DefaultListModel<ScriptTask> scriptTaskDefaultListModel = new DefaultListModel<>();
 
     private final CombatTaskGui combatTaskGui = new CombatTaskGui(this);
 
-    public MainGui() {
+    public ScriptTaskGui() {
         initComponents();
 
         list1.setModel(scriptTaskDefaultListModel);
@@ -42,19 +42,7 @@ public class MainGui extends JFrame {
         return scriptTaskDefaultListModel;
     }
 
-    private void button6(ActionEvent e) {
-        if (comboBox1.getSelectedItem() == null) return;
-
-        ScriptBehavior behavior = (ScriptBehavior) comboBox1.getSelectedItem();
-
-        if (behavior == ScriptBehavior.COMBAT_MELEE || behavior == ScriptBehavior.COMBAT_RANGED) {
-            combatTaskGui.setOkButtonText("OK");
-            combatTaskGui.setEditMode(false);
-            combatTaskGui.setVisible(true);
-        }
-    }
-
-    private void ok(ActionEvent e) {
+    private void start(ActionEvent e) {
         if (getScriptTaskDefaultListModel().isEmpty()) {
             JOptionPane.showMessageDialog(this, "You forgot to add script tasks!");
             return;
@@ -64,37 +52,80 @@ public class MainGui extends JFrame {
         setVisible(false);
     }
 
-    private void button1(ActionEvent e) {
+    private void add(ActionEvent e) {
+        // TODO Add Task
+
+        if (comboBox1.getSelectedItem() == null) return;
+
+        ScriptBehavior behavior = (ScriptBehavior) comboBox1.getSelectedItem();
+
+        if (behavior == ScriptBehavior.COMBAT_MELEE || behavior == ScriptBehavior.COMBAT_RANGED) {
+            combatTaskGui.showAddForm();
+        }
+    }
+
+    private void edit(ActionEvent e) {
         // TODO Edit Task
 
         if (list1.getSelectedValue() == null || list1.getSelectedIndex() == -1) return;
+
         ScriptTask selectedTask = (ScriptTask) list1.getSelectedValue();
         int selectedIndex = list1.getSelectedIndex();
 
-        if (selectedTask.getScriptBehavior() == ScriptBehavior.COMBAT_MELEE || selectedTask.getScriptBehavior() == ScriptBehavior.COMBAT_RANGED) {
-            if (selectedTask.getScriptCombatData() == null) return;
-
-            if (selectedTask.getScriptCombatData().getAttackStyle() == null) return;
-            combatTaskGui.setAttackStyle(selectedTask.getScriptCombatData().getAttackStyle());
-
-            if (selectedTask.getScriptCombatData().getMonsters() == null) return;
-            combatTaskGui.getMonsterDefaultListModel().clear();
-            combatTaskGui.getMonsterDefaultListModel().addAll(selectedTask.getScriptCombatData().getMonsters());
-            combatTaskGui.setLootItemsCheckBox(selectedTask.getScriptCombatData().getLootGroundItems());
-            combatTaskGui.setEquipmentItemList(selectedTask.getScriptCombatData().getEquipmentItems());
-            combatTaskGui.setInventoryItemList(selectedTask.getScriptCombatData().getInventoryItems());
-            combatTaskGui.setEditIndex(selectedIndex);
-            combatTaskGui.setEditMode(true);
-            combatTaskGui.setOkButtonText("SAVE");
-            combatTaskGui.setVisible(true);
+        if (selectedTask.getBehavior() == ScriptBehavior.COMBAT_MELEE ||
+                selectedTask.getBehavior() == ScriptBehavior.COMBAT_RANGED) {
+            combatTaskGui.showEditForm(selectedTask, selectedIndex);
         }
+    }
 
+    private void delete(ActionEvent e) {
+        int selectedIndex = list1.getSelectedIndex();
+        if (selectedIndex == -1) return;
+
+        scriptTaskDefaultListModel.remove(selectedIndex);
+    }
+
+    private void moveUp(ActionEvent e) {
+        move(-1);
+    }
+
+    private void moveDown(ActionEvent e) {
+        move(1);
+    }
+
+    private void move(int shift) {
+        int currentSize = scriptTaskDefaultListModel.size();
+        int currentIndex = list1.getSelectedIndex();
+        int neighborIndex = currentIndex + shift;
+
+        if (currentIndex == -1 || neighborIndex >= currentSize || neighborIndex < 0) return;
+
+        ScriptTask neighborTask = scriptTaskDefaultListModel.getElementAt(neighborIndex);
+        ScriptTask currentTask = (ScriptTask) list1.getSelectedValue();
+
+        scriptTaskDefaultListModel.set(neighborIndex, currentTask);
+        scriptTaskDefaultListModel.set(currentIndex, neighborTask);
+
+        list1.setSelectedIndex(neighborIndex);
+    }
+
+    private void ok(ActionEvent e) {
+        // TODO add your code here
+    }
+
+    private void button1(ActionEvent e) {
+        // TODO add your code here
+    }
+
+    private void button6(ActionEvent e) {
+        // TODO add your code here
     }
 
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents  @formatter:off
         dialogPane = new JPanel();
         buttonBar = new JPanel();
+        button4 = new JButton();
         button9 = new JButton();
         okButton = new JButton();
         tabbedPane3 = new JTabbedPane();
@@ -132,19 +163,25 @@ public class MainGui extends JFrame {
             {
                 buttonBar.setBorder(new EmptyBorder(12, 0, 0, 0));
                 buttonBar.setLayout(new GridBagLayout());
-                ((GridBagLayout)buttonBar.getLayout()).columnWidths = new int[] {0, 0, 80};
-                ((GridBagLayout)buttonBar.getLayout()).columnWeights = new double[] {1.0, 0.0, 0.0};
+                ((GridBagLayout)buttonBar.getLayout()).columnWidths = new int[] {0, 0, 0, 80};
+                ((GridBagLayout)buttonBar.getLayout()).columnWeights = new double[] {1.0, 0.0, 0.0, 0.0};
+
+                //---- button4 ----
+                button4.setText("Reset Script Cache");
+                buttonBar.add(button4, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 5), 0, 0));
 
                 //---- button9 ----
-                button9.setText("Clear Cache");
-                buttonBar.add(button9, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                button9.setText("Break Manager");
+                buttonBar.add(button9, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 5), 0, 0));
 
                 //---- okButton ----
                 okButton.setText("Start Script");
                 okButton.addActionListener(e -> ok(e));
-                buttonBar.add(okButton, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0,
+                buttonBar.add(okButton, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 0), 0, 0));
             }
@@ -209,18 +246,21 @@ public class MainGui extends JFrame {
 
                         //---- button2 ----
                         button2.setText("Delete");
+                        button2.addActionListener(e -> delete(e));
                         buttonBar2.add(button2, new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 0, 5, 5), 0, 0));
 
                         //---- button3 ----
                         button3.setText("Move Up");
+                        button3.addActionListener(e -> moveUp(e));
                         buttonBar2.add(button3, new GridBagConstraints(3, 2, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 0, 5, 5), 0, 0));
 
                         //---- okButton2 ----
                         okButton2.setText("Move Down");
+                        okButton2.addActionListener(e -> moveDown(e));
                         buttonBar2.add(okButton2, new GridBagConstraints(4, 2, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 0, 5, 0), 0, 0));
@@ -273,6 +313,7 @@ public class MainGui extends JFrame {
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables  @formatter:off
     private JPanel dialogPane;
     private JPanel buttonBar;
+    private JButton button4;
     private JButton button9;
     private JButton okButton;
     private JTabbedPane tabbedPane3;

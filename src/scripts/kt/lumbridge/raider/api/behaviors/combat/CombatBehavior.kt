@@ -19,7 +19,7 @@ private val combatWaitMean: Int =
         "scripts.kt.lumbridge.raider.api.behaviors.combat.CombatBehavior.combatWaitMean"
     )
     { g: PlayerPreferences.Generator ->
-        g.uniform(300, 3000)
+        g.uniform(300, 2600)
     }
 
 private val combatWaitStd: Int =
@@ -54,11 +54,11 @@ fun IParentNode.completeCombatAction(scriptTask: ScriptTask?) = sequence {
 
     // ensure the attack style is selected
     selector {
-        condition { scriptTask?.scriptCombatData?.attackStyle == null }
-        condition { scriptTask?.scriptCombatData?.attackStyle?.let { Combat.isAttackStyleSet(it) } }
+        condition { scriptTask?.combatData?.attackStyle == null }
+        condition { scriptTask?.combatData?.attackStyle?.let { Combat.isAttackStyleSet(it) } }
         sequence {
-            condition { scriptTask?.scriptCombatData?.attackStyle?.let { Combat.isAttackStyleAvailable(it) } }
-            condition { scriptTask?.scriptCombatData?.attackStyle?.let { Combat.setAttackStyle(it) } }
+            condition { scriptTask?.combatData?.attackStyle?.let { Combat.isAttackStyleAvailable(it) } }
+            condition { scriptTask?.combatData?.attackStyle?.let { Combat.setAttackStyle(it) } }
         }
     }
 
@@ -72,56 +72,56 @@ fun IParentNode.completeCombatAction(scriptTask: ScriptTask?) = sequence {
     sequence {
         // ensure the monster location is nearby and reachable
         selector {
-            condition { scriptTask?.scriptCombatData?.monsters?.any { it.isCentralPositionNearby() && it.canReachCentralPosition() } }
-            condition { scriptTask?.scriptCombatData?.monsters?.any { it.walkToCentralPosition() } }
+            condition { scriptTask?.combatData?.monsters?.any { it.isCentralPositionNearby() && it.canReachCentralPosition() } }
+            condition { scriptTask?.combatData?.monsters?.any { it.walkToCentralPosition() } }
         }
         // ensure the monster is available and ready to be attacked
         selector {
-            condition { scriptTask?.scriptCombatData?.monsters?.any { it.getMonsterNpcQuery().isAny } }
-            perform { scriptTask?.scriptCombatData?.monsters?.any { Waiting.waitUntil { it.getMonsterNpcQuery().isAny } } }
+            condition { scriptTask?.combatData?.monsters?.any { it.getMonsterNpcQuery().isAny } }
+            perform { scriptTask?.combatData?.monsters?.any { Waiting.waitUntil { it.getMonsterNpcQuery().isAny } } }
         }
         // attack the monster, wait, loot
         selector {
-            condition { scriptTask?.scriptCombatData?.monsters?.any { it.isFighting() } }
+            condition { scriptTask?.combatData?.monsters?.any { it.isFighting() } }
             perform {
-                scriptTask?.scriptCombatData?.monsters?.any {
+                scriptTask?.combatData?.monsters?.any {
                     it.attack(actions = listOf { eatingAction().tick() })
                 }
             }
         }
     }
 
-    // wait using seeded normal dist
-    perform { Waiting.waitNormal(combatWaitMean, combatWaitStd) }
-
     // do the looting stuff
     lootingAction(scriptTask)
+
+    // wait using seeded normal dist
+    perform { Waiting.waitNormal(combatWaitMean, combatWaitStd) }
 }
 
 fun IParentNode.lootingAction(scriptTask: ScriptTask?) = selector {
-    condition { scriptTask?.scriptCombatData?.lootGroundItems == false }
+    condition { scriptTask?.combatData?.lootGroundItems == false }
     condition { !isLootableItemsFound() }
     condition { lootItems() > 0 }
 }
 
 private fun getBankingConditionList(scriptTask: ScriptTask?) = listOf(
     {
-        scriptTask?.scriptCombatData?.lootGroundItems == true && Inventory.isFull()
+        scriptTask?.combatData?.lootGroundItems == true && Inventory.isFull()
     },
 
     {
-        scriptTask?.scriptCombatData?.inventoryMap?.isNotEmpty() == true &&
-                scriptTask.scriptCombatData.inventoryMap?.any { Inventory.contains(it.key) } == false
+        scriptTask?.combatData?.inventoryMap?.isNotEmpty() == true &&
+                scriptTask.combatData.inventoryMap?.any { Inventory.contains(it.key) } == false
     },
 
     {
-        scriptTask?.scriptCombatData?.equipmentItems?.isNotEmpty() == true &&
-                scriptTask.scriptCombatData.equipmentItems?.any { Equipment.contains(it.id) } == false
+        scriptTask?.combatData?.equipmentItems?.isNotEmpty() == true &&
+                scriptTask.combatData.equipmentItems?.any { Equipment.contains(it.id) } == false
     },
 
     {
-        scriptTask?.scriptCombatData?.inventoryMap?.isNotEmpty() == true &&
-                scriptTask.scriptCombatData.inventoryMap
+        scriptTask?.combatData?.inventoryMap?.isNotEmpty() == true &&
+                scriptTask.combatData.inventoryMap
                     ?.any {
                         Query.inventory()
                             .idEquals(it.key)
