@@ -71,7 +71,7 @@ public class ScriptTaskGui extends JFrame {
         ScriptBehavior behavior = (ScriptBehavior) comboBox1.getSelectedItem();
 
         switch (behavior) {
-            case COMBAT_MAGIC: combatTaskGui.showMagicForm();
+            case COMBAT_MAGIC: combatTaskGui.showMagicAddForm();
                 break;
             case COMBAT_MELEE: combatTaskGui.showMeleeAddForm();
                 break;

@@ -100,7 +100,7 @@ public class CombatTaskGui extends JFrame {
         okButton.setText(txt);
     }
 
-    public void showMagicForm() {
+    public void showMagicAddForm() {
         setScriptBehavior(ScriptBehavior.COMBAT_MAGIC);
         setMagicComponents();
         setAddForm();
