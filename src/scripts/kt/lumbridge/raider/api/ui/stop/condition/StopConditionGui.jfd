@@ -5,53 +5,151 @@ new FormModel {
 	root: new FormRoot {
 		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class java.awt.BorderLayout ) ) {
 			name: "this"
+			"resizable": false
 			"title": "Stop Condition Configuration"
+			"minimumSize": new java.awt.Dimension( 420, 500 )
 			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
 				name: "dialogPane"
-				"border": new javax.swing.border.EmptyBorder( 12, 12, 12, 12 )
+				"border": sfield com.jformdesigner.model.FormObject NULL_VALUE
+				"preferredSize": new java.awt.Dimension( 400, 500 )
 				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
-					"$columnSpecs": "0, 0"
-					"$rowSpecs": "0, 0, 0"
-					"$hGap": 5
-					"$vGap": 5
-					"$alignLeft": true
-					"$alignTop": true
-				} ) {
-					name: "contentPanel"
-				}, new FormLayoutConstraints( class java.lang.String ) {
-					"value": "Center"
-				} )
-				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
-					"$columnSpecs": "0:1.0, 80, 80"
-					"$rowSpecs": "0"
+					"$columnSpecs": "0, 0, 0"
+					"$rowSpecs": "0, 0, 0, 0, 0"
 					"$hGap": 5
 					"$vGap": 5
 				} ) {
-					name: "buttonBar"
-					"border": new javax.swing.border.EmptyBorder( 12, 0, 0, 0 )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "okButton"
-						"text": "OK"
+					name: "panel2"
+					"border": new javax.swing.border.TitledBorder( "Skill Levels Condition" )
+					add( new FormComponent( "javax.swing.JLabel" ) {
+						name: "label4"
+						"text": "Skill"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) )
+					add( new FormComponent( "javax.swing.JComboBox" ) {
+						name: "comboBox1"
 					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 						"gridx": 1
-						"gridy": 0
+					} )
+					add( new FormComponent( "javax.swing.JLabel" ) {
+						name: "label5"
+						"text": "Until Level"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 1
+					} )
+					add( new FormComponent( "javax.swing.JSpinner" ) {
+						name: "spinner4"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridx": 1
+						"gridy": 1
 					} )
 					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "cancelButton"
-						"text": "Cancel"
+						name: "button3"
+						"text": " Add Skill/Lvl Mapping"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "onAddSkillLvlMapping", true ) )
 					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-						"gridx": 2
-						"gridy": 0
+						"gridx": 1
+						"gridy": 2
+					} )
+					add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+						name: "scrollPane1"
+						add( new FormComponent( "javax.swing.JList" ) {
+							name: "list1"
+							"visibleRowCount": 10
+							"selectionMode": 0
+							"maximumSize": new java.awt.Dimension( 40, 57 )
+						} )
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 3
+						"gridwidth": 2
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "button4"
+						"text": "Delete Selected"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "delete", true ) )
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 4
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "button1"
+						"text": "Set/Use Skill Lvls Condition"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "onSkillLvlConditionButton", true ) )
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 4
+						"gridx": 1
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
-					"value": "South"
+					"value": "North"
+				} )
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
+					"$columnSpecs": "0, 0, 0, 0"
+					"$rowSpecs": "0, 0, 0, 0, 0, 0, 0, 0, 0"
+					"$hGap": 5
+					"$vGap": 5
+				} ) {
+					name: "panel1"
+					"border": new javax.swing.border.TitledBorder( "Time Stop Condition" )
+					add( new FormComponent( "javax.swing.JLabel" ) {
+						name: "label6"
+						"text": "Days"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) )
+					add( new FormComponent( "javax.swing.JSpinner" ) {
+						name: "spinner5"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridx": 1
+					} )
+					add( new FormComponent( "javax.swing.JLabel" ) {
+						name: "label1"
+						"text": "Hours"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 2
+					} )
+					add( new FormComponent( "javax.swing.JSpinner" ) {
+						name: "spinner1"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridx": 1
+						"gridy": 2
+					} )
+					add( new FormComponent( "javax.swing.JLabel" ) {
+						name: "label2"
+						"text": "Minutes"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 4
+					} )
+					add( new FormComponent( "javax.swing.JSpinner" ) {
+						name: "spinner2"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 4
+						"gridx": 1
+					} )
+					add( new FormComponent( "javax.swing.JLabel" ) {
+						name: "label3"
+						"text": "Seconds"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 6
+					} )
+					add( new FormComponent( "javax.swing.JSpinner" ) {
+						name: "spinner3"
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 6
+						"gridx": 1
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "button2"
+						"text": "Set/Use Time Condition"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "onTimeConditionButton", true ) )
+					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+						"gridy": 8
+						"gridx": 1
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "Center"
 				} )
 			}, new FormLayoutConstraints( class java.lang.String ) {
 				"value": "Center"
 			} )
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 0, 0 )
-			"size": new java.awt.Dimension( 675, 370 )
+			"size": new java.awt.Dimension( 400, 830 )
 		} )
 	}
 }
+

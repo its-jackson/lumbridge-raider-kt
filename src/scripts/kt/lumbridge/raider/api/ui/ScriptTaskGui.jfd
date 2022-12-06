@@ -26,9 +26,9 @@ new FormModel {
 						"gridx": 1
 						"gridy": 1
 					} )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "button9"
-						"text": "Break Manager"
+					add( new FormComponent( "javax.swing.JToggleButton" ) {
+						name: "toggleButton1"
+						"text": "Enable Break Handler"
 					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 						"gridx": 2
 						"gridy": 1
@@ -36,6 +36,8 @@ new FormModel {
 					add( new FormComponent( "javax.swing.JButton" ) {
 						name: "okButton"
 						"text": "Start Script"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ok", true ) )
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ok", true ) )
 						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ok", true ) )
 					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 						"gridx": 3
@@ -154,6 +156,7 @@ new FormModel {
 							add( new FormComponent( "javax.swing.JButton" ) {
 								name: "button11"
 								"text": "Configure Stop Condition"
+								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "configStopCondition", true ) )
 							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 								"gridx": 4
 								"gridy": 4

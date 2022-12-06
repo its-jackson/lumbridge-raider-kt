@@ -6,8 +6,10 @@ package scripts.kt.lumbridge.raider.api.ui;
 
 import java.awt.event.*;
 
+import org.tribot.script.sdk.script.ScriptRuntimeInfo;
 import scripts.kt.lumbridge.raider.api.ScriptBehavior;
 import scripts.kt.lumbridge.raider.api.ScriptTask;
+import scripts.kt.lumbridge.raider.api.ui.stop.condition.StopConditionGui;
 import scripts.kt.lumbridge.raider.api.ui.task.combat.CombatTaskGui;
 
 import java.awt.*;
@@ -19,52 +21,30 @@ import javax.swing.border.*;
  * @author Polymorphic
  */
 public class ScriptTaskGui extends JFrame {
-    private SwingGuiState guiState = SwingGuiState.CLOSED;
+    private SwingGuiState scriptTaskGuiState = SwingGuiState.CLOSED;
 
     private final DefaultListModel<ScriptTask> scriptTaskDefaultListModel = new DefaultListModel<>();
+
+    private final StopConditionGui stopConditionGui = new StopConditionGui(this);
 
     private final CombatTaskGui combatTaskGui = new CombatTaskGui(this);
 
     public ScriptTaskGui() {
         initComponents();
-
+        setTitle("LumbridgeRaider.kt v" + ScriptRuntimeInfo.getScriptRepoVersion());
         list1.setModel(scriptTaskDefaultListModel);
-
-        Arrays.stream(ScriptBehavior.values())
-                .forEach(scriptBehavior -> comboBox1.addItem(scriptBehavior));
+        Arrays.stream(ScriptBehavior.values()).forEach(scriptBehavior -> comboBox1.addItem(scriptBehavior));
     }
 
-    public SwingGuiState getGuiState() {
-        return guiState;
+    public SwingGuiState getScriptTaskGuiState() {
+        return scriptTaskGuiState;
     }
 
     public DefaultListModel<ScriptTask> getScriptTaskDefaultListModel() {
         return scriptTaskDefaultListModel;
     }
 
-    private void start(ActionEvent e) {
-        if (getScriptTaskDefaultListModel().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "You forgot to add script tasks!");
-            return;
-        }
-
-        guiState = SwingGuiState.STARTED;
-        setVisible(false);
-    }
-
-    private void add(ActionEvent e) {
-        // TODO Add Task
-
-        if (comboBox1.getSelectedItem() == null) return;
-
-        ScriptBehavior behavior = (ScriptBehavior) comboBox1.getSelectedItem();
-
-        if (behavior == ScriptBehavior.COMBAT_MELEE || behavior == ScriptBehavior.COMBAT_RANGED) {
-            combatTaskGui.showAddForm();
-        }
-    }
-
-    private void edit(ActionEvent e) {
+    private void button1(ActionEvent e) {
         // TODO Edit Task
 
         if (list1.getSelectedValue() == null || list1.getSelectedIndex() == -1) return;
@@ -72,9 +52,30 @@ public class ScriptTaskGui extends JFrame {
         ScriptTask selectedTask = (ScriptTask) list1.getSelectedValue();
         int selectedIndex = list1.getSelectedIndex();
 
-        if (selectedTask.getBehavior() == ScriptBehavior.COMBAT_MELEE ||
-                selectedTask.getBehavior() == ScriptBehavior.COMBAT_RANGED) {
-            combatTaskGui.showEditForm(selectedTask, selectedIndex);
+        if (selectedTask.getBehavior() == null) return;
+
+        switch (selectedTask.getBehavior()) {
+            case COMBAT_MAGIC: combatTaskGui.showMagicEditForm(selectedTask, selectedIndex);
+                break;
+            case COMBAT_MELEE: combatTaskGui.showMeleeEditForm(selectedTask, selectedIndex);
+                break;
+            case COMBAT_RANGED: combatTaskGui.showRangedEditForm(selectedTask, selectedIndex);
+        }
+    }
+
+    private void button6(ActionEvent e) {
+        // TODO Add Task
+
+        if (comboBox1.getSelectedItem() == null) return;
+
+        ScriptBehavior behavior = (ScriptBehavior) comboBox1.getSelectedItem();
+
+        switch (behavior) {
+            case COMBAT_MAGIC: combatTaskGui.showMagicForm();
+                break;
+            case COMBAT_MELEE: combatTaskGui.showMeleeAddForm();
+                break;
+            case COMBAT_RANGED:combatTaskGui.showRangedAddForm();
         }
     }
 
@@ -110,15 +111,17 @@ public class ScriptTaskGui extends JFrame {
     }
 
     private void ok(ActionEvent e) {
-        // TODO add your code here
+        if (getScriptTaskDefaultListModel().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "You forgot to add script tasks!");
+            return;
+        }
+
+        scriptTaskGuiState = SwingGuiState.STARTED;
+        setVisible(false);
     }
 
-    private void button1(ActionEvent e) {
-        // TODO add your code here
-    }
-
-    private void button6(ActionEvent e) {
-        // TODO add your code here
+    private void configStopCondition(ActionEvent e) {
+        stopConditionGui.showForm((ScriptTask) list1.getSelectedValue(), list1.getSelectedIndex());
     }
 
     private void initComponents() {
@@ -126,7 +129,7 @@ public class ScriptTaskGui extends JFrame {
         dialogPane = new JPanel();
         buttonBar = new JPanel();
         button4 = new JButton();
-        button9 = new JButton();
+        toggleButton1 = new JToggleButton();
         okButton = new JButton();
         tabbedPane3 = new JTabbedPane();
         panel2 = new JPanel();
@@ -172,15 +175,19 @@ public class ScriptTaskGui extends JFrame {
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 5), 0, 0));
 
-                //---- button9 ----
-                button9.setText("Break Manager");
-                buttonBar.add(button9, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0,
+                //---- toggleButton1 ----
+                toggleButton1.setText("Enable Break Handler");
+                buttonBar.add(toggleButton1, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 5), 0, 0));
 
                 //---- okButton ----
                 okButton.setText("Start Script");
-                okButton.addActionListener(e -> ok(e));
+                okButton.addActionListener(e -> {
+			ok(e);
+			ok(e);
+			ok(e);
+		});
                 buttonBar.add(okButton, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 0), 0, 0));
@@ -292,6 +299,7 @@ public class ScriptTaskGui extends JFrame {
 
                         //---- button11 ----
                         button11.setText("Configure Stop Condition");
+                        button11.addActionListener(e -> configStopCondition(e));
                         buttonBar2.add(button11, new GridBagConstraints(4, 4, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 0, 0, 0), 0, 0));
@@ -314,7 +322,7 @@ public class ScriptTaskGui extends JFrame {
     private JPanel dialogPane;
     private JPanel buttonBar;
     private JButton button4;
-    private JButton button9;
+    private JToggleButton toggleButton1;
     private JButton okButton;
     private JTabbedPane tabbedPane3;
     private JPanel panel2;

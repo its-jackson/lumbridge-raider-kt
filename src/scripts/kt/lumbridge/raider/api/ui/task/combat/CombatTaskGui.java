@@ -11,6 +11,7 @@ import org.tribot.script.sdk.types.EquipmentItem;
 import org.tribot.script.sdk.types.InventoryItem;
 import scripts.kt.lumbridge.raider.api.ScriptBehavior;
 import scripts.kt.lumbridge.raider.api.ScriptCombatData;
+import scripts.kt.lumbridge.raider.api.ScriptCombatMagicData;
 import scripts.kt.lumbridge.raider.api.ScriptTask;
 import scripts.kt.lumbridge.raider.api.behaviors.combat.Monster;
 import scripts.kt.lumbridge.raider.api.ui.ScriptTaskGui;
@@ -34,51 +35,19 @@ public class CombatTaskGui extends JFrame {
     private List<InventoryItem> inventoryItemList = Collections.emptyList();
     private List<EquipmentItem> equipmentItemList = Collections.emptyList();
 
+    private ScriptBehavior scriptBehavior;
+
+    private Combat.AttackStyle attackStyle;
+    private Combat.AutocastableSpell autocastableSpell;
+
     private boolean editMode;
     private int editIndex;
 
     public CombatTaskGui(ScriptTaskGui rootFrame) {
         this.rootFrame = rootFrame;
         initComponents();
-
-        Arrays.stream(Combat.AttackStyle.values())
-                .forEach(attackStyle -> comboBox2.addItem(attackStyle));
-
-        Arrays.stream(Monster.values())
-                .forEach(monster -> comboBox3.addItem(monster));
-
+        Arrays.stream(Monster.values()).forEach(monster -> comboBox3.addItem(monster));
         list2.setModel(monsterDefaultListModel);
-    }
-
-    public void showAddForm() {
-        getMonsterDefaultListModel().clear();
-        setMonster(Monster.CHICKEN_LUMBRIDGE_EAST);
-        setAttackStyle(Combat.AttackStyle.ACCURATE);
-        setInventoryItemList(Collections.emptyList());
-        setEquipmentItemList(Collections.emptyList());
-        setLootItemsCheckBox(false);
-        setEditMode(false);
-        setEditIndex(-1);
-        setOkButtonText("Add");
-        setVisible(true);
-    }
-
-    public void showEditForm(ScriptTask selectedTask, int selectedIndex) {
-        if (selectedTask == null || selectedIndex == -1) return;
-        if (selectedTask.getCombatData() == null) return;
-        if (selectedTask.getCombatData().getAttackStyle() == null) return;
-        if (selectedTask.getCombatData().getMonsters() == null) return;
-
-        setAttackStyle(selectedTask.getCombatData().getAttackStyle());
-        getMonsterDefaultListModel().clear();
-        getMonsterDefaultListModel().addAll(selectedTask.getCombatData().getMonsters());
-        setLootItemsCheckBox(selectedTask.getCombatData().getLootGroundItems());
-        setEquipmentItemList(selectedTask.getCombatData().getEquipmentItems());
-        setInventoryItemList(selectedTask.getCombatData().getInventoryItems());
-        setEditIndex(selectedIndex);
-        setEditMode(true);
-        setOkButtonText("Save");
-        setVisible(true);
     }
 
     private DefaultListModel<Monster> getMonsterDefaultListModel() {
@@ -93,8 +62,18 @@ public class CombatTaskGui extends JFrame {
         this.equipmentItemList = equipmentItemList;
     }
 
+    public void setScriptBehavior(ScriptBehavior scriptBehavior) {
+        this.scriptBehavior = scriptBehavior;
+    }
+
     private void setAttackStyle(Combat.AttackStyle attackStyle) {
-        comboBox2.setSelectedItem(attackStyle);
+        this.attackStyle = attackStyle;
+        this.comboBox2.setSelectedItem(attackStyle);
+    }
+
+    private void setAutocastableSpell(Combat.AutocastableSpell autocastableSpell) {
+        this.autocastableSpell = autocastableSpell;
+        this.comboBox1.setSelectedItem(autocastableSpell);
     }
 
     private void setMonster(Monster monster) {
@@ -121,24 +100,148 @@ public class CombatTaskGui extends JFrame {
         okButton.setText(txt);
     }
 
-    private void ok(ActionEvent e) {
-        if (comboBox2.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "You forgot to selected an attack style!");
-            return;
-        }
+    public void showMagicForm() {
+        setScriptBehavior(ScriptBehavior.COMBAT_MAGIC);
+        setMagicComponents();
+        setAddForm();
+    }
 
+    public void showMagicEditForm(ScriptTask selectedTask, int selectedIndex) {
+        if (selectedTask == null || selectedIndex == -1) return;
+        if (selectedTask.getCombatData() == null) return;
+        if (selectedTask.getCombatData().getMonsters() == null) return;
+        if (selectedTask.getCombatMagicData() == null) return;
+
+        setScriptBehavior(selectedTask.getBehavior());
+        setEditComponents(selectedTask, selectedIndex);
+        setMagicComponents();
+        setAutocastableSpell(selectedTask.getCombatMagicData().getAutoCastableSpell());
+    }
+
+    public void showMeleeAddForm() {
+        setScriptBehavior(ScriptBehavior.COMBAT_MELEE);
+        setMeleeComponents();
+        setAddForm();
+    }
+
+    public void showMeleeEditForm(ScriptTask selectedTask, int selectedIndex) {
+        setMeleeComponents();
+        setMeleeOrRangedEditForm(selectedTask, selectedIndex);
+    }
+
+    public void showRangedAddForm() {
+        setScriptBehavior(ScriptBehavior.COMBAT_RANGED);
+        setRangedComponents();
+        setAddForm();
+    }
+
+    public void showRangedEditForm(ScriptTask selectedTask, int selectedIndex) {
+        setRangedComponents();
+        setMeleeOrRangedEditForm(selectedTask, selectedIndex);
+    }
+
+    private void setMeleeOrRangedEditForm(ScriptTask selectedTask, int selectedIndex) {
+        if (selectedTask == null || selectedIndex == -1) return;
+        if (selectedTask.getCombatData() == null) return;
+        if (selectedTask.getCombatData().getMonsters() == null) return;
+        if (selectedTask.getCombatData().getAttackStyle() == null) return;
+
+        setScriptBehavior(selectedTask.getBehavior());
+        setAttackStyle(selectedTask.getCombatData().getAttackStyle());
+        setEditComponents(selectedTask, selectedIndex);
+    }
+
+    private void setAddForm() {
+        setMonster(Monster.CHICKEN_LUMBRIDGE_EAST);
+        getMonsterDefaultListModel().clear();
+        setInventoryItemList(Collections.emptyList());
+        setEquipmentItemList(Collections.emptyList());
+        setLootItemsCheckBox(false);
+        setEditMode(false);
+        setEditIndex(-1);
+        setOkButtonText("Add");
+        setVisible(true);
+    }
+
+    private void setEditComponents(ScriptTask selectedTask, int selectedIndex) {
+        if (selectedTask.getCombatData() == null || selectedIndex == -1) return;
+        if (selectedTask.getCombatData().getMonsters() == null) return;
+
+        getMonsterDefaultListModel().clear();
+        getMonsterDefaultListModel().addAll(selectedTask.getCombatData().getMonsters());
+        setLootItemsCheckBox(selectedTask.getCombatData().getLootGroundItems());
+        setEquipmentItemList(selectedTask.getCombatData().getEquipmentItems());
+        setInventoryItemList(selectedTask.getCombatData().getInventoryItems());
+        setEditIndex(selectedIndex);
+        setEditMode(true);
+        setOkButtonText("Save");
+        setVisible(true);
+    }
+
+    private void setMagicComponents() {
+        comboBox2.setEnabled(false);
+        comboBox2.removeAllItems();
+        comboBox1.setEnabled(true);
+        comboBox1.removeAllItems();
+        Arrays.stream(Combat.AutocastableSpell.values()).forEach(spell -> comboBox1.addItem(spell));
+        setAttackStyle(null);
+    }
+
+    private void setMeleeComponents() {
+        comboBox2.setEnabled(true);
+        comboBox1.setEnabled(false);
+        comboBox1.removeAllItems();
+        comboBox2.removeAllItems();
+        comboBox2.addItem(Combat.AttackStyle.ACCURATE);
+        comboBox2.addItem(Combat.AttackStyle.AGGRESSIVE);
+        comboBox2.addItem(Combat.AttackStyle.CONTROLLED);
+        comboBox2.addItem(Combat.AttackStyle.DEFENSIVE);
+        setAutocastableSpell(null);
+    }
+
+    private void setRangedComponents() {
+        comboBox2.setEnabled(true);
+        comboBox1.setEnabled(false);
+        comboBox1.removeAllItems();
+        comboBox2.removeAllItems();
+        comboBox2.addItem(Combat.AttackStyle.RANGED_ACCURATE);
+        comboBox2.addItem(Combat.AttackStyle.RAPID);
+        comboBox2.addItem(Combat.AttackStyle.LONGRANGE);
+        setAutocastableSpell(null);
+    }
+
+    private void ok(ActionEvent e) {
         if (monsterDefaultListModel.isEmpty()) {
             JOptionPane.showMessageDialog(this, "You forgot to add monsters to kill!");
             return;
         }
 
+        if (scriptBehavior == ScriptBehavior.COMBAT_MAGIC && comboBox1.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "You forgot to select a spell!");
+            return;
+        }
+
+        if ((scriptBehavior == ScriptBehavior.COMBAT_MELEE  || scriptBehavior == ScriptBehavior.COMBAT_RANGED)
+                && comboBox2.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "You forgot to selected an attack style!");
+            return;
+        }
+
+        if (comboBox2.getSelectedItem() != null) {
+            attackStyle = (Combat.AttackStyle) comboBox2.getSelectedItem();
+        }
+
+        if (comboBox1.getSelectedItem() != null) {
+            autocastableSpell = (Combat.AutocastableSpell) comboBox1.getSelectedItem();
+        }
+
         ScriptTask combatScriptTask = new ScriptTask.Builder()
-                .behavior(ScriptBehavior.COMBAT_MELEE)
+                .behavior(scriptBehavior)
                 .combatData(
                         new ScriptCombatData.Builder()
                                 .inventoryItems(inventoryItemList)
                                 .equipmentItems(equipmentItemList)
-                                .attackStyle((Combat.AttackStyle) comboBox2.getSelectedItem())
+                                .attackStyle(attackStyle)
                                 .lootGroundItems(checkBox1.isSelected())
                                 .monsters(
                                         Arrays.stream(monsterDefaultListModel.toArray())
@@ -146,6 +249,9 @@ public class CombatTaskGui extends JFrame {
                                                 .collect(Collectors.toList())
                                 )
                                 .build()
+                )
+                .combatMagicData(
+                        new ScriptCombatMagicData(autocastableSpell)
                 )
                 .build();
 
@@ -196,6 +302,8 @@ public class CombatTaskGui extends JFrame {
         comboBox2 = new JComboBox();
         label4 = new JLabel();
         comboBox3 = new JComboBox();
+        label1 = new JLabel();
+        comboBox1 = new JComboBox();
         label5 = new JLabel();
         scrollPane2 = new JScrollPane();
         list2 = new JList();
@@ -206,7 +314,7 @@ public class CombatTaskGui extends JFrame {
         okButton = new JButton();
 
         //======== this ========
-        setTitle("Combat Task (Melee/Ranged)");
+        setTitle("Combat Task (Melee/Ranged/Magic)");
         setResizable(false);
         setMinimumSize(new Dimension(600, 375));
         var contentPane = getContentPane();
@@ -225,28 +333,37 @@ public class CombatTaskGui extends JFrame {
             {
                 panel1.setLayout(new GridBagLayout());
                 ((GridBagLayout)panel1.getLayout()).columnWidths = new int[] {0, 0, 0, 0};
-                ((GridBagLayout)panel1.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0};
+                ((GridBagLayout)panel1.getLayout()).rowHeights = new int[] {0, 0, 0, 0};
                 ((GridBagLayout)panel1.getLayout()).columnWeights = new double[] {0.0, 0.0, 0.0, 1.0E-4};
-                ((GridBagLayout)panel1.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 1.0E-4};
+                ((GridBagLayout)panel1.getLayout()).rowWeights = new double[] {0.0, 0.0, 0.0, 1.0E-4};
 
                 //---- label3 ----
-                label3.setText("Attack Style To Use");
+                label3.setText("Attack Style");
                 panel1.add(label3, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 5), 0, 0));
-                panel1.add(comboBox2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                panel1.add(comboBox2, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- label4 ----
-                label4.setText("Monsters To Kill");
-                panel1.add(label4, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+                label4.setText("Monsters");
+                panel1.add(label4, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- comboBox3 ----
                 comboBox3.addActionListener(e -> comboBox3(e));
-                panel1.add(comboBox3, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
+                panel1.add(comboBox3, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
+
+                //---- label1 ----
+                label1.setText("Autocastable Spell");
+                panel1.add(label1, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 5), 0, 0));
+                panel1.add(comboBox1, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 5), 0, 0));
             }
@@ -282,7 +399,7 @@ public class CombatTaskGui extends JFrame {
                     new Insets(0, 0, 0, 5), 0, 0));
 
                 //---- button2 ----
-                button2.setText("Remove Selected Monster");
+                button2.setText("Delete Selected");
                 button2.addActionListener(e -> button2(e));
                 buttonBar.add(button2, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
@@ -319,6 +436,8 @@ public class CombatTaskGui extends JFrame {
     private JComboBox comboBox2;
     private JLabel label4;
     private JComboBox comboBox3;
+    private JLabel label1;
+    private JComboBox comboBox1;
     private JLabel label5;
     private JScrollPane scrollPane2;
     private JList list2;

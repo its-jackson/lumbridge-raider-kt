@@ -42,7 +42,7 @@ class LumbridgeRaiderKt : TribotScript {
         .build()
 
     private val mainPaint = BasicPaintTemplate.builder()
-        .row(PaintRows.scriptName(paintTemplate.toBuilder()))
+        .row(PaintRows.versionedScriptName(paintTemplate.toBuilder()))
         .row(PaintRows.runtime(paintTemplate.toBuilder()))
         .row(
             paintTemplate.toBuilder().label("Behavior")
@@ -141,7 +141,7 @@ class LumbridgeRaiderKt : TribotScript {
             }.tick()
 
             if (behaviorTreeGuiState != BehaviorTreeStatus.SUCCESS) return
-            if (scriptTaskGui?.guiState != SwingGuiState.STARTED) return
+            if (scriptTaskGui?.scriptTaskGuiState != SwingGuiState.STARTED) return
 
             val model = scriptTaskGui?.list1?.model
             val scriptTaskList: MutableList<ScriptTask> = mutableListOf()

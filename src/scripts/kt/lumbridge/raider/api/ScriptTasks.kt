@@ -37,6 +37,7 @@ inline fun <reified T> deepCopy(ob: T): T {
 
     return gson.fromJson(gson.toJson(ob), T::class.java)
 }
+
 data class ScriptMiningData(
     val rocks: List<Rock>? = null,
     val pickaxe: Pickaxe? = null,
@@ -130,15 +131,15 @@ data class ScriptTask (
         private var questingData: ScriptQuestingData? = null
 
         fun stopCondition(stop: AbstractStopCondition) = apply { this.stopCondition = stop }
-        fun behavior(behavior: ScriptBehavior) = apply { this.behavior = behavior }
-        fun disposal(disposal: ScriptDisposal) = apply { this.disposal = disposal }
-        fun combatData(combatData: ScriptCombatData) = apply { this.combatData = combatData }
-        fun combatMagicData(combatMagicData: ScriptCombatMagicData) = apply { this.combatMagicData = combatMagicData }
-        fun miningData(miningData: ScriptMiningData) = apply { this.miningData = miningData }
-        fun woodcuttingData(woodcuttingData: ScriptWoodcuttingData) = apply { this.woodcuttingData = woodcuttingData }
-        fun fishingData(fishingData: ScriptFishingData) = apply { this.fishingData = fishingData }
-        fun prayerData(prayerData: ScriptPrayerData) = apply { this.prayerData = prayerData }
-        fun questingData(questingData: ScriptQuestingData) = apply { this.questingData = questingData }
+        fun behavior(behavior: ScriptBehavior?) = apply { this.behavior = behavior }
+        fun disposal(disposal: ScriptDisposal?) = apply { this.disposal = disposal }
+        fun combatData(combatData: ScriptCombatData?) = apply { this.combatData = combatData }
+        fun combatMagicData(combatMagicData: ScriptCombatMagicData?) = apply { this.combatMagicData = combatMagicData }
+        fun miningData(miningData: ScriptMiningData?) = apply { this.miningData = miningData }
+        fun woodcuttingData(woodcuttingData: ScriptWoodcuttingData?) = apply { this.woodcuttingData = woodcuttingData }
+        fun fishingData(fishingData: ScriptFishingData?) = apply { this.fishingData = fishingData }
+        fun prayerData(prayerData: ScriptPrayerData?) = apply { this.prayerData = prayerData }
+        fun questingData(questingData: ScriptQuestingData?) = apply { this.questingData = questingData }
 
         fun build() = ScriptTask(
             stopCondition = this.stopCondition,
