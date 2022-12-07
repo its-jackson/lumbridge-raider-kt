@@ -7,99 +7,47 @@ new FormModel {
 			name: "this"
 			"title": "LumbridgeRaider.kt"
 			"focusable": false
-			"minimumSize": new java.awt.Dimension( 800, 600 )
+			"minimumSize": new java.awt.Dimension( 740, 470 )
 			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
 				name: "dialogPane"
 				"border": new javax.swing.border.EmptyBorder( 12, 12, 12, 12 )
-				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
-					"$columnSpecs": "0:1.0, 0, 0, 80"
-					"$rowSpecs": "0, 0"
-					"$hGap": 5
-					"$vGap": 5
-				} ) {
-					name: "buttonBar"
-					"border": &EmptyBorder0 new javax.swing.border.EmptyBorder( 12, 0, 0, 0 )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "button4"
-						"text": "Reset Script Cache"
-					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-						"gridx": 1
-						"gridy": 1
-					} )
-					add( new FormComponent( "javax.swing.JToggleButton" ) {
-						name: "toggleButton1"
-						"text": "Enable Break Handler"
-					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-						"gridx": 2
-						"gridy": 1
-					} )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "okButton"
-						"text": "Start Script"
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ok", true ) )
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ok", true ) )
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ok", true ) )
-					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-						"gridx": 3
-						"gridy": 1
-					} )
-				}, new FormLayoutConstraints( class java.lang.String ) {
-					"value": "South"
-				} )
 				add( new FormContainer( "javax.swing.JTabbedPane", new FormLayoutManager( class javax.swing.JTabbedPane ) ) {
 					name: "tabbedPane3"
 					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
 						"$columnSpecs": "0:1.0"
-						"$rowSpecs": "0, 0:1.0, 0"
+						"$rowSpecs": "0:1.0, 0, 0, 0, 0"
 						"$alignTop": true
 						"$alignLeft": true
 					} ) {
 						name: "panel2"
-						add( new FormComponent( "javax.swing.JLabel" ) {
-							name: "label1"
-							"text": "Script Task List"
-						}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-							"hAlign": 0
-						} )
 						add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
 							name: "scrollPane1"
 							add( new FormComponent( "javax.swing.JList" ) {
 								name: "list1"
-								"border": new javax.swing.border.MatteBorder( 1, 1, 1, 1, sfield java.awt.Color black )
+								"border": new javax.swing.border.TitledBorder( "Script Task Queue (First-In-First-Out)" )
 							} )
-						}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-							"gridy": 1
-						} )
+						}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) )
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
-							"$columnSpecs": "0:1.0, 0, 0, 0, 80"
-							"$rowSpecs": "0, 0, 0, 0, 0"
+							"$columnSpecs": "0, 0, 0, 0, 0"
+							"$rowSpecs": "0"
 							"$hGap": 5
 							"$vGap": 5
+							"$alignLeft": true
+							"$alignTop": true
 						} ) {
-							name: "buttonBar2"
-							"border": #EmptyBorder0
-							add( new FormComponent( "javax.swing.JLabel" ) {
-								name: "label2"
-								"text": "Task Selection"
+							name: "panel3"
+							"border": new javax.swing.border.TitledBorder( "Script Task Controls" )
+							add( new FormComponent( "javax.swing.JButton" ) {
+								name: "button11"
+								"text": "Configure Stop Condition"
+								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "configStopCondition", true ) )
 							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) )
-							add( new FormComponent( "javax.swing.JLabel" ) {
-								name: "label4"
-								"text": "Task Controls"
-							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-								"gridx": 1
-							} )
-							add( new FormComponent( "javax.swing.JComboBox" ) {
-								name: "comboBox1"
-							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-								"gridy": 2
-							} )
 							add( new FormComponent( "javax.swing.JButton" ) {
 								name: "button1"
 								"text": "Edit"
 								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "button1", true ) )
 							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 								"gridx": 1
-								"gridy": 2
 							} )
 							add( new FormComponent( "javax.swing.JButton" ) {
 								name: "button2"
@@ -107,7 +55,6 @@ new FormModel {
 								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "delete", true ) )
 							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 								"gridx": 2
-								"gridy": 2
 							} )
 							add( new FormComponent( "javax.swing.JButton" ) {
 								name: "button3"
@@ -115,7 +62,6 @@ new FormModel {
 								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "moveUp", true ) )
 							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 								"gridx": 3
-								"gridy": 2
 							} )
 							add( new FormComponent( "javax.swing.JButton" ) {
 								name: "okButton2"
@@ -123,59 +69,125 @@ new FormModel {
 								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "moveDown", true ) )
 							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 								"gridx": 4
-								"gridy": 2
 							} )
+						}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+							"gridy": 1
+							"vAlign": 1
+							"hAlign": 2
+						} )
+						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
+							"$columnSpecs": "0, 0"
+							"$rowSpecs": "0"
+							"$hGap": 5
+							"$vGap": 5
+							"$alignLeft": true
+							"$alignTop": true
+						} ) {
+							name: "panel4"
+							"border": new javax.swing.border.TitledBorder( "Script Task Selection" )
 							add( new FormComponent( "javax.swing.JButton" ) {
 								name: "button6"
 								"text": "Add New Task"
 								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "button6", true ) )
-							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-								"gridy": 4
-							} )
-							add( new FormComponent( "javax.swing.JButton" ) {
-								name: "button7"
-								"text": "Save List"
+							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) )
+							add( new FormComponent( "javax.swing.JComboBox" ) {
+								name: "comboBox1"
 							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 								"gridx": 1
-								"gridy": 4
-							} )
-							add( new FormComponent( "javax.swing.JButton" ) {
-								name: "button8"
-								"text": "Load List"
-							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-								"gridx": 2
-								"gridy": 4
-							} )
-							add( new FormComponent( "javax.swing.JButton" ) {
-								name: "button10"
-								"text": "Delete List"
-							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-								"gridx": 3
-								"gridy": 4
-							} )
-							add( new FormComponent( "javax.swing.JButton" ) {
-								name: "button11"
-								"text": "Configure Stop Condition"
-								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "configStopCondition", true ) )
-							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-								"gridx": 4
-								"gridy": 4
 							} )
 						}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 							"gridy": 2
+							"hAlign": 2
+							"vAlign": 1
+						} )
+						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
+							"$columnSpecs": "0, 0"
+							"$rowSpecs": "0"
+							"$hGap": 5
+							"$vGap": 5
+							"$alignLeft": true
+							"$alignTop": true
+						} ) {
+							name: "panel5"
+							"border": new javax.swing.border.TitledBorder( "Advanced" )
+							add( new FormComponent( "javax.swing.JButton" ) {
+								name: "button4"
+								"text": "Reset Settings Cache"
+							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) )
+							add( new FormComponent( "javax.swing.JToggleButton" ) {
+								name: "toggleButton1"
+								"text": "Enable Break Handler"
+							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+								"gridx": 1
+							} )
+						}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+							"gridy": 3
+							"hAlign": 2
+							"vAlign": 1
+						} )
+						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+							name: "panel7"
+							add( new FormComponent( "javax.swing.JButton" ) {
+								name: "okButton"
+								"text": "Start Script"
+								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ok", true ) )
+								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ok", true ) )
+								addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ok", true ) )
+							}, new FormLayoutConstraints( class java.lang.String ) {
+								"value": "East"
+							} )
+						}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
+							"gridy": 4
 						} )
 					}, new FormLayoutConstraints( null ) {
-						"title": "Index"
+						"title": "Display"
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "Center"
+				} )
+				add( new FormContainer( "javax.swing.JMenuBar", new FormLayoutManager( class javax.swing.JMenuBar ) ) {
+					name: "menuBar1"
+					add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
+						name: "menu1"
+						"text": "File"
+						add( new FormComponent( "javax.swing.JMenuItem" ) {
+							name: "menuItem1"
+							"text": "Settings"
+						} )
+						add( new FormComponent( "javax.swing.JMenuItem" ) {
+							name: "menuItem4"
+							"text": "Exit"
+						} )
+					} )
+					add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
+						name: "menu4"
+						"text": "Links"
+						add( new FormComponent( "javax.swing.JMenuItem" ) {
+							name: "menuItem3"
+							"text": "Github Repository"
+						} )
+						add( new FormComponent( "javax.swing.JMenuItem" ) {
+							name: "menuItem5"
+							"text": "TRiBot Repository"
+						} )
+					} )
+					add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
+						name: "menu2"
+						"text": "Help"
+						add( new FormComponent( "javax.swing.JMenuItem" ) {
+							name: "menuItem2"
+							"text": "About"
+						} )
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "North"
 				} )
 			}, new FormLayoutConstraints( class java.lang.String ) {
 				"value": "Center"
 			} )
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 0, 0 )
-			"size": new java.awt.Dimension( 895, 550 )
+			"size": new java.awt.Dimension( 775, 470 )
 		} )
 	}
 }

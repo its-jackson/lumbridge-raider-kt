@@ -207,7 +207,7 @@ enum class ScriptDisposal(val disposal: String) {
 }
 
 class ScriptTaskRunner : ISatisfiable {
-    private val taskStack: ArrayDeque<ScriptTask> = ArrayDeque()
+    private val taskQueue: ArrayDeque<ScriptTask> = ArrayDeque()
 
     private var mainScriptBehaviorTree: IBehaviorNode? = null
     private var mainScriptBehaviorTreeState: BehaviorTreeStatus? = null
@@ -215,8 +215,8 @@ class ScriptTaskRunner : ISatisfiable {
     var activeScriptTask: ScriptTask? = null
 
     fun configure(scriptTasks: Array<ScriptTask>) {
-        taskStack.clear()
-        taskStack.addAll(scriptTasks)
+        taskQueue.clear()
+        taskQueue.addAll(scriptTasks)
         setNextAndComposeMainScriptBehaviorTree()
     }
 
@@ -255,12 +255,12 @@ class ScriptTaskRunner : ISatisfiable {
         onEnd()
     }
 
-    fun remaining() = taskStack.size
+    fun remaining() = taskQueue.size
 
-    private fun isRunnerComplete() = activeScriptTask == null && taskStack.isEmpty()
+    private fun isRunnerComplete() = activeScriptTask == null && taskQueue.isEmpty()
 
     private fun setNext() {
-        activeScriptTask = taskStack.removeFirstOrNull()
+        activeScriptTask = taskQueue.removeFirstOrNull()
     }
 
     private fun composeMainScriptBehaviorTree() {

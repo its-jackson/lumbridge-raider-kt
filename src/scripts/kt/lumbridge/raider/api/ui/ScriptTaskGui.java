@@ -7,10 +7,12 @@ package scripts.kt.lumbridge.raider.api.ui;
 import java.awt.event.*;
 
 import org.tribot.script.sdk.script.ScriptRuntimeInfo;
+import org.tribot.script.sdk.util.Resources;
 import scripts.kt.lumbridge.raider.api.ScriptBehavior;
 import scripts.kt.lumbridge.raider.api.ScriptTask;
 import scripts.kt.lumbridge.raider.api.ui.stop.condition.StopConditionGui;
 import scripts.kt.lumbridge.raider.api.ui.task.combat.CombatTaskGui;
+import scripts.kt.lumbridge.raider.api.ui.task.cooking.CookingTaskGui;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -26,11 +28,12 @@ public class ScriptTaskGui extends JFrame {
     private final DefaultListModel<ScriptTask> scriptTaskDefaultListModel = new DefaultListModel<>();
 
     private final StopConditionGui stopConditionGui = new StopConditionGui(this);
-
     private final CombatTaskGui combatTaskGui = new CombatTaskGui(this);
+    private final CookingTaskGui cookingTaskGui = new CookingTaskGui(this);
 
     public ScriptTaskGui() {
         initComponents();
+        setIconImage(Resources.getImage("scripts/kt/lumbridge/raider/api/resources/Tribot-Logo.png"));
         setTitle("LumbridgeRaider.kt v" + ScriptRuntimeInfo.getScriptRepoVersion());
         list1.setModel(scriptTaskDefaultListModel);
         Arrays.stream(ScriptBehavior.values()).forEach(scriptBehavior -> comboBox1.addItem(scriptBehavior));
@@ -60,6 +63,8 @@ public class ScriptTaskGui extends JFrame {
             case COMBAT_MELEE: combatTaskGui.showMeleeEditForm(selectedTask, selectedIndex);
                 break;
             case COMBAT_RANGED: combatTaskGui.showRangedEditForm(selectedTask, selectedIndex);
+                break;
+            case COOKING: cookingTaskGui.showCookingEditForm(selectedTask, selectedIndex);
         }
     }
 
@@ -75,7 +80,9 @@ public class ScriptTaskGui extends JFrame {
                 break;
             case COMBAT_MELEE: combatTaskGui.showMeleeAddForm();
                 break;
-            case COMBAT_RANGED:combatTaskGui.showRangedAddForm();
+            case COMBAT_RANGED: combatTaskGui.showRangedAddForm();
+                break;
+            case COOKING: cookingTaskGui.showCookingAddForm();
         }
     }
 
@@ -127,33 +134,38 @@ public class ScriptTaskGui extends JFrame {
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents  @formatter:off
         dialogPane = new JPanel();
-        buttonBar = new JPanel();
-        button4 = new JButton();
-        toggleButton1 = new JToggleButton();
-        okButton = new JButton();
         tabbedPane3 = new JTabbedPane();
         panel2 = new JPanel();
-        label1 = new JLabel();
         scrollPane1 = new JScrollPane();
         list1 = new JList();
-        buttonBar2 = new JPanel();
-        label2 = new JLabel();
-        label4 = new JLabel();
-        comboBox1 = new JComboBox();
+        panel3 = new JPanel();
+        button11 = new JButton();
         button1 = new JButton();
         button2 = new JButton();
         button3 = new JButton();
         okButton2 = new JButton();
+        panel4 = new JPanel();
         button6 = new JButton();
-        button7 = new JButton();
-        button8 = new JButton();
-        button10 = new JButton();
-        button11 = new JButton();
+        comboBox1 = new JComboBox();
+        panel5 = new JPanel();
+        button4 = new JButton();
+        toggleButton1 = new JToggleButton();
+        panel7 = new JPanel();
+        okButton = new JButton();
+        menuBar1 = new JMenuBar();
+        menu1 = new JMenu();
+        menuItem1 = new JMenuItem();
+        menuItem4 = new JMenuItem();
+        menu4 = new JMenu();
+        menuItem3 = new JMenuItem();
+        menuItem5 = new JMenuItem();
+        menu2 = new JMenu();
+        menuItem2 = new JMenuItem();
 
         //======== this ========
         setTitle("LumbridgeRaider.kt");
         setFocusable(false);
-        setMinimumSize(new Dimension(800, 600));
+        setMinimumSize(new Dimension(740, 470));
         var contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
 
@@ -162,38 +174,6 @@ public class ScriptTaskGui extends JFrame {
             dialogPane.setBorder(new EmptyBorder(12, 12, 12, 12));
             dialogPane.setLayout(new BorderLayout());
 
-            //======== buttonBar ========
-            {
-                buttonBar.setBorder(new EmptyBorder(12, 0, 0, 0));
-                buttonBar.setLayout(new GridBagLayout());
-                ((GridBagLayout)buttonBar.getLayout()).columnWidths = new int[] {0, 0, 0, 80};
-                ((GridBagLayout)buttonBar.getLayout()).columnWeights = new double[] {1.0, 0.0, 0.0, 0.0};
-
-                //---- button4 ----
-                button4.setText("Reset Script Cache");
-                buttonBar.add(button4, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 0, 5), 0, 0));
-
-                //---- toggleButton1 ----
-                toggleButton1.setText("Enable Break Handler");
-                buttonBar.add(toggleButton1, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 0, 5), 0, 0));
-
-                //---- okButton ----
-                okButton.setText("Start Script");
-                okButton.addActionListener(e -> {
-			ok(e);
-			ok(e);
-			ok(e);
-		});
-                buttonBar.add(okButton, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 0, 0), 0, 0));
-            }
-            dialogPane.add(buttonBar, BorderLayout.SOUTH);
-
             //======== tabbedPane3 ========
             {
 
@@ -201,116 +181,180 @@ public class ScriptTaskGui extends JFrame {
                 {
                     panel2.setLayout(new GridBagLayout());
                     ((GridBagLayout)panel2.getLayout()).columnWidths = new int[] {0, 0};
-                    ((GridBagLayout)panel2.getLayout()).rowHeights = new int[] {0, 0, 0, 0};
+                    ((GridBagLayout)panel2.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0};
                     ((GridBagLayout)panel2.getLayout()).columnWeights = new double[] {1.0, 1.0E-4};
-                    ((GridBagLayout)panel2.getLayout()).rowWeights = new double[] {0.0, 1.0, 0.0, 1.0E-4};
-
-                    //---- label1 ----
-                    label1.setText("Script Task List");
-                    panel2.add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.VERTICAL,
-                        new Insets(0, 0, 0, 0), 0, 0));
+                    ((GridBagLayout)panel2.getLayout()).rowWeights = new double[] {1.0, 0.0, 0.0, 0.0, 0.0, 1.0E-4};
 
                     //======== scrollPane1 ========
                     {
 
                         //---- list1 ----
-                        list1.setBorder(new MatteBorder(1, 1, 1, 1, Color.black));
+                        list1.setBorder(new TitledBorder("Script Task Queue (First-In-First-Out)"));
                         scrollPane1.setViewportView(list1);
                     }
-                    panel2.add(scrollPane1, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                    panel2.add(scrollPane1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 0, 0, 0), 0, 0));
 
-                    //======== buttonBar2 ========
+                    //======== panel3 ========
                     {
-                        buttonBar2.setBorder(new EmptyBorder(12, 0, 0, 0));
-                        buttonBar2.setLayout(new GridBagLayout());
-                        ((GridBagLayout)buttonBar2.getLayout()).columnWidths = new int[] {0, 0, 0, 0, 80};
-                        ((GridBagLayout)buttonBar2.getLayout()).columnWeights = new double[] {1.0, 0.0, 0.0, 0.0, 0.0};
-
-                        //---- label2 ----
-                        label2.setText("Task Selection");
-                        buttonBar2.add(label2, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 5, 5), 0, 0));
-
-                        //---- label4 ----
-                        label4.setText("Task Controls");
-                        buttonBar2.add(label4, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 5, 5), 0, 0));
-                        buttonBar2.add(comboBox1, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 5, 5), 0, 0));
-
-                        //---- button1 ----
-                        button1.setText("Edit");
-                        button1.addActionListener(e -> button1(e));
-                        buttonBar2.add(button1, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 5, 5), 0, 0));
-
-                        //---- button2 ----
-                        button2.setText("Delete");
-                        button2.addActionListener(e -> delete(e));
-                        buttonBar2.add(button2, new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 5, 5), 0, 0));
-
-                        //---- button3 ----
-                        button3.setText("Move Up");
-                        button3.addActionListener(e -> moveUp(e));
-                        buttonBar2.add(button3, new GridBagConstraints(3, 2, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 5, 5), 0, 0));
-
-                        //---- okButton2 ----
-                        okButton2.setText("Move Down");
-                        okButton2.addActionListener(e -> moveDown(e));
-                        buttonBar2.add(okButton2, new GridBagConstraints(4, 2, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 5, 0), 0, 0));
-
-                        //---- button6 ----
-                        button6.setText("Add New Task");
-                        button6.addActionListener(e -> button6(e));
-                        buttonBar2.add(button6, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 0, 5), 0, 0));
-
-                        //---- button7 ----
-                        button7.setText("Save List");
-                        buttonBar2.add(button7, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 0, 5), 0, 0));
-
-                        //---- button8 ----
-                        button8.setText("Load List");
-                        buttonBar2.add(button8, new GridBagConstraints(2, 4, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 0, 5), 0, 0));
-
-                        //---- button10 ----
-                        button10.setText("Delete List");
-                        buttonBar2.add(button10, new GridBagConstraints(3, 4, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 0, 5), 0, 0));
+                        panel3.setBorder(new TitledBorder("Script Task Controls"));
+                        panel3.setLayout(new GridBagLayout());
+                        ((GridBagLayout)panel3.getLayout()).columnWidths = new int[] {0, 0, 0, 0, 0, 0};
+                        ((GridBagLayout)panel3.getLayout()).rowHeights = new int[] {0, 0};
+                        ((GridBagLayout)panel3.getLayout()).columnWeights = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 1.0E-4};
+                        ((GridBagLayout)panel3.getLayout()).rowWeights = new double[] {0.0, 1.0E-4};
 
                         //---- button11 ----
                         button11.setText("Configure Stop Condition");
                         button11.addActionListener(e -> configStopCondition(e));
-                        buttonBar2.add(button11, new GridBagConstraints(4, 4, 1, 1, 0.0, 0.0,
+                        panel3.add(button11, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 0, 0, 5), 0, 0));
+
+                        //---- button1 ----
+                        button1.setText("Edit");
+                        button1.addActionListener(e -> button1(e));
+                        panel3.add(button1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 0, 0, 5), 0, 0));
+
+                        //---- button2 ----
+                        button2.setText("Delete");
+                        button2.addActionListener(e -> delete(e));
+                        panel3.add(button2, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 0, 0, 5), 0, 0));
+
+                        //---- button3 ----
+                        button3.setText("Move Up");
+                        button3.addActionListener(e -> moveUp(e));
+                        panel3.add(button3, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 0, 0, 5), 0, 0));
+
+                        //---- okButton2 ----
+                        okButton2.setText("Move Down");
+                        okButton2.addActionListener(e -> moveDown(e));
+                        panel3.add(okButton2, new GridBagConstraints(4, 0, 1, 1, 0.0, 0.0,
                             GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                             new Insets(0, 0, 0, 0), 0, 0));
                     }
-                    panel2.add(buttonBar2, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+                    panel2.add(panel3, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.NORTHWEST, GridBagConstraints.NONE,
+                        new Insets(0, 0, 0, 0), 0, 0));
+
+                    //======== panel4 ========
+                    {
+                        panel4.setBorder(new TitledBorder("Script Task Selection"));
+                        panel4.setLayout(new GridBagLayout());
+                        ((GridBagLayout)panel4.getLayout()).columnWidths = new int[] {0, 0, 0};
+                        ((GridBagLayout)panel4.getLayout()).rowHeights = new int[] {0, 0};
+                        ((GridBagLayout)panel4.getLayout()).columnWeights = new double[] {0.0, 0.0, 1.0E-4};
+                        ((GridBagLayout)panel4.getLayout()).rowWeights = new double[] {0.0, 1.0E-4};
+
+                        //---- button6 ----
+                        button6.setText("Add New Task");
+                        button6.addActionListener(e -> button6(e));
+                        panel4.add(button6, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 0, 0, 5), 0, 0));
+                        panel4.add(comboBox1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 0, 0, 0), 0, 0));
+                    }
+                    panel2.add(panel4, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.NORTHWEST, GridBagConstraints.NONE,
+                        new Insets(0, 0, 0, 0), 0, 0));
+
+                    //======== panel5 ========
+                    {
+                        panel5.setBorder(new TitledBorder("Advanced"));
+                        panel5.setLayout(new GridBagLayout());
+                        ((GridBagLayout)panel5.getLayout()).columnWidths = new int[] {0, 0, 0};
+                        ((GridBagLayout)panel5.getLayout()).rowHeights = new int[] {0, 0};
+                        ((GridBagLayout)panel5.getLayout()).columnWeights = new double[] {0.0, 0.0, 1.0E-4};
+                        ((GridBagLayout)panel5.getLayout()).rowWeights = new double[] {0.0, 1.0E-4};
+
+                        //---- button4 ----
+                        button4.setText("Reset Settings Cache");
+                        panel5.add(button4, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 0, 0, 5), 0, 0));
+
+                        //---- toggleButton1 ----
+                        toggleButton1.setText("Enable Break Handler");
+                        panel5.add(toggleButton1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                            new Insets(0, 0, 0, 0), 0, 0));
+                    }
+                    panel2.add(panel5, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
+                        GridBagConstraints.NORTHWEST, GridBagConstraints.NONE,
+                        new Insets(0, 0, 0, 0), 0, 0));
+
+                    //======== panel7 ========
+                    {
+                        panel7.setLayout(new BorderLayout());
+
+                        //---- okButton ----
+                        okButton.setText("Start Script");
+                        okButton.addActionListener(e -> {
+			ok(e);
+			ok(e);
+			ok(e);
+		});
+                        panel7.add(okButton, BorderLayout.EAST);
+                    }
+                    panel2.add(panel7, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 0, 0, 0), 0, 0));
                 }
-                tabbedPane3.addTab("Index", panel2);
+                tabbedPane3.addTab("Display", panel2);
             }
             dialogPane.add(tabbedPane3, BorderLayout.CENTER);
+
+            //======== menuBar1 ========
+            {
+
+                //======== menu1 ========
+                {
+                    menu1.setText("File");
+
+                    //---- menuItem1 ----
+                    menuItem1.setText("Settings");
+                    menu1.add(menuItem1);
+
+                    //---- menuItem4 ----
+                    menuItem4.setText("Exit");
+                    menu1.add(menuItem4);
+                }
+                menuBar1.add(menu1);
+
+                //======== menu4 ========
+                {
+                    menu4.setText("Links");
+
+                    //---- menuItem3 ----
+                    menuItem3.setText("Github Repository");
+                    menu4.add(menuItem3);
+
+                    //---- menuItem5 ----
+                    menuItem5.setText("TRiBot Repository");
+                    menu4.add(menuItem5);
+                }
+                menuBar1.add(menu4);
+
+                //======== menu2 ========
+                {
+                    menu2.setText("Help");
+
+                    //---- menuItem2 ----
+                    menuItem2.setText("About");
+                    menu2.add(menuItem2);
+                }
+                menuBar1.add(menu2);
+            }
+            dialogPane.add(menuBar1, BorderLayout.NORTH);
         }
         contentPane.add(dialogPane, BorderLayout.CENTER);
         pack();
@@ -320,28 +364,33 @@ public class ScriptTaskGui extends JFrame {
 
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables  @formatter:off
     private JPanel dialogPane;
-    private JPanel buttonBar;
-    private JButton button4;
-    private JToggleButton toggleButton1;
-    private JButton okButton;
     private JTabbedPane tabbedPane3;
     private JPanel panel2;
-    private JLabel label1;
     private JScrollPane scrollPane1;
     private JList list1;
-    private JPanel buttonBar2;
-    private JLabel label2;
-    private JLabel label4;
-    private JComboBox comboBox1;
+    private JPanel panel3;
+    private JButton button11;
     private JButton button1;
     private JButton button2;
     private JButton button3;
     private JButton okButton2;
+    private JPanel panel4;
     private JButton button6;
-    private JButton button7;
-    private JButton button8;
-    private JButton button10;
-    private JButton button11;
+    private JComboBox comboBox1;
+    private JPanel panel5;
+    private JButton button4;
+    private JToggleButton toggleButton1;
+    private JPanel panel7;
+    private JButton okButton;
+    private JMenuBar menuBar1;
+    private JMenu menu1;
+    private JMenuItem menuItem1;
+    private JMenuItem menuItem4;
+    private JMenu menu4;
+    private JMenuItem menuItem3;
+    private JMenuItem menuItem5;
+    private JMenu menu2;
+    private JMenuItem menuItem2;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 
 

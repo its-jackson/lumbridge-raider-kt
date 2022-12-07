@@ -107,8 +107,6 @@ enum class Monster(
 
     open fun location() = ""
 
-    override fun toString(): String = "${this@Monster.monsterName} at ${this@Monster.location()}"
-
     fun getMonsterNpcQuery() = Query.npcs()
         .nameEquals(this@Monster.monsterName)
         .isNotBeingInteractedWith
