@@ -94,5 +94,5 @@ enum class Rock(
         }
         .orElse(false)
 
-    override fun toString() = oreSpriteName
+    //override fun toString() = oreSpriteName
 }

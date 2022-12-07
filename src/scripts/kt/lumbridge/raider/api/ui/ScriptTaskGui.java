@@ -13,6 +13,8 @@ import scripts.kt.lumbridge.raider.api.ScriptTask;
 import scripts.kt.lumbridge.raider.api.ui.stop.condition.StopConditionGui;
 import scripts.kt.lumbridge.raider.api.ui.task.combat.CombatTaskGui;
 import scripts.kt.lumbridge.raider.api.ui.task.cooking.CookingTaskGui;
+import scripts.kt.lumbridge.raider.api.ui.task.fishing.FishingTaskGui;
+import scripts.kt.lumbridge.raider.api.ui.task.mining.MiningTaskGui;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -30,6 +32,8 @@ public class ScriptTaskGui extends JFrame {
     private final StopConditionGui stopConditionGui = new StopConditionGui(this);
     private final CombatTaskGui combatTaskGui = new CombatTaskGui(this);
     private final CookingTaskGui cookingTaskGui = new CookingTaskGui(this);
+    private final FishingTaskGui fishingTaskGui = new FishingTaskGui(this);
+    private final MiningTaskGui miningTaskGui = new MiningTaskGui(this);
 
     public ScriptTaskGui() {
         initComponents();
@@ -49,7 +53,6 @@ public class ScriptTaskGui extends JFrame {
 
     private void button1(ActionEvent e) {
         // TODO Edit Task
-
         if (list1.getSelectedValue() == null || list1.getSelectedIndex() == -1) return;
 
         ScriptTask selectedTask = (ScriptTask) list1.getSelectedValue();
@@ -65,12 +68,15 @@ public class ScriptTaskGui extends JFrame {
             case COMBAT_RANGED: combatTaskGui.showRangedEditForm(selectedTask, selectedIndex);
                 break;
             case COOKING: cookingTaskGui.showCookingEditForm(selectedTask, selectedIndex);
+                break;
+            case FISHING: fishingTaskGui.showFishingEditForm(selectedTask, selectedIndex);
+                break;
+            case MINING: miningTaskGui.showMiningEditForm(selectedTask, selectedIndex);
         }
     }
 
     private void button6(ActionEvent e) {
         // TODO Add Task
-
         if (comboBox1.getSelectedItem() == null) return;
 
         ScriptBehavior behavior = (ScriptBehavior) comboBox1.getSelectedItem();
@@ -83,6 +89,10 @@ public class ScriptTaskGui extends JFrame {
             case COMBAT_RANGED: combatTaskGui.showRangedAddForm();
                 break;
             case COOKING: cookingTaskGui.showCookingAddForm();
+                break;
+            case FISHING: fishingTaskGui.showFishingAddForm();
+                break;
+            case MINING: miningTaskGui.showMiningAddForm();
         }
     }
 
@@ -298,11 +308,7 @@ public class ScriptTaskGui extends JFrame {
 
                         //---- okButton ----
                         okButton.setText("Start Script");
-                        okButton.addActionListener(e -> {
-			ok(e);
-			ok(e);
-			ok(e);
-		});
+                        okButton.addActionListener(this::ok);
                         panel7.add(okButton, BorderLayout.EAST);
                     }
                     panel2.add(panel7, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,

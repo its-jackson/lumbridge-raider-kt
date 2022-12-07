@@ -290,7 +290,8 @@ class LumbridgeRaiderKt : TribotScript {
     private fun prayerTest() {
         val prayerTask = ScriptTask(
             behavior = ScriptBehavior.PRAYER,
-            stopCondition = ResourceGainedCondition(526)
+            stopCondition = ResourceGainedCondition(526, 56),
+            prayerData = ScriptPrayerData(Inventory.DropPattern.ZIGZAG)
         )
 
         scriptTaskRunner.configure(arrayOf(prayerTask))

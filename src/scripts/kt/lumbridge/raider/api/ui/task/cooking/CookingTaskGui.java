@@ -116,7 +116,7 @@ public class CookingTaskGui extends JFrame {
 
                 //======== panel1 ========
                 {
-                    panel1.setBorder(new BevelBorder(BevelBorder.LOWERED));
+                    panel1.setBorder(new TitledBorder(""));
                     panel1.setLayout(new GridBagLayout());
 
                     //---- label1 ----

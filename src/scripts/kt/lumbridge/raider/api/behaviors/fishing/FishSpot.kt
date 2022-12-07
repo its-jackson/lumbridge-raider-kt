@@ -133,7 +133,8 @@ enum class FishSpot(
             fishSpot.actions
                 .any { action ->
                     this@FishSpot.actions.contains(action) && Waiting.waitUntil { fishSpot.interact(action) } &&
-                            Waiting.waitUntilAnimating(10000) && waitUntilNotAnimating(end = TribotRandom.normal(2000, 187).toLong())
+                            Waiting.waitUntilAnimating(10000) &&
+                            waitUntilNotAnimating(end = TribotRandom.normal(2000, 187).toLong())
                 }
         }
         .orElse(false)
@@ -141,5 +142,5 @@ enum class FishSpot(
     fun getFishSpotQuery() = Query.npcs()
         .idEquals(*this@FishSpot.ids)
 
-    override fun toString(): String = "${spriteNames.fold("") { acc, s -> "$acc/$s" }} at ${location()}"
+    //override fun toString(): String = "${spriteNames.fold("") { acc, s -> "$acc/$s" }} at ${location()}"
 }

@@ -7,6 +7,7 @@ package scripts.kt.lumbridge.raider.api.ui.stop.condition;
 import java.awt.event.*;
 
 import org.tribot.script.sdk.Skill;
+import org.tribot.script.sdk.util.Resources;
 import scripts.kotlin.api.AbstractStopCondition;
 import scripts.kotlin.api.SkillLevelsReachedCondition;
 import scripts.kotlin.api.TimeStopCondition;
@@ -25,6 +26,7 @@ import javax.swing.border.*;
  */
 public class StopConditionGui extends JFrame {
     private final ScriptTaskGui rootFrame;
+    private final JFrame sillyFrame = new JFrame();
 
     private final DefaultListModel<HashMap<Skill, Integer>> skillLvlDefaultListModel = new DefaultListModel<>();
 
@@ -51,6 +53,16 @@ public class StopConditionGui extends JFrame {
         spinner4.setModel(new SpinnerNumberModel(1, 1, 99, 1));
 
         list1.setModel(skillLvlDefaultListModel);
+
+        ImageIcon icon = new ImageIcon(
+                Resources.getImage("scripts/kt/lumbridge/raider/api/resources/Silly.png")
+        );
+        JLabel label = new JLabel(icon);
+        sillyFrame.add(label);
+        sillyFrame.pack();
+        sillyFrame.setSize(400, 350);
+        sillyFrame.setResizable(false);
+        sillyFrame.setLocationRelativeTo(rootFrame);
     }
 
     private void setScriptTask(ScriptTask scriptTask) {
@@ -82,8 +94,12 @@ public class StopConditionGui extends JFrame {
 
     public void showForm(ScriptTask scriptTask, int scriptIndex) {
         if (scriptTask == null || scriptIndex == -1) return;
-        if (scriptTask.getBehavior() == ScriptBehavior.COOKING) return;
-        if (scriptTask.getBehavior() == ScriptBehavior.PRAYER) return;
+
+        if (scriptTask.getBehavior() == ScriptBehavior.COOKING ||
+                scriptTask.getBehavior() == ScriptBehavior.PRAYER) {
+            sillyFrame.setVisible(true);
+            return;
+        }
 
         setState(scriptTask, scriptIndex);
         resetComponents();
