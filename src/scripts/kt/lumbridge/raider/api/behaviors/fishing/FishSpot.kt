@@ -141,6 +141,4 @@ enum class FishSpot(
 
     fun getFishSpotQuery() = Query.npcs()
         .idEquals(*this@FishSpot.ids)
-
-    //override fun toString(): String = "${spriteNames.fold("") { acc, s -> "$acc/$s" }} at ${location()}"
 }

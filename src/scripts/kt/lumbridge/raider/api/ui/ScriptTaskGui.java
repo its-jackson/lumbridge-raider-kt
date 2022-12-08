@@ -10,11 +10,15 @@ import org.tribot.script.sdk.script.ScriptRuntimeInfo;
 import org.tribot.script.sdk.util.Resources;
 import scripts.kt.lumbridge.raider.api.ScriptBehavior;
 import scripts.kt.lumbridge.raider.api.ScriptTask;
+import scripts.kt.lumbridge.raider.api.ui.silly.SillyGui;
 import scripts.kt.lumbridge.raider.api.ui.stop.condition.StopConditionGui;
 import scripts.kt.lumbridge.raider.api.ui.task.combat.CombatTaskGui;
 import scripts.kt.lumbridge.raider.api.ui.task.cooking.CookingTaskGui;
 import scripts.kt.lumbridge.raider.api.ui.task.fishing.FishingTaskGui;
 import scripts.kt.lumbridge.raider.api.ui.task.mining.MiningTaskGui;
+import scripts.kt.lumbridge.raider.api.ui.task.prayer.PrayerTaskGui;
+import scripts.kt.lumbridge.raider.api.ui.task.questing.QuestingGuiTask;
+import scripts.kt.lumbridge.raider.api.ui.task.woodcutting.WoodcuttingGuiTask;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -29,11 +33,16 @@ public class ScriptTaskGui extends JFrame {
 
     private final DefaultListModel<ScriptTask> scriptTaskDefaultListModel = new DefaultListModel<>();
 
+    private final SillyGui sillyFrame = new SillyGui(this);
+
     private final StopConditionGui stopConditionGui = new StopConditionGui(this);
     private final CombatTaskGui combatTaskGui = new CombatTaskGui(this);
     private final CookingTaskGui cookingTaskGui = new CookingTaskGui(this);
     private final FishingTaskGui fishingTaskGui = new FishingTaskGui(this);
     private final MiningTaskGui miningTaskGui = new MiningTaskGui(this);
+    private final PrayerTaskGui prayerTaskGui = new PrayerTaskGui(this);
+    private final QuestingGuiTask questingGuiTask = new QuestingGuiTask(this);
+    private final WoodcuttingGuiTask woodcuttingGuiTask = new WoodcuttingGuiTask(this);
 
     public ScriptTaskGui() {
         initComponents();
@@ -52,7 +61,6 @@ public class ScriptTaskGui extends JFrame {
     }
 
     private void button1(ActionEvent e) {
-        // TODO Edit Task
         if (list1.getSelectedValue() == null || list1.getSelectedIndex() == -1) return;
 
         ScriptTask selectedTask = (ScriptTask) list1.getSelectedValue();
@@ -72,11 +80,16 @@ public class ScriptTaskGui extends JFrame {
             case FISHING: fishingTaskGui.showFishingEditForm(selectedTask, selectedIndex);
                 break;
             case MINING: miningTaskGui.showMiningEditForm(selectedTask, selectedIndex);
+                break;
+            case PRAYER: prayerTaskGui.showPrayerEditForm(selectedTask, selectedIndex);
+                break;
+            case QUESTING: sillyFrame.setVisible(true);
+                break;
+            case WOODCUTTING: woodcuttingGuiTask.showWoodcuttingEditForm(selectedTask, selectedIndex);
         }
     }
 
     private void button6(ActionEvent e) {
-        // TODO Add Task
         if (comboBox1.getSelectedItem() == null) return;
 
         ScriptBehavior behavior = (ScriptBehavior) comboBox1.getSelectedItem();
@@ -93,6 +106,12 @@ public class ScriptTaskGui extends JFrame {
             case FISHING: fishingTaskGui.showFishingAddForm();
                 break;
             case MINING: miningTaskGui.showMiningAddForm();
+                break;
+            case PRAYER: prayerTaskGui.showPrayerAddForm();
+                break;
+            case QUESTING: questingGuiTask.showQuestingAddForm();
+                break;
+            case WOODCUTTING: woodcuttingGuiTask.showWoodcuttingAddForm();
         }
     }
 

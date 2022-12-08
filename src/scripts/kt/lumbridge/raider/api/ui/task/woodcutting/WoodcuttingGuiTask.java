@@ -1,17 +1,15 @@
 /*
- * Created by JFormDesigner on Wed Dec 07 10:39:52 AST 2022
+ * Created by JFormDesigner on Thu Dec 08 14:53:06 AST 2022
  */
 
-package scripts.kt.lumbridge.raider.api.ui.task.mining;
+package scripts.kt.lumbridge.raider.api.ui.task.woodcutting;
 
 import java.awt.event.*;
 
-import scripts.kt.lumbridge.raider.api.ScriptBehavior;
-import scripts.kt.lumbridge.raider.api.ScriptDisposal;
-import scripts.kt.lumbridge.raider.api.ScriptMiningData;
-import scripts.kt.lumbridge.raider.api.ScriptTask;
-import scripts.kt.lumbridge.raider.api.behaviors.mining.Pickaxe;
+import scripts.kt.lumbridge.raider.api.*;
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Rock;
+import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Axe;
+import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Tree;
 import scripts.kt.lumbridge.raider.api.ui.ScriptTaskGui;
 
 import java.awt.*;
@@ -24,84 +22,77 @@ import javax.swing.border.*;
 /**
  * @author Polymorphic
  */
-public class MiningTaskGui extends JFrame {
+public class WoodcuttingGuiTask extends JFrame {
     private final ScriptTaskGui rootFrame;
 
-    private final DefaultListModel<Rock> rockDefaultListModel = new DefaultListModel<>();
+    private final DefaultListModel<Tree> treeDefaultListModel = new DefaultListModel<>();
 
     private int editIndex;
 
-    public MiningTaskGui(ScriptTaskGui rootFrame) {
+    public WoodcuttingGuiTask(ScriptTaskGui rootFrame) {
         this.rootFrame = rootFrame;
         initComponents();
-        Arrays.stream(Pickaxe.values()).forEach(pickaxe -> comboBox2.addItem(pickaxe));
-        Arrays.stream(Rock.values()).forEach(rock -> comboBox3.addItem(rock));
-        comboBox4.addItem(ScriptDisposal.BANK);
-        comboBox4.addItem(ScriptDisposal.DROP);
-        comboBox4.addItem(ScriptDisposal.M1D1);
-        list1.setModel(rockDefaultListModel);
+
+        Arrays.stream(Axe.values()).forEach(axe -> this.comboBox1.addItem(axe));
+        Arrays.stream(Tree.values()).forEach(tree -> this.comboBox2.addItem(tree));
+        this.comboBox3.addItem(ScriptDisposal.BANK);
+        this.comboBox3.addItem(ScriptDisposal.DROP);
+        this.list1.setModel(treeDefaultListModel);
     }
 
-    public void showMiningAddForm() {
-        checkBox1.setSelected(false);
-        comboBox2.setSelectedItem(Pickaxe.BRONZE);
-        comboBox3.setSelectedItem(Rock.TIN_LUMBRIDGE_SWAMP);
-        comboBox4.setSelectedItem(ScriptDisposal.BANK);
-        rockDefaultListModel.clear();
+    public void showWoodcuttingAddForm() {
         editIndex = -1;
+        comboBox1.setSelectedIndex(0);
+        comboBox2.setSelectedIndex(0);
+        comboBox3.setSelectedIndex(0);
+        checkBox1.setSelected(false);
+        treeDefaultListModel.clear();
         okButton.setText("Add");
         setVisible(true);
     }
 
-    public void showMiningEditForm(ScriptTask selectedTask, int selectedIndex) {
+    public void showWoodcuttingEditForm(ScriptTask selectedTask, int selectedIndex) {
         if (selectedTask == null || selectedIndex == -1) return;
-        if (selectedTask.getMiningData() == null) return;
-        if (selectedTask.getMiningData().getPickaxe() == null) return;
-        if (selectedTask.getMiningData().getRocks() == null) return;
         if (selectedTask.getDisposal() == null) return;
+        if (selectedTask.getWoodcuttingData() == null) return;
+        if (selectedTask.getWoodcuttingData().getAxe() == null) return;
+        if (selectedTask.getWoodcuttingData().getTrees() == null) return;
 
-        checkBox1.setSelected(selectedTask.getMiningData().getWieldPickaxe());
-        comboBox2.setSelectedItem(selectedTask.getMiningData().getPickaxe());
-        comboBox4.setSelectedItem(selectedTask.getDisposal());
-        rockDefaultListModel.clear();
-        rockDefaultListModel.addAll(selectedTask.getMiningData().getRocks());
         editIndex = selectedIndex;
+        comboBox1.setSelectedItem(selectedTask.getWoodcuttingData().getAxe());
+        checkBox1.setSelected(selectedTask.getWoodcuttingData().getWieldAxe());
+        treeDefaultListModel.clear();
+        treeDefaultListModel.addAll(selectedTask.getWoodcuttingData().getTrees());
+        comboBox3.setSelectedItem(selectedTask.getDisposal());
         okButton.setText("Save");
         setVisible(true);
     }
 
     private void ok(ActionEvent e) {
+        if (comboBox1.getSelectedItem() == null) return;
         if (comboBox2.getSelectedItem() == null) return;
-        if (comboBox4.getSelectedItem() == null) return;
-        if (rockDefaultListModel.isEmpty()) return;
+        if (comboBox3.getSelectedItem() == null) return;
+        if (treeDefaultListModel.isEmpty()) return;
 
         boolean isWield = checkBox1.isSelected();
-        Pickaxe pickaxe = (Pickaxe) comboBox2.getSelectedItem();
-        ScriptDisposal disposal = (ScriptDisposal) comboBox4.getSelectedItem();
-        List<Rock> rockSequence = Arrays.stream(rockDefaultListModel.toArray())
-                .map(o -> (Rock) o)
+        Axe axe =  (Axe) comboBox1.getSelectedItem();
+        ScriptDisposal disposal = (ScriptDisposal) comboBox3.getSelectedItem();
+        List<Tree> rockSequence = Arrays.stream(treeDefaultListModel.toArray())
+                .map(o -> (Tree) o)
                 .collect(Collectors.toList());
 
-        ScriptTask miningTask = new ScriptTask.Builder()
-                .behavior(ScriptBehavior.MINING)
+        ScriptTask woodcuttingTask = new ScriptTask.Builder()
+                .behavior(ScriptBehavior.WOODCUTTING)
                 .disposal(disposal)
-                .miningData(
-                        new ScriptMiningData(rockSequence, pickaxe, isWield)
-                )
+                .woodcuttingData(new ScriptWoodcuttingData(rockSequence, axe, isWield))
                 .build();
 
         if (editIndex != -1)
-            rootFrame.getScriptTaskDefaultListModel().set(editIndex, miningTask);
+            rootFrame.getScriptTaskDefaultListModel().set(editIndex, woodcuttingTask);
         else
-            rootFrame.getScriptTaskDefaultListModel().addElement(miningTask);
+            rootFrame.getScriptTaskDefaultListModel().addElement(woodcuttingTask);
 
         setVisible(false);
-    }
-
-    private void comboBox3(ActionEvent e) {
-        if (comboBox3.getSelectedItem() == null) return;
-        Rock rock = (Rock) comboBox3.getSelectedItem();
-        rockDefaultListModel.addElement(rock);
     }
 
     private void cancel(ActionEvent e) {
@@ -109,32 +100,39 @@ public class MiningTaskGui extends JFrame {
     }
 
     private void delete(ActionEvent e) {
-        if (list1.getSelectedIndex() == -1) return;
-        rockDefaultListModel.remove(list1.getSelectedIndex());
+        int toDelete = list1.getSelectedIndex();
+        if (toDelete == -1) return;
+
+        treeDefaultListModel.remove(toDelete);
+    }
+
+    private void comboBox2(ActionEvent e) {
+        if (comboBox2.getSelectedItem() == null) return;
+        treeDefaultListModel.addElement((Tree) comboBox2.getSelectedItem());
     }
 
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents  @formatter:off
         dialogPane = new JPanel();
         contentPanel = new JPanel();
-        label2 = new JLabel();
-        comboBox2 = new JComboBox();
+        label1 = new JLabel();
+        comboBox1 = new JComboBox();
         checkBox1 = new JCheckBox();
         buttonBar = new JPanel();
         okButton = new JButton();
         cancelButton = new JButton();
-        panel2 = new JPanel();
-        label3 = new JLabel();
-        comboBox3 = new JComboBox();
+        panel1 = new JPanel();
+        label2 = new JLabel();
+        comboBox2 = new JComboBox();
         scrollPane1 = new JScrollPane();
         list1 = new JList();
         button1 = new JButton();
-        panel3 = new JPanel();
-        comboBox4 = new JComboBox();
+        panel2 = new JPanel();
+        comboBox3 = new JComboBox();
 
         //======== this ========
-        setMinimumSize(new Dimension(500, 435));
-        setTitle("Mining Task");
+        setTitle("Woodcutting Task");
+        setMinimumSize(new Dimension(500, 400));
         var contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
 
@@ -145,15 +143,15 @@ public class MiningTaskGui extends JFrame {
 
             //======== contentPanel ========
             {
-                contentPanel.setBorder(new TitledBorder("Pickaxe Preferences"));
+                contentPanel.setBorder(new TitledBorder("Axe Preferences"));
                 contentPanel.setLayout(new GridBagLayout());
 
-                //---- label2 ----
-                label2.setText("Pickaxe");
-                contentPanel.add(label2, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                //---- label1 ----
+                label1.setText("Axe");
+                contentPanel.add(label1, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 5), 0, 0));
-                contentPanel.add(comboBox2, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                contentPanel.add(comboBox1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 5), 0, 0));
 
@@ -188,49 +186,49 @@ public class MiningTaskGui extends JFrame {
             }
             dialogPane.add(buttonBar, BorderLayout.SOUTH);
 
-            //======== panel2 ========
+            //======== panel1 ========
             {
-                panel2.setBorder(new TitledBorder("Rock Sequence (ORDER MATTERS)"));
-                panel2.setLayout(new GridBagLayout());
+                panel1.setBorder(new TitledBorder("Tree Sequence (ORDER MATTERS)"));
+                panel1.setLayout(new GridBagLayout());
 
-                //---- label3 ----
-                label3.setText("Rock");
-                panel2.add(label3, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                //---- label2 ----
+                label2.setText("Tree");
+                panel1.add(label2, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 5), 0, 0));
 
-                //---- comboBox3 ----
-                comboBox3.addActionListener(e -> comboBox3(e));
-                panel2.add(comboBox3, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
+                //---- comboBox2 ----
+                comboBox2.addActionListener(e -> comboBox2(e));
+                panel1.add(comboBox2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 0), 0, 0));
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //======== scrollPane1 ========
                 {
                     scrollPane1.setViewportView(list1);
                 }
-                panel2.add(scrollPane1, new GridBagConstraints(0, 1, 2, 2, 0.0, 0.0,
+                panel1.add(scrollPane1, new GridBagConstraints(0, 2, 5, 4, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 5, 0), 0, 0));
 
                 //---- button1 ----
-                button1.setText("Deleted Selected");
+                button1.setText("Delete Selected");
                 button1.addActionListener(e -> delete(e));
-                panel2.add(button1, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0,
+                panel1.add(button1, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 0, 0), 0, 0));
+                    new Insets(0, 0, 0, 5), 0, 0));
             }
-            dialogPane.add(panel2, BorderLayout.CENTER);
+            dialogPane.add(panel1, BorderLayout.CENTER);
 
-            //======== panel3 ========
+            //======== panel2 ========
             {
-                panel3.setBorder(new TitledBorder("Disposal"));
-                panel3.setLayout(new GridBagLayout());
-                panel3.add(comboBox4, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
+                panel2.setBorder(new TitledBorder("Disposal"));
+                panel2.setLayout(new GridBagLayout());
+                panel2.add(comboBox3, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                     new Insets(0, 0, 0, 0), 0, 0));
             }
-            dialogPane.add(panel3, BorderLayout.EAST);
+            dialogPane.add(panel2, BorderLayout.EAST);
         }
         contentPane.add(dialogPane, BorderLayout.CENTER);
         pack();
@@ -241,19 +239,19 @@ public class MiningTaskGui extends JFrame {
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables  @formatter:off
     private JPanel dialogPane;
     private JPanel contentPanel;
-    private JLabel label2;
-    private JComboBox comboBox2;
+    private JLabel label1;
+    private JComboBox comboBox1;
     private JCheckBox checkBox1;
     private JPanel buttonBar;
     private JButton okButton;
     private JButton cancelButton;
-    private JPanel panel2;
-    private JLabel label3;
-    private JComboBox comboBox3;
+    private JPanel panel1;
+    private JLabel label2;
+    private JComboBox comboBox2;
     private JScrollPane scrollPane1;
     private JList list1;
     private JButton button1;
-    private JPanel panel3;
-    private JComboBox comboBox4;
+    private JPanel panel2;
+    private JComboBox comboBox3;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }

@@ -9,7 +9,7 @@ import scripts.kotlin.api.walkTo
 
 enum class Quest(
     x: Int, y: Int, z: Int,
-    private val questName: String,
+    val questName: String,
     private val questHandInNpc: String,
     private val chatScreenDialog: Array<String>,
     private val chatScreenConfig: ChatScreen.Config
@@ -51,6 +51,4 @@ enum class Quest(
                     Waiting.waitUntil { ChatScreen.isOpen() }
         }
         .orElse(false)
-
-    override fun toString() = this@Quest.questName
 }

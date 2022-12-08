@@ -129,7 +129,7 @@ public class CookingTaskGui extends JFrame {
                         new Insets(0, 0, 5, 0), 0, 0));
 
                     //---- label2 ----
-                    label2.setText("Amount To Cook (leave blank, or -1, for until fully depleted.)");
+                    label2.setText("Amount To Cook (leave blank, or -1, for until empty.)");
                     panel1.add(label2, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 0, 5, 5), 0, 0));

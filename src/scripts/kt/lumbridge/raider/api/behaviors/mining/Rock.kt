@@ -93,6 +93,4 @@ enum class Rock(
             Waiting.waitUntil { it.interact("Mine") }
         }
         .orElse(false)
-
-    //override fun toString() = oreSpriteName
 }

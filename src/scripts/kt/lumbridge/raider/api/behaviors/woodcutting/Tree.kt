@@ -120,6 +120,4 @@ enum class Tree(
             }
         }
         .orElse(false)
-
-    override fun toString() = this@Tree.treeName
 }

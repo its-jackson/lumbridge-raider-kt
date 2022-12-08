@@ -67,25 +67,25 @@ class LumbridgeRaiderKt : TribotScript {
         .row(
             paintTemplate.toBuilder()
                 .label("Rocks")
-                .value { scriptTaskRunner.activeScriptTask?.miningData?.rocks }
+                .value { scriptTaskRunner.activeScriptTask?.miningData?.rocks?.map { it.oreSpriteName } }
                 .build()
         )
         .row(
             paintTemplate.toBuilder()
                 .label("Trees")
-                .value { scriptTaskRunner.activeScriptTask?.woodcuttingData?.trees }
+                .value { scriptTaskRunner.activeScriptTask?.woodcuttingData?.trees?.map { it.treeName } }
                 .build()
         )
         .row(
             paintTemplate.toBuilder()
                 .label("Fish spot")
-                .value { scriptTaskRunner.activeScriptTask?.fishingData?.fishSpot }
+                .value { scriptTaskRunner.activeScriptTask?.fishingData?.fishSpot?.spriteNames }
                 .build()
         )
         .row(
             paintTemplate.toBuilder()
                 .label("Quest")
-                .value { scriptTaskRunner.activeScriptTask?.questingData?.quest }
+                .value { scriptTaskRunner.activeScriptTask?.questingData?.quest?.questName }
                 .build()
         )
         .row(
