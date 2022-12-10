@@ -15,7 +15,7 @@ new FormModel {
 					name: "tabbedPane3"
 					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
 						"$columnSpecs": "0:1.0"
-						"$rowSpecs": "0:1.0, 0, 0, 0, 0"
+						"$rowSpecs": "0:1.0, 0, 0, 0"
 						"$alignTop": true
 						"$alignLeft": true
 					} ) {
@@ -100,31 +100,6 @@ new FormModel {
 							"hAlign": 2
 							"vAlign": 1
 						} )
-						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridBagLayout ) {
-							"$columnSpecs": "0, 0"
-							"$rowSpecs": "0"
-							"$hGap": 5
-							"$vGap": 5
-							"$alignLeft": true
-							"$alignTop": true
-						} ) {
-							name: "panel5"
-							"border": new javax.swing.border.TitledBorder( "Advanced" )
-							add( new FormComponent( "javax.swing.JButton" ) {
-								name: "button4"
-								"text": "Reset Settings Cache"
-							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) )
-							add( new FormComponent( "javax.swing.JToggleButton" ) {
-								name: "toggleButton1"
-								"text": "Enable Break Handler"
-							}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-								"gridx": 1
-							} )
-						}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-							"gridy": 3
-							"hAlign": 2
-							"vAlign": 1
-						} )
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
 							name: "panel7"
 							add( new FormComponent( "javax.swing.JButton" ) {
@@ -137,7 +112,7 @@ new FormModel {
 								"value": "East"
 							} )
 						}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
-							"gridy": 4
+							"gridy": 3
 						} )
 					}, new FormLayoutConstraints( null ) {
 						"title": "Display"
@@ -161,7 +136,7 @@ new FormModel {
 					} )
 					add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
 						name: "menu4"
-						"text": "Links"
+						"text": "Link"
 						add( new FormComponent( "javax.swing.JMenuItem" ) {
 							name: "menuItem3"
 							"text": "Github Repository"
@@ -169,6 +144,15 @@ new FormModel {
 						add( new FormComponent( "javax.swing.JMenuItem" ) {
 							name: "menuItem5"
 							"text": "TRiBot Repository"
+						} )
+					} )
+					add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
+						name: "menu3"
+						"text": "View"
+						add( new FormComponent( "javax.swing.JMenuItem" ) {
+							name: "menuItem6"
+							"text": "Break Manager"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "showBreakManagerForm", true ) )
 						} )
 					} )
 					add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {

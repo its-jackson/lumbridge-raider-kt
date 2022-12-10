@@ -223,7 +223,7 @@ public class CombatTaskGui extends JFrame {
 
         if ((scriptBehavior == ScriptBehavior.COMBAT_MELEE  || scriptBehavior == ScriptBehavior.COMBAT_RANGED)
                 && comboBox2.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "You forgot to selected an attack style!");
+            JOptionPane.showMessageDialog(this, "You forgot to select an attack style!");
             return;
         }
 

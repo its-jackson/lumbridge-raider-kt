@@ -45,18 +45,13 @@ class LumbridgeRaiderKt : TribotScript {
         .row(PaintRows.versionedScriptName(paintTemplate.toBuilder()))
         .row(PaintRows.runtime(paintTemplate.toBuilder()))
         .row(
-            paintTemplate.toBuilder().label("Behavior")
-                .value { scriptTaskRunner.activeScriptTask?.behavior?.behavior }
+            paintTemplate.toBuilder().label("Stop")
+                .value { scriptTaskRunner.activeScriptTask?.stopCondition }
                 .build()
         )
         .row(
             paintTemplate.toBuilder().label("Disposal")
                 .value { scriptTaskRunner.activeScriptTask?.disposal?.disposal }
-                .build()
-        )
-        .row(
-            paintTemplate.toBuilder().label("Stop")
-                .value { scriptTaskRunner.activeScriptTask?.stopCondition }
                 .build()
         )
         .row(
@@ -150,8 +145,17 @@ class LumbridgeRaiderKt : TribotScript {
                 scriptTaskList.add(model.getElementAt(i))
             }
 
+            var scriptBreakControlData: ScriptBreakControlData? = ScriptBreakControlData(
+//                frequencyMeanMinutes = 0.0,
+//                frequencyStdMinutes = 1.0,
+//                timeMeanMinutes = 0.5,
+//                timeStdMinutes = 0.1
+            )
+
+            scriptBreakControlData = scriptTaskGui?.scriptBreakControlData
+
             scriptTaskGui = null // de-reference the script gui (assist garbage collection early)
-            scriptTaskRunner.configure(scriptTaskList.toTypedArray())
+            scriptTaskRunner.configure(scriptTaskList.toTypedArray(), scriptBreakControlData)
             scriptTaskRunner.run()
         }
     }

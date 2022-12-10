@@ -97,7 +97,7 @@ data class ScriptCombatData(
     }
 }
 
-data class ScriptTask (
+data class ScriptTask(
     val stopCondition: AbstractStopCondition = TimeStopCondition(days = 28),
     val behavior: ScriptBehavior? = null,
     val disposal: ScriptDisposal? = null,
@@ -109,7 +109,7 @@ data class ScriptTask (
     val prayerData: ScriptPrayerData? = null,
     val questingData: ScriptQuestingData? = null,
     var bankTask: BankTask? = null,
-)  {
+) {
     val resourceGainedCondition: ResourceGainedCondition?
         get() {
             return if (this.stopCondition !is ResourceGainedCondition)
@@ -167,27 +167,30 @@ enum class ScriptBehavior(val behavior: String) {
     QUESTING("Questing"),
     PRAYER("Prayer");
 
-    fun getScriptLogicBehaviorTree(activeScriptTask: ScriptTask?) = when (this) {
+    fun getScriptLogicBehaviorTree(
+        activeScriptTask: ScriptTask?,
+        breakControlData: ScriptBreakControlData?
+    ) = when (this) {
         COMBAT_MELEE, COMBAT_RANGED ->
-            scriptLogicBehaviorTree { combatBehavior(activeScriptTask) }
+            scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { combatBehavior(activeScriptTask) } }
 
         COMBAT_MAGIC ->
-            scriptLogicBehaviorTree { combatMagicBehavior(activeScriptTask) }
+            scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { combatMagicBehavior(activeScriptTask) } }
 
         COOKING ->
-            scriptLogicBehaviorTree { cookingBehavior(activeScriptTask) }
+            scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { cookingBehavior(activeScriptTask) } }
 
         FISHING ->
-            scriptLogicBehaviorTree { fishingBehavior(activeScriptTask) }
+            scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { fishingBehavior(activeScriptTask) } }
 
         PRAYER ->
-            scriptLogicBehaviorTree { prayerBehavior(activeScriptTask) }
+            scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { prayerBehavior(activeScriptTask) } }
 
         WOODCUTTING ->
-            scriptLogicBehaviorTree { woodcuttingBehavior(activeScriptTask) }
+            scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { woodcuttingBehavior(activeScriptTask) } }
 
         MINING ->
-            scriptLogicBehaviorTree { miningBehavior(activeScriptTask) }
+            scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { miningBehavior(activeScriptTask) } }
 
         QUESTING ->
             if (activeScriptTask?.questingData?.quest == Quest.COOKS_ASSISTANT)
@@ -197,7 +200,6 @@ enum class ScriptBehavior(val behavior: String) {
     }
 }
 
-// TODO - make sure all behaviors support the required disposal method
 enum class ScriptDisposal(val disposal: String) {
     BANK("Bank"),
     DROP("Drop"),
@@ -211,12 +213,17 @@ class ScriptTaskRunner : ISatisfiable {
 
     private var mainScriptBehaviorTree: IBehaviorNode? = null
     private var mainScriptBehaviorTreeState: BehaviorTreeStatus? = null
+    private var scriptBreakControlData: ScriptBreakControlData? = null
 
     var activeScriptTask: ScriptTask? = null
 
-    fun configure(scriptTasks: Array<ScriptTask>) {
+    fun configure(
+        scriptTasks: Array<ScriptTask>,
+        breakControlData: ScriptBreakControlData? = null
+    ) {
         taskQueue.clear()
         taskQueue.addAll(scriptTasks)
+        scriptBreakControlData = breakControlData
         setNextAndComposeMainScriptBehaviorTree()
     }
 
@@ -265,7 +272,7 @@ class ScriptTaskRunner : ISatisfiable {
 
     private fun composeMainScriptBehaviorTree() {
         mainScriptBehaviorTree = activeScriptTask?.behavior
-            ?.getScriptLogicBehaviorTree(activeScriptTask)
+            ?.getScriptLogicBehaviorTree(activeScriptTask, scriptBreakControlData)
     }
 
     private fun setNextAndComposeMainScriptBehaviorTree() {

@@ -8,8 +8,10 @@ import java.awt.event.*;
 
 import org.tribot.script.sdk.script.ScriptRuntimeInfo;
 import org.tribot.script.sdk.util.Resources;
+import scripts.kotlin.api.ScriptBreakControlData;
 import scripts.kt.lumbridge.raider.api.ScriptBehavior;
 import scripts.kt.lumbridge.raider.api.ScriptTask;
+import scripts.kt.lumbridge.raider.api.ui.breakmanager.BreakManagerGui;
 import scripts.kt.lumbridge.raider.api.ui.silly.SillyGui;
 import scripts.kt.lumbridge.raider.api.ui.stop.condition.StopConditionGui;
 import scripts.kt.lumbridge.raider.api.ui.task.combat.CombatTaskGui;
@@ -21,6 +23,7 @@ import scripts.kt.lumbridge.raider.api.ui.task.questing.QuestingGuiTask;
 import scripts.kt.lumbridge.raider.api.ui.task.woodcutting.WoodcuttingGuiTask;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.border.*;
@@ -31,9 +34,12 @@ import javax.swing.border.*;
 public class ScriptTaskGui extends JFrame {
     private SwingGuiState scriptTaskGuiState = SwingGuiState.CLOSED;
 
+    private ScriptBreakControlData scriptBreakControlData = null;
+
     private final DefaultListModel<ScriptTask> scriptTaskDefaultListModel = new DefaultListModel<>();
 
-    private final SillyGui sillyFrame = new SillyGui(this);
+    private final BreakManagerGui breakManagerGui = new BreakManagerGui(this);
+    private final SillyGui sillyGui = new SillyGui(this);
 
     private final StopConditionGui stopConditionGui = new StopConditionGui(this);
     private final CombatTaskGui combatTaskGui = new CombatTaskGui(this);
@@ -44,7 +50,7 @@ public class ScriptTaskGui extends JFrame {
     private final QuestingGuiTask questingGuiTask = new QuestingGuiTask(this);
     private final WoodcuttingGuiTask woodcuttingGuiTask = new WoodcuttingGuiTask(this);
 
-    public ScriptTaskGui() {
+    public ScriptTaskGui() throws IOException {
         initComponents();
         setIconImage(Resources.getImage("scripts/kt/lumbridge/raider/api/resources/Tribot-Logo.png"));
         setTitle("LumbridgeRaider.kt v" + ScriptRuntimeInfo.getScriptRepoVersion());
@@ -54,6 +60,14 @@ public class ScriptTaskGui extends JFrame {
 
     public SwingGuiState getScriptTaskGuiState() {
         return scriptTaskGuiState;
+    }
+
+    public ScriptBreakControlData getScriptBreakControlData() {
+        return scriptBreakControlData;
+    }
+
+    public void setScriptBreakControlData(ScriptBreakControlData scriptBreakControlData) {
+        this.scriptBreakControlData = scriptBreakControlData;
     }
 
     public DefaultListModel<ScriptTask> getScriptTaskDefaultListModel() {
@@ -83,7 +97,7 @@ public class ScriptTaskGui extends JFrame {
                 break;
             case PRAYER: prayerTaskGui.showPrayerEditForm(selectedTask, selectedIndex);
                 break;
-            case QUESTING: sillyFrame.setVisible(true);
+            case QUESTING: sillyGui.setVisible(true);
                 break;
             case WOODCUTTING: woodcuttingGuiTask.showWoodcuttingEditForm(selectedTask, selectedIndex);
         }
@@ -160,6 +174,10 @@ public class ScriptTaskGui extends JFrame {
         stopConditionGui.showForm((ScriptTask) list1.getSelectedValue(), list1.getSelectedIndex());
     }
 
+    private void showBreakManagerForm(ActionEvent e) {
+        breakManagerGui.showForm();
+    }
+
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents  @formatter:off
         dialogPane = new JPanel();
@@ -176,9 +194,6 @@ public class ScriptTaskGui extends JFrame {
         panel4 = new JPanel();
         button6 = new JButton();
         comboBox1 = new JComboBox();
-        panel5 = new JPanel();
-        button4 = new JButton();
-        toggleButton1 = new JToggleButton();
         panel7 = new JPanel();
         okButton = new JButton();
         menuBar1 = new JMenuBar();
@@ -188,6 +203,8 @@ public class ScriptTaskGui extends JFrame {
         menu4 = new JMenu();
         menuItem3 = new JMenuItem();
         menuItem5 = new JMenuItem();
+        menu3 = new JMenu();
+        menuItem6 = new JMenuItem();
         menu2 = new JMenu();
         menuItem2 = new JMenuItem();
 
@@ -210,9 +227,9 @@ public class ScriptTaskGui extends JFrame {
                 {
                     panel2.setLayout(new GridBagLayout());
                     ((GridBagLayout)panel2.getLayout()).columnWidths = new int[] {0, 0};
-                    ((GridBagLayout)panel2.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0, 0};
+                    ((GridBagLayout)panel2.getLayout()).rowHeights = new int[] {0, 0, 0, 0, 0};
                     ((GridBagLayout)panel2.getLayout()).columnWeights = new double[] {1.0, 1.0E-4};
-                    ((GridBagLayout)panel2.getLayout()).rowWeights = new double[] {1.0, 0.0, 0.0, 0.0, 0.0, 1.0E-4};
+                    ((GridBagLayout)panel2.getLayout()).rowWeights = new double[] {1.0, 0.0, 0.0, 0.0, 1.0E-4};
 
                     //======== scrollPane1 ========
                     {
@@ -296,41 +313,20 @@ public class ScriptTaskGui extends JFrame {
                         GridBagConstraints.NORTHWEST, GridBagConstraints.NONE,
                         new Insets(0, 0, 0, 0), 0, 0));
 
-                    //======== panel5 ========
-                    {
-                        panel5.setBorder(new TitledBorder("Advanced"));
-                        panel5.setLayout(new GridBagLayout());
-                        ((GridBagLayout)panel5.getLayout()).columnWidths = new int[] {0, 0, 0};
-                        ((GridBagLayout)panel5.getLayout()).rowHeights = new int[] {0, 0};
-                        ((GridBagLayout)panel5.getLayout()).columnWeights = new double[] {0.0, 0.0, 1.0E-4};
-                        ((GridBagLayout)panel5.getLayout()).rowWeights = new double[] {0.0, 1.0E-4};
-
-                        //---- button4 ----
-                        button4.setText("Reset Settings Cache");
-                        panel5.add(button4, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 0, 5), 0, 0));
-
-                        //---- toggleButton1 ----
-                        toggleButton1.setText("Enable Break Handler");
-                        panel5.add(toggleButton1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
-                            GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                            new Insets(0, 0, 0, 0), 0, 0));
-                    }
-                    panel2.add(panel5, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.NORTHWEST, GridBagConstraints.NONE,
-                        new Insets(0, 0, 0, 0), 0, 0));
-
                     //======== panel7 ========
                     {
                         panel7.setLayout(new BorderLayout());
 
                         //---- okButton ----
                         okButton.setText("Start Script");
-                        okButton.addActionListener(this::ok);
+                        okButton.addActionListener(e -> {
+			ok(e);
+			ok(e);
+			ok(e);
+		});
                         panel7.add(okButton, BorderLayout.EAST);
                     }
-                    panel2.add(panel7, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
+                    panel2.add(panel7, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0,
                         GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                         new Insets(0, 0, 0, 0), 0, 0));
                 }
@@ -357,7 +353,7 @@ public class ScriptTaskGui extends JFrame {
 
                 //======== menu4 ========
                 {
-                    menu4.setText("Links");
+                    menu4.setText("Link");
 
                     //---- menuItem3 ----
                     menuItem3.setText("Github Repository");
@@ -368,6 +364,17 @@ public class ScriptTaskGui extends JFrame {
                     menu4.add(menuItem5);
                 }
                 menuBar1.add(menu4);
+
+                //======== menu3 ========
+                {
+                    menu3.setText("View");
+
+                    //---- menuItem6 ----
+                    menuItem6.setText("Break Manager");
+                    menuItem6.addActionListener(e -> showBreakManagerForm(e));
+                    menu3.add(menuItem6);
+                }
+                menuBar1.add(menu3);
 
                 //======== menu2 ========
                 {
@@ -402,9 +409,6 @@ public class ScriptTaskGui extends JFrame {
     private JPanel panel4;
     private JButton button6;
     private JComboBox comboBox1;
-    private JPanel panel5;
-    private JButton button4;
-    private JToggleButton toggleButton1;
     private JPanel panel7;
     private JButton okButton;
     private JMenuBar menuBar1;
@@ -414,6 +418,8 @@ public class ScriptTaskGui extends JFrame {
     private JMenu menu4;
     private JMenuItem menuItem3;
     private JMenuItem menuItem5;
+    private JMenu menu3;
+    private JMenuItem menuItem6;
     private JMenu menu2;
     private JMenuItem menuItem2;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on

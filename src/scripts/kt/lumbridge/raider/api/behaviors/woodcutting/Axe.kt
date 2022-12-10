@@ -6,7 +6,7 @@ enum class Axe(val id: Int) {
     INFERNAL_OR(25066),
     INFERNAL_UNCHARGED(13242),
     INFERNAL(13241),
-    DRAGON_OR(23677),
+    DRAGON_OR(25378),
     DRAGON(6739),
     RUNE(1359),
     ADAMANT(1357),
