@@ -94,6 +94,7 @@ public class FishingTaskGui extends JFrame {
         //======== this ========
         setTitle("Fishing Task");
         setMinimumSize(new Dimension(500, 300));
+        setResizable(false);
         var contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
 

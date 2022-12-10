@@ -6,6 +6,7 @@ package scripts.kt.lumbridge.raider.api.ui;
 
 import java.awt.event.*;
 
+import org.tribot.script.sdk.Tribot;
 import org.tribot.script.sdk.script.ScriptRuntimeInfo;
 import org.tribot.script.sdk.util.Resources;
 import org.tribot.script.sdk.util.ScriptSettings;
@@ -26,6 +27,7 @@ import scripts.kt.lumbridge.raider.api.ui.task.woodcutting.WoodcuttingGuiTask;
 
 import java.awt.*;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.border.*;
@@ -58,7 +60,6 @@ public class ScriptTaskGui extends JFrame {
     public ScriptTaskGui() throws IOException {
         initComponents();
         setIconImage(Resources.getImage("scripts/kt/lumbridge/raider/api/resources/Tribot-Logo.png"));
-        setTitle("LumbridgeRaider.kt v" + ScriptRuntimeInfo.getScriptRepoVersion());
         list1.setModel(scriptTaskDefaultListModel);
         Arrays.stream(ScriptBehavior.values()).forEach(scriptBehavior -> comboBox1.addItem(scriptBehavior));
     }
@@ -190,6 +191,39 @@ public class ScriptTaskGui extends JFrame {
 
     private void showSettingsForm(ActionEvent e) {
         settingsGui.showForm();
+    }
+
+    private void exit(ActionEvent e) {
+        setVisible(false);
+    }
+
+    private void githubLink(ActionEvent e) {
+        openWebsiteLink("https://github.com/its-jackson/lumbridge-raider-kt");
+    }
+
+    private void tribotRepoLink(ActionEvent e) {
+        openWebsiteLink("https://repo.tribot.org/script/id/4116");
+    }
+
+    private void openWebsiteLink(String address) {
+        try {
+            Desktop desktop = Desktop.getDesktop();
+            URI uri = new URI(address);
+            desktop.browse(uri);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void about(ActionEvent e) {
+        String message = Character.toString(169) + " Polymorphic Scripts. All rights reserved.";
+        String completeMessage = message.concat(" This product is licensed under TRiBot License Terms to: ")
+                .concat(Tribot.getUsername());
+
+        JOptionPane.showMessageDialog(
+                this, completeMessage,
+                "About LumbridgeRaider.kt", JOptionPane.INFORMATION_MESSAGE
+        );
     }
 
     private void initComponents() {
@@ -362,6 +396,7 @@ public class ScriptTaskGui extends JFrame {
 
                     //---- menuItem4 ----
                     menuItem4.setText("Exit");
+                    menuItem4.addActionListener(e -> exit(e));
                     menu1.add(menuItem4);
                 }
                 menuBar1.add(menu1);
@@ -372,10 +407,12 @@ public class ScriptTaskGui extends JFrame {
 
                     //---- menuItem3 ----
                     menuItem3.setText("Github Repository");
+                    menuItem3.addActionListener(e -> githubLink(e));
                     menu4.add(menuItem3);
 
                     //---- menuItem5 ----
                     menuItem5.setText("TRiBot Repository");
+                    menuItem5.addActionListener(e -> tribotRepoLink(e));
                     menu4.add(menuItem5);
                 }
                 menuBar1.add(menu4);
@@ -397,6 +434,7 @@ public class ScriptTaskGui extends JFrame {
 
                     //---- menuItem2 ----
                     menuItem2.setText("About");
+                    menuItem2.addActionListener(e -> about(e));
                     menu2.add(menuItem2);
                 }
                 menuBar1.add(menu2);

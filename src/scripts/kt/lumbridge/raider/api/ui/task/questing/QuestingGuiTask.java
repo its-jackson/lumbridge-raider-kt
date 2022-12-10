@@ -60,6 +60,7 @@ public class QuestingGuiTask extends JFrame {
         //======== this ========
         setTitle("Quest Task");
         setMinimumSize(new Dimension(300, 200));
+        setResizable(false);
         var contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
 

@@ -133,6 +133,7 @@ public class WoodcuttingGuiTask extends JFrame {
         //======== this ========
         setTitle("Woodcutting Task");
         setMinimumSize(new Dimension(500, 400));
+        setResizable(false);
         var contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
 

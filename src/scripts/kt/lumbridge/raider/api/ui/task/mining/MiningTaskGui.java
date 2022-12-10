@@ -135,6 +135,7 @@ public class MiningTaskGui extends JFrame {
         //======== this ========
         setMinimumSize(new Dimension(500, 435));
         setTitle("Mining Task");
+        setResizable(false);
         var contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
 

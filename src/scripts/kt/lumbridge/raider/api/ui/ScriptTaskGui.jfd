@@ -133,6 +133,7 @@ new FormModel {
 						add( new FormComponent( "javax.swing.JMenuItem" ) {
 							name: "menuItem4"
 							"text": "Exit"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "exit", true ) )
 						} )
 					} )
 					add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
@@ -141,10 +142,12 @@ new FormModel {
 						add( new FormComponent( "javax.swing.JMenuItem" ) {
 							name: "menuItem3"
 							"text": "Github Repository"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "githubLink", true ) )
 						} )
 						add( new FormComponent( "javax.swing.JMenuItem" ) {
 							name: "menuItem5"
 							"text": "TRiBot Repository"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "tribotRepoLink", true ) )
 						} )
 					} )
 					add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
@@ -162,6 +165,7 @@ new FormModel {
 						add( new FormComponent( "javax.swing.JMenuItem" ) {
 							name: "menuItem2"
 							"text": "About"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "about", true ) )
 						} )
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {

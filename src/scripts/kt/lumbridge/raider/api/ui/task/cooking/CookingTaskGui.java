@@ -102,6 +102,7 @@ public class CookingTaskGui extends JFrame {
 
         //======== this ========
         setTitle("Cooking Task");
+        setResizable(false);
         var contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
 
