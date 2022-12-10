@@ -200,10 +200,10 @@ enum class ScriptBehavior(val behavior: String) {
         breakControlData: ScriptBreakControlData?
     ) = when (this) {
         COMBAT_MELEE, COMBAT_RANGED ->
-            scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { combatBehavior(activeScriptTask) } }
+            scriptLogicBehaviorTree { scriptBreakControl(breakControlData,true) { combatBehavior(activeScriptTask) } }
 
         COMBAT_MAGIC ->
-            scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { combatMagicBehavior(activeScriptTask) } }
+            scriptLogicBehaviorTree { scriptBreakControl(breakControlData, true) { combatMagicBehavior(activeScriptTask) } }
 
         COOKING ->
             scriptLogicBehaviorTree { scriptBreakControl(breakControlData) { cookingBehavior(activeScriptTask) } }
