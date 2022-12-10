@@ -1,5 +1,6 @@
 package scripts
 
+import com.google.gson.GsonBuilder
 import org.tribot.script.sdk.*
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.painting.Painting
@@ -9,6 +10,8 @@ import org.tribot.script.sdk.painting.template.basic.PaintTextRow
 import org.tribot.script.sdk.script.ScriptConfig
 import org.tribot.script.sdk.script.TribotScript
 import org.tribot.script.sdk.script.TribotScriptManifest
+import org.tribot.script.sdk.util.ScriptSettings
+import org.tribot.script.sdk.util.serialization.RuntimeTypeAdapterFactory
 import scripts.kotlin.api.*
 import scripts.kt.lumbridge.raider.api.*
 import scripts.kt.lumbridge.raider.api.behaviors.combat.Monster
@@ -126,6 +129,22 @@ class LumbridgeRaiderKt : TribotScript {
         {
             scriptTaskGui?.isVisible = true
 
+            val adapter = RuntimeTypeAdapterFactory.of(AbstractStopCondition::class.java)
+                .registerSubtype(TimeStopCondition::class.java)
+                .registerSubtype(SkillLevelsReachedCondition::class.java)
+                .registerSubtype(ResourceGainedCondition::class.java)
+
+            val gson = GsonBuilder()
+                .registerTypeAdapterFactory(adapter)
+                .setPrettyPrinting()
+                .create()
+
+            val handler = ScriptSettings.builder()
+                .gson(gson)
+                .build()
+
+            scriptTaskGui?.setDefaultSettingsHandler(handler)
+
             val behaviorTreeGuiState = behaviorTree {
                 repeatUntil({ scriptTaskGui?.isVisible == false }) {
                     sequence {
@@ -138,6 +157,7 @@ class LumbridgeRaiderKt : TribotScript {
             if (behaviorTreeGuiState != BehaviorTreeStatus.SUCCESS) return
             if (scriptTaskGui?.scriptTaskGuiState != SwingGuiState.STARTED) return
 
+            val breakData = scriptTaskGui?.scriptBreakControlData
             val model = scriptTaskGui?.list1?.model
             val scriptTaskList: MutableList<ScriptTask> = mutableListOf()
 
@@ -145,17 +165,8 @@ class LumbridgeRaiderKt : TribotScript {
                 scriptTaskList.add(model.getElementAt(i))
             }
 
-            var scriptBreakControlData: ScriptBreakControlData? = ScriptBreakControlData(
-//                frequencyMeanMinutes = 0.0,
-//                frequencyStdMinutes = 1.0,
-//                timeMeanMinutes = 0.5,
-//                timeStdMinutes = 0.1
-            )
-
-            scriptBreakControlData = scriptTaskGui?.scriptBreakControlData
-
             scriptTaskGui = null // de-reference the script gui (assist garbage collection early)
-            scriptTaskRunner.configure(scriptTaskList.toTypedArray(), scriptBreakControlData)
+            scriptTaskRunner.configure(scriptTaskList.toTypedArray(), breakData)
             scriptTaskRunner.run()
         }
     }

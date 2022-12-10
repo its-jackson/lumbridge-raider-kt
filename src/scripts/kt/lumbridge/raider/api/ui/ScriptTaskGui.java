@@ -8,10 +8,12 @@ import java.awt.event.*;
 
 import org.tribot.script.sdk.script.ScriptRuntimeInfo;
 import org.tribot.script.sdk.util.Resources;
+import org.tribot.script.sdk.util.ScriptSettings;
 import scripts.kotlin.api.ScriptBreakControlData;
 import scripts.kt.lumbridge.raider.api.ScriptBehavior;
 import scripts.kt.lumbridge.raider.api.ScriptTask;
 import scripts.kt.lumbridge.raider.api.ui.breakmanager.BreakManagerGui;
+import scripts.kt.lumbridge.raider.api.ui.settings.SettingsGui;
 import scripts.kt.lumbridge.raider.api.ui.silly.SillyGui;
 import scripts.kt.lumbridge.raider.api.ui.stop.condition.StopConditionGui;
 import scripts.kt.lumbridge.raider.api.ui.task.combat.CombatTaskGui;
@@ -32,12 +34,15 @@ import javax.swing.border.*;
  * @author Polymorphic
  */
 public class ScriptTaskGui extends JFrame {
+    private ScriptSettings defaultSettingsHandler;
+
     private SwingGuiState scriptTaskGuiState = SwingGuiState.CLOSED;
 
     private ScriptBreakControlData scriptBreakControlData = null;
 
     private final DefaultListModel<ScriptTask> scriptTaskDefaultListModel = new DefaultListModel<>();
 
+    private final SettingsGui settingsGui = new SettingsGui(this);
     private final BreakManagerGui breakManagerGui = new BreakManagerGui(this);
     private final SillyGui sillyGui = new SillyGui(this);
 
@@ -56,6 +61,11 @@ public class ScriptTaskGui extends JFrame {
         setTitle("LumbridgeRaider.kt v" + ScriptRuntimeInfo.getScriptRepoVersion());
         list1.setModel(scriptTaskDefaultListModel);
         Arrays.stream(ScriptBehavior.values()).forEach(scriptBehavior -> comboBox1.addItem(scriptBehavior));
+    }
+
+    public void setDefaultSettingsHandler(ScriptSettings defaultSettingsHandler) {
+        this.defaultSettingsHandler = defaultSettingsHandler;
+        this.settingsGui.setDefaultSettingsHandler(defaultSettingsHandler);
     }
 
     public SwingGuiState getScriptTaskGuiState() {
@@ -176,6 +186,10 @@ public class ScriptTaskGui extends JFrame {
 
     private void showBreakManagerForm(ActionEvent e) {
         breakManagerGui.showForm();
+    }
+
+    private void showSettingsForm(ActionEvent e) {
+        settingsGui.showForm();
     }
 
     private void initComponents() {
@@ -343,6 +357,7 @@ public class ScriptTaskGui extends JFrame {
 
                     //---- menuItem1 ----
                     menuItem1.setText("Settings");
+                    menuItem1.addActionListener(e -> showSettingsForm(e));
                     menu1.add(menuItem1);
 
                     //---- menuItem4 ----

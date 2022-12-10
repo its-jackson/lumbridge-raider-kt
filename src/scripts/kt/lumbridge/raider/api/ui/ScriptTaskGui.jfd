@@ -128,6 +128,7 @@ new FormModel {
 						add( new FormComponent( "javax.swing.JMenuItem" ) {
 							name: "menuItem1"
 							"text": "Settings"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "showSettingsForm", true ) )
 						} )
 						add( new FormComponent( "javax.swing.JMenuItem" ) {
 							name: "menuItem4"

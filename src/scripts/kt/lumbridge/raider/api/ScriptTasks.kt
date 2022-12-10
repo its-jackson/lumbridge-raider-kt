@@ -1,5 +1,6 @@
 package scripts.kt.lumbridge.raider.api
 
+import com.allatori.annotations.DoNotRename
 import com.google.gson.GsonBuilder
 import org.tribot.script.sdk.Combat
 import org.tribot.script.sdk.Inventory
@@ -39,39 +40,55 @@ inline fun <reified T> deepCopy(ob: T): T {
 }
 
 data class ScriptMiningData(
+    @DoNotRename
     val rocks: List<Rock>? = null,
+    @DoNotRename
     val pickaxe: Pickaxe? = null,
+    @DoNotRename
     val wieldPickaxe: Boolean = false
 )
 
 data class ScriptWoodcuttingData(
+    @DoNotRename
     val trees: List<Tree>? = null,
+    @DoNotRename
     val axe: Axe? = null,
+    @DoNotRename
     val wieldAxe: Boolean = false
 )
 
 data class ScriptFishingData(
+    @DoNotRename
     val fishSpot: FishSpot? = null
 )
 
 data class ScriptPrayerData(
+    @DoNotRename
     val buryPattern: Inventory.DropPattern? = null,
 )
 
 data class ScriptQuestingData(
+    @DoNotRename
     val quest: Quest? = null,
 )
 
 data class ScriptCombatMagicData(
+    @DoNotRename
     val autoCastableSpell: Combat.AutocastableSpell? = null,
 )
 
 data class ScriptCombatData(
+    @DoNotRename
     var equipmentItems: List<EquipmentItem>? = null,
+    @DoNotRename
     var inventoryItems: List<InventoryItem>? = null,
+    @DoNotRename
     var inventoryMap: Map<Int, Int>? = null,
+    @DoNotRename
     val attackStyle: Combat.AttackStyle?,
+    @DoNotRename
     val monsters: List<Monster>? = null,
+    @DoNotRename
     val lootGroundItems: Boolean = false
 ) {
     class Builder {
@@ -98,16 +115,27 @@ data class ScriptCombatData(
 }
 
 data class ScriptTask(
+    @DoNotRename
     val stopCondition: AbstractStopCondition = TimeStopCondition(days = 28),
+    @DoNotRename
     val behavior: ScriptBehavior? = null,
+    @DoNotRename
     val disposal: ScriptDisposal? = null,
+    @DoNotRename
     val combatData: ScriptCombatData? = null,
+    @DoNotRename
     val combatMagicData: ScriptCombatMagicData? = null,
+    @DoNotRename
     val miningData: ScriptMiningData? = null,
+    @DoNotRename
     val woodcuttingData: ScriptWoodcuttingData? = null,
+    @DoNotRename
     val fishingData: ScriptFishingData? = null,
+    @DoNotRename
     val prayerData: ScriptPrayerData? = null,
+    @DoNotRename
     val questingData: ScriptQuestingData? = null,
+    @DoNotRename
     var bankTask: BankTask? = null,
 ) {
     val resourceGainedCondition: ResourceGainedCondition?
