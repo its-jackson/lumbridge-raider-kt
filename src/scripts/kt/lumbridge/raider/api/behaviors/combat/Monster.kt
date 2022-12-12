@@ -117,9 +117,7 @@ enum class Monster(
 
     fun walkToCentralPosition() = walkTo(this@Monster.centralPosition)
 
-    fun attack(
-        actions: List<() -> Unit> = listOf()
-    ): Boolean = getMonsterNpcQuery()
+    fun attack(actions: List<() -> Unit> = listOf()): Boolean = getMonsterNpcQuery()
         .findBestInteractable()
         .map {
             if (!canReach(it) && !walkTo(it))

@@ -32,8 +32,6 @@ import java.awt.Font
     description = "Local"
 )
 class LumbridgeRaiderKt : TribotScript {
-    private val userWhiteList = listOf("Polymorphic")
-
     private val scriptTaskRunner = ScriptTaskRunner()
 
     private var scriptTaskGui: ScriptTaskGui? = ScriptTaskGui()
@@ -104,9 +102,6 @@ class LumbridgeRaiderKt : TribotScript {
     override fun execute(args: String): Unit = script(args)
 
     private fun script(args: String) {
-        if (Tribot.getUsername() !in userWhiteList)
-            throw RuntimeException("Username is not in whitelist: ${Tribot.getUsername()}")
-
         if (args.equals("/combat/melee/test", true))
             combatMeleeTest()
         else if (args.equals("/combat/ranged/test", true))

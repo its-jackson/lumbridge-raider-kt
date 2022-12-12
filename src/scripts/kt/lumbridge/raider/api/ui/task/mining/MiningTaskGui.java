@@ -6,6 +6,7 @@ package scripts.kt.lumbridge.raider.api.ui.task.mining;
 
 import java.awt.event.*;
 
+import scripts.kotlin.api.AbstractStopCondition;
 import scripts.kt.lumbridge.raider.api.ScriptBehavior;
 import scripts.kt.lumbridge.raider.api.ScriptDisposal;
 import scripts.kt.lumbridge.raider.api.ScriptMiningData;
@@ -29,6 +30,7 @@ public class MiningTaskGui extends JFrame {
 
     private final DefaultListModel<Rock> rockDefaultListModel = new DefaultListModel<>();
 
+    private ScriptTask miningTask;
     private int editIndex;
 
     public MiningTaskGui(ScriptTaskGui rootFrame) {
@@ -43,6 +45,7 @@ public class MiningTaskGui extends JFrame {
     }
 
     public void showMiningAddForm() {
+        miningTask = null;
         checkBox1.setSelected(false);
         comboBox2.setSelectedItem(Pickaxe.BRONZE);
         comboBox3.setSelectedItem(Rock.TIN_LUMBRIDGE_SWAMP);
@@ -60,6 +63,7 @@ public class MiningTaskGui extends JFrame {
         if (selectedTask.getMiningData().getRocks() == null) return;
         if (selectedTask.getDisposal() == null) return;
 
+        miningTask = selectedTask;
         checkBox1.setSelected(selectedTask.getMiningData().getWieldPickaxe());
         comboBox2.setSelectedItem(selectedTask.getMiningData().getPickaxe());
         comboBox4.setSelectedItem(selectedTask.getDisposal());
@@ -82,18 +86,18 @@ public class MiningTaskGui extends JFrame {
                 .map(o -> (Rock) o)
                 .collect(Collectors.toList());
 
-        ScriptTask miningTask = new ScriptTask.Builder()
+        ScriptTask.Builder miningTaskCopy = new ScriptTask.Builder()
                 .behavior(ScriptBehavior.MINING)
                 .disposal(disposal)
-                .miningData(
-                        new ScriptMiningData(rockSequence, pickaxe, isWield)
-                )
-                .build();
+                .miningData(new ScriptMiningData(rockSequence, pickaxe, isWield));
 
-        if (editIndex != -1)
-            rootFrame.getScriptTaskDefaultListModel().set(editIndex, miningTask);
-        else
-            rootFrame.getScriptTaskDefaultListModel().addElement(miningTask);
+        if (editIndex != -1 && miningTask != null) {
+            ScriptTask complete = miningTaskCopy.stopCondition(miningTask.getStopCondition()).build();
+            rootFrame.getScriptTaskDefaultListModel().set(editIndex, complete);
+        }
+        else {
+            rootFrame.getScriptTaskDefaultListModel().addElement(miningTaskCopy.build());
+        }
 
         setVisible(false);
     }

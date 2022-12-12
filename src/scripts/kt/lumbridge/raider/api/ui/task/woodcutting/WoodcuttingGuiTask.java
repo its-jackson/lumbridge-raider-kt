@@ -6,6 +6,7 @@ package scripts.kt.lumbridge.raider.api.ui.task.woodcutting;
 
 import java.awt.event.*;
 
+import scripts.kotlin.api.AbstractStopCondition;
 import scripts.kt.lumbridge.raider.api.*;
 import scripts.kt.lumbridge.raider.api.behaviors.mining.Rock;
 import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Axe;
@@ -27,6 +28,7 @@ public class WoodcuttingGuiTask extends JFrame {
 
     private final DefaultListModel<Tree> treeDefaultListModel = new DefaultListModel<>();
 
+    private ScriptTask woodcuttingTask;
     private int editIndex;
 
     public WoodcuttingGuiTask(ScriptTaskGui rootFrame) {
@@ -41,6 +43,7 @@ public class WoodcuttingGuiTask extends JFrame {
     }
 
     public void showWoodcuttingAddForm() {
+        woodcuttingTask = null;
         editIndex = -1;
         comboBox1.setSelectedIndex(0);
         comboBox2.setSelectedIndex(0);
@@ -58,6 +61,7 @@ public class WoodcuttingGuiTask extends JFrame {
         if (selectedTask.getWoodcuttingData().getAxe() == null) return;
         if (selectedTask.getWoodcuttingData().getTrees() == null) return;
 
+        woodcuttingTask = selectedTask;
         editIndex = selectedIndex;
         comboBox1.setSelectedItem(selectedTask.getWoodcuttingData().getAxe());
         checkBox1.setSelected(selectedTask.getWoodcuttingData().getWieldAxe());
@@ -81,16 +85,20 @@ public class WoodcuttingGuiTask extends JFrame {
                 .map(o -> (Tree) o)
                 .collect(Collectors.toList());
 
-        ScriptTask woodcuttingTask = new ScriptTask.Builder()
+        ScriptTask.Builder woodcuttingTaskCopy = new ScriptTask.Builder()
                 .behavior(ScriptBehavior.WOODCUTTING)
                 .disposal(disposal)
-                .woodcuttingData(new ScriptWoodcuttingData(rockSequence, axe, isWield))
-                .build();
+                .woodcuttingData(new ScriptWoodcuttingData(rockSequence, axe, isWield));
 
-        if (editIndex != -1)
-            rootFrame.getScriptTaskDefaultListModel().set(editIndex, woodcuttingTask);
-        else
-            rootFrame.getScriptTaskDefaultListModel().addElement(woodcuttingTask);
+        if (editIndex != -1 && woodcuttingTask != null) {
+            ScriptTask completeWoodcuttingTask = woodcuttingTaskCopy.stopCondition(woodcuttingTask.getStopCondition())
+                    .build();
+
+            rootFrame.getScriptTaskDefaultListModel().set(editIndex, completeWoodcuttingTask);
+        }
+        else {
+            rootFrame.getScriptTaskDefaultListModel().addElement(woodcuttingTaskCopy.build());
+        }
 
         setVisible(false);
     }

@@ -98,7 +98,7 @@ new FormModel {
 					"$vGap": 20
 				} ) {
 					name: "panel1"
-					"border": new javax.swing.border.TitledBorder( "" )
+					"border": new javax.swing.border.TitledBorder( "Minutes (mean/std)" )
 					add( new FormComponent( "javax.swing.JLabel" ) {
 						name: "label2"
 						"text": "Frequency Mean"
@@ -111,11 +111,13 @@ new FormModel {
 					} )
 					add( new FormComponent( "javax.swing.JTextField" ) {
 						name: "textField1"
+						"toolTipText": "Format: minutes"
 					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 						"gridy": 1
 					} )
 					add( new FormComponent( "javax.swing.JTextField" ) {
 						name: "textField3"
+						"toolTipText": "Format: minutes"
 					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 						"gridx": 1
 						"gridy": 1
@@ -135,11 +137,13 @@ new FormModel {
 					} )
 					add( new FormComponent( "javax.swing.JTextField" ) {
 						name: "textField2"
+						"toolTipText": "Format: minutes"
 					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 						"gridy": 3
 					} )
 					add( new FormComponent( "javax.swing.JTextField" ) {
 						name: "textField4"
+						"toolTipText": "Format: minutes"
 					}, new FormLayoutConstraints( class com.jformdesigner.runtime.GridBagConstraintsEx ) {
 						"gridx": 1
 						"gridy": 3

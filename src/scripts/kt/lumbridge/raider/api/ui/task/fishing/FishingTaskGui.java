@@ -24,6 +24,7 @@ import javax.swing.border.*;
 public class FishingTaskGui extends JFrame {
     private final ScriptTaskGui rootFrame;
 
+    private ScriptTask fishingTask;
     private int editIndex;
 
     public FishingTaskGui(ScriptTaskGui rootFrame) {
@@ -37,6 +38,7 @@ public class FishingTaskGui extends JFrame {
     }
 
     public void showFishingAddForm() {
+        fishingTask = null;
         editIndex = -1;
         comboBox1.setSelectedIndex(0);
         comboBox2.setSelectedIndex(0);
@@ -48,6 +50,7 @@ public class FishingTaskGui extends JFrame {
         if (selectedTask == null || selectedIndex == -1) return;
         if (selectedTask.getFishingData() == null || selectedTask.getDisposal() == null) return;
 
+        fishingTask = selectedTask;
         editIndex = selectedIndex;
         comboBox1.setSelectedItem(selectedTask.getFishingData().getFishSpot());
         comboBox2.setSelectedItem(selectedTask.getDisposal());
@@ -61,16 +64,18 @@ public class FishingTaskGui extends JFrame {
         FishSpot fishSpot = (FishSpot) comboBox1.getSelectedItem();
         ScriptDisposal disposal = (ScriptDisposal) comboBox2.getSelectedItem();
 
-        ScriptTask fishingTask = new ScriptTask.Builder()
+        ScriptTask.Builder fishingTaskCopy = new ScriptTask.Builder()
                 .behavior(ScriptBehavior.FISHING)
                 .disposal(disposal)
-                .fishingData(new ScriptFishingData(fishSpot))
-                .build();
+                .fishingData(new ScriptFishingData(fishSpot));
 
-        if (editIndex != -1)
-            rootFrame.getScriptTaskDefaultListModel().set(editIndex, fishingTask);
-        else
-            rootFrame.getScriptTaskDefaultListModel().addElement(fishingTask);
+        if (editIndex != -1 && fishingTask != null) {
+            ScriptTask complete = fishingTaskCopy.stopCondition(fishingTask.getStopCondition()).build();
+            rootFrame.getScriptTaskDefaultListModel().set(editIndex, complete);
+        }
+        else {
+            rootFrame.getScriptTaskDefaultListModel().addElement(fishingTaskCopy.build());
+        }
 
         setVisible(false);
     }

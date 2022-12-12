@@ -9,6 +9,8 @@ import org.tribot.script.sdk.Login;
 import org.tribot.script.sdk.query.Query;
 import org.tribot.script.sdk.types.EquipmentItem;
 import org.tribot.script.sdk.types.InventoryItem;
+import scripts.kotlin.api.AbstractStopCondition;
+import scripts.kotlin.api.TimeStopCondition;
 import scripts.kt.lumbridge.raider.api.ScriptBehavior;
 import scripts.kt.lumbridge.raider.api.ScriptCombatData;
 import scripts.kt.lumbridge.raider.api.ScriptCombatMagicData;
@@ -35,12 +37,11 @@ public class CombatTaskGui extends JFrame {
     private List<InventoryItem> inventoryItemList = Collections.emptyList();
     private List<EquipmentItem> equipmentItemList = Collections.emptyList();
 
+    private ScriptTask combatTask;
     private ScriptBehavior scriptBehavior;
-
     private Combat.AttackStyle attackStyle;
     private Combat.AutocastableSpell autocastableSpell;
 
-    private boolean editMode;
     private int editIndex;
 
     public CombatTaskGui(ScriptTaskGui rootFrame) {
@@ -60,6 +61,10 @@ public class CombatTaskGui extends JFrame {
 
     private void setEquipmentItemList(List<EquipmentItem> equipmentItemList) {
         this.equipmentItemList = equipmentItemList;
+    }
+
+    public void setCombatTask(ScriptTask combatTask) {
+        this.combatTask = combatTask;
     }
 
     public void setScriptBehavior(ScriptBehavior scriptBehavior) {
@@ -84,14 +89,6 @@ public class CombatTaskGui extends JFrame {
         checkBox1.setSelected(loot);
     }
 
-    private boolean isEditMode() {
-        return editMode;
-    }
-
-    private void setEditMode(boolean editMode) {
-        this.editMode = editMode;
-    }
-
     private void setEditIndex(int editIndex) {
         this.editIndex = editIndex;
     }
@@ -101,6 +98,7 @@ public class CombatTaskGui extends JFrame {
     }
 
     public void showMagicAddForm() {
+        setCombatTask(null);
         setScriptBehavior(ScriptBehavior.COMBAT_MAGIC);
         setMagicComponents();
         setAddForm();
@@ -112,6 +110,7 @@ public class CombatTaskGui extends JFrame {
         if (selectedTask.getCombatData().getMonsters() == null) return;
         if (selectedTask.getCombatMagicData() == null) return;
 
+        setCombatTask(selectedTask);
         setScriptBehavior(selectedTask.getBehavior());
         setEditComponents(selectedTask, selectedIndex);
         setMagicComponents();
@@ -146,18 +145,19 @@ public class CombatTaskGui extends JFrame {
         if (selectedTask.getCombatData().getMonsters() == null) return;
         if (selectedTask.getCombatData().getAttackStyle() == null) return;
 
+        setCombatTask(selectedTask);
         setScriptBehavior(selectedTask.getBehavior());
         setAttackStyle(selectedTask.getCombatData().getAttackStyle());
         setEditComponents(selectedTask, selectedIndex);
     }
 
     private void setAddForm() {
+        setCombatTask(null);
         setMonster(Monster.CHICKEN_LUMBRIDGE_EAST);
         getMonsterDefaultListModel().clear();
         setInventoryItemList(Collections.emptyList());
         setEquipmentItemList(Collections.emptyList());
         setLootItemsCheckBox(false);
-        setEditMode(false);
         setEditIndex(-1);
         setOkButtonText("Add");
         setVisible(true);
@@ -173,7 +173,6 @@ public class CombatTaskGui extends JFrame {
         setEquipmentItemList(selectedTask.getCombatData().getEquipmentItems());
         setInventoryItemList(selectedTask.getCombatData().getInventoryItems());
         setEditIndex(selectedIndex);
-        setEditMode(true);
         setOkButtonText("Save");
         setVisible(true);
     }
@@ -235,7 +234,7 @@ public class CombatTaskGui extends JFrame {
             autocastableSpell = (Combat.AutocastableSpell) comboBox1.getSelectedItem();
         }
 
-        ScriptTask combatScriptTask = new ScriptTask.Builder()
+        ScriptTask.Builder combatTaskCopy = new ScriptTask.Builder()
                 .behavior(scriptBehavior)
                 .combatData(
                         new ScriptCombatData.Builder()
@@ -252,13 +251,15 @@ public class CombatTaskGui extends JFrame {
                 )
                 .combatMagicData(
                         new ScriptCombatMagicData(autocastableSpell)
-                )
-                .build();
+                );
 
-        if (isEditMode())
-            rootFrame.getScriptTaskDefaultListModel().set(editIndex, combatScriptTask);
-        else
-            rootFrame.getScriptTaskDefaultListModel().addElement(combatScriptTask);
+        if (editIndex != -1 && combatTask != null) {
+            ScriptTask completeCombatTask = combatTaskCopy.stopCondition(combatTask.getStopCondition()).build();
+            rootFrame.getScriptTaskDefaultListModel().set(editIndex, completeCombatTask);
+        }
+        else {
+            rootFrame.getScriptTaskDefaultListModel().addElement(combatTaskCopy.build());
+        }
 
         setVisible(false);
     }

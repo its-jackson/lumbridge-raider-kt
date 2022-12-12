@@ -17,8 +17,7 @@ import scripts.kt.lumbridge.raider.api.behaviors.banking.initializeBankTask
 private val combatWaitMean: Int =
     PlayerPreferences.preference(
         "scripts.kt.lumbridge.raider.api.behaviors.combat.CombatBehavior.combatWaitMean"
-    )
-    { g: PlayerPreferences.Generator ->
+    ) { g: PlayerPreferences.Generator ->
         g.uniform(300, 2600)
     }
 
