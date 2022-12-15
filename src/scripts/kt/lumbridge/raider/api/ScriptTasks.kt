@@ -316,6 +316,10 @@ class ScriptTaskRunner : ISatisfiable {
 
     private fun isRunnerComplete() = activeScriptTask == null && taskQueue.isEmpty()
 
+    private fun resetMainScriptBehaviorTreeState() {
+        mainScriptBehaviorTreeState = null
+    }
+
     private fun setNext() {
         activeScriptTask = taskQueue.removeFirstOrNull()
     }
@@ -327,6 +331,7 @@ class ScriptTaskRunner : ISatisfiable {
 
     private fun setNextAndComposeMainScriptBehaviorTree() {
         setNext()
+        resetMainScriptBehaviorTreeState()
         composeMainScriptBehaviorTree()
     }
 

@@ -76,5 +76,7 @@ fun IParentNode.accountConfigBehavior(scriptTask: ScriptTask?) = sequence {
         }
     }
 
-    performKill { scriptTask?.accountConfigData?.cameraZoomPercent?.let { Camera.setZoomPercent(it) } }
+    perform { scriptTask?.accountConfigData?.cameraZoomPercent?.let { Camera.setZoomPercent(it) } }
+
+    performKill { Options.closeAllSettings() }
 }

@@ -84,7 +84,7 @@ fun IParentNode.firemakingBehavior(scriptTask: ScriptTask?) = sequence {
 
             condition { Waiting.waitUntilAnimating(2000) }
 
-            condition { waitUntilNotAnimating(end = TribotRandom.normal(350, 8).toLong()) }
+            condition { waitUntilNotAnimating(end = TribotRandom.normal(625, 5).toLong()) }
         }
     }
 
