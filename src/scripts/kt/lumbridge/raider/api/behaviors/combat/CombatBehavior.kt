@@ -18,7 +18,7 @@ private val combatWaitMean: Int =
     PlayerPreferences.preference(
         "scripts.kt.lumbridge.raider.api.behaviors.combat.CombatBehavior.combatWaitMean"
     ) { g: PlayerPreferences.Generator ->
-        g.uniform(300, 2600)
+        g.uniform(300, 1000)
     }
 
 private val combatWaitStd: Int =

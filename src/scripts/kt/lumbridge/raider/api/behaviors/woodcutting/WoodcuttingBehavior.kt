@@ -16,7 +16,7 @@ private val woodcuttingWaitMean: Int =
     PlayerPreferences.preference(
         "scripts.kt.lumbridge.raider.api.behaviors.woodcutting.WoodcuttingBehavior.woodcuttingWaitMean"
     ) { g: PlayerPreferences.Generator ->
-        g.uniform(300, 5000)
+        g.uniform(300, 1000)
     }
 
 private val woodcuttingWaitStd: Int =

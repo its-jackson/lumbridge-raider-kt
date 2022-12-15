@@ -6,6 +6,7 @@ import org.tribot.script.sdk.Waiting.waitUntilAnimating
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.util.TribotRandom
 import scripts.kotlin.api.canReach
+import scripts.kotlin.api.waitAvgHumanReactionTime
 import scripts.kt.lumbridge.raider.api.ScriptDisposal
 import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.initializeBankTask
@@ -98,6 +99,8 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
             }
         }
     }
+
+    perform { waitAvgHumanReactionTime() }
 }
 
 private fun IParentNode.normalOreDroppingDisposal(scriptTask: ScriptTask?) = selector {

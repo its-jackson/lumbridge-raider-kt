@@ -12,6 +12,7 @@ import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.util.TribotRandom
 import scripts.kotlin.api.getAsInventory
 import scripts.kotlin.api.fetchResourceFromBank
+import scripts.kotlin.api.waitAvgHumanReactionTime
 import scripts.kotlin.api.waitUntilNotAnimating
 import scripts.kt.lumbridge.raider.api.ScriptTask
 
@@ -22,6 +23,7 @@ fun IParentNode.prayerBehavior(scriptTask: ScriptTask?) = sequence {
         scriptTask?.resourceGainedCondition?.updateSumDirectly(buryCount)
         buryCount > 0
     }
+    waitAvgHumanReactionTime()
 }
 
 private fun getBonesInventoryQuery(scriptTask: ScriptTask?) = scriptTask?.resourceGainedCondition?.id

@@ -21,7 +21,7 @@ private val fishingWaitMean: Int =
         "scripts.kt.lumbridge.raider.api.behaviors.fishing.FishingBehavior.fishingWaitMean"
     )
     { g: PlayerPreferences.Generator ->
-        g.uniform(200, 4000)
+        g.uniform(200, 1000)
     }
 
 private val fishingWaitStd: Int =

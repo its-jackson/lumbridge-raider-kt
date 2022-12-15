@@ -86,7 +86,8 @@ public class StopConditionGui extends JFrame {
 
         if (scriptTask.getBehavior() == ScriptBehavior.COOKING ||
                 scriptTask.getBehavior() == ScriptBehavior.PRAYER ||
-                scriptTask.getBehavior() == ScriptBehavior.QUESTING) {
+                scriptTask.getBehavior() == ScriptBehavior.QUESTING ||
+                scriptTask.getBehavior() == ScriptBehavior.ACCOUNT_CONFIG) {
             sillyFrame.setVisible(true);
             return;
         }

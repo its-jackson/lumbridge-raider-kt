@@ -12,6 +12,7 @@ import org.tribot.script.sdk.types.EquipmentItem
 import org.tribot.script.sdk.types.InventoryItem
 import org.tribot.script.sdk.util.serialization.StateTypeAdapterFactory
 import scripts.kotlin.api.*
+import scripts.kt.lumbridge.raider.api.behaviors.account.config.accountConfigBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.combat.Monster
 import scripts.kt.lumbridge.raider.api.behaviors.combat.combatBehavior
 import scripts.kt.lumbridge.raider.api.behaviors.combat.magic.combatMagicBehavior
@@ -38,6 +39,17 @@ inline fun <reified T> deepCopy(ob: T): T {
 
     return gson.fromJson(gson.toJson(ob), T::class.java)
 }
+
+data class ScriptAccountConfigData(
+    @DoNotRename
+    val solveNewCharacterBankSetup: Boolean = false,
+    @DoNotRename
+    val enableShiftClick: Boolean = false,
+    @DoNotRename
+    val enableRoofs: Boolean = false,
+    @DoNotRename
+    val cameraZoomPercent: Double = 0.0,
+)
 
 data class ScriptMiningData(
     @DoNotRename
@@ -122,6 +134,8 @@ data class ScriptTask(
     @DoNotRename
     val disposal: ScriptDisposal? = null,
     @DoNotRename
+    val accountConfigData: ScriptAccountConfigData? = null,
+    @DoNotRename
     val combatData: ScriptCombatData? = null,
     @DoNotRename
     val combatMagicData: ScriptCombatMagicData? = null,
@@ -150,6 +164,7 @@ data class ScriptTask(
         private var stopCondition: AbstractStopCondition = TimeStopCondition(days = 28)
         private var behavior: ScriptBehavior? = null
         private var disposal: ScriptDisposal? = null
+        private var accountConfigData: ScriptAccountConfigData? = null
         private var combatData: ScriptCombatData? = null
         private var combatMagicData: ScriptCombatMagicData? = null
         private var miningData: ScriptMiningData? = null
@@ -161,6 +176,7 @@ data class ScriptTask(
         fun stopCondition(stop: AbstractStopCondition) = apply { this.stopCondition = stop }
         fun behavior(behavior: ScriptBehavior?) = apply { this.behavior = behavior }
         fun disposal(disposal: ScriptDisposal?) = apply { this.disposal = disposal }
+        fun accountConfigData(accountConfigData: ScriptAccountConfigData?) = apply { this.accountConfigData = accountConfigData }
         fun combatData(combatData: ScriptCombatData?) = apply { this.combatData = combatData }
         fun combatMagicData(combatMagicData: ScriptCombatMagicData?) = apply { this.combatMagicData = combatMagicData }
         fun miningData(miningData: ScriptMiningData?) = apply { this.miningData = miningData }
@@ -173,6 +189,7 @@ data class ScriptTask(
             stopCondition = this.stopCondition,
             behavior = this.behavior,
             disposal = this.disposal,
+            accountConfigData = this.accountConfigData,
             combatData = this.combatData,
             combatMagicData = this.combatMagicData,
             miningData = this.miningData,
@@ -185,6 +202,7 @@ data class ScriptTask(
 }
 
 enum class ScriptBehavior(val behavior: String) {
+    ACCOUNT_CONFIG("Account configuration"),
     COMBAT_MELEE("Combat melee"),
     COMBAT_MAGIC("Combat magic"),
     COMBAT_RANGED("Combat ranged"),
@@ -199,6 +217,9 @@ enum class ScriptBehavior(val behavior: String) {
         activeScriptTask: ScriptTask?,
         breakControlData: ScriptBreakControlData?
     ) = when (this) {
+        ACCOUNT_CONFIG ->
+            scriptLogicBehaviorTree { accountConfigBehavior(activeScriptTask) }
+
         COMBAT_MELEE, COMBAT_RANGED ->
             scriptLogicBehaviorTree { scriptBreakControl(breakControlData,true) { combatBehavior(activeScriptTask) } }
 
@@ -248,11 +269,11 @@ class ScriptTaskRunner : ISatisfiable {
 
     fun configure(
         scriptTasks: Array<ScriptTask>,
-        breakControlData: ScriptBreakControlData? = null
+        scriptBreakData: ScriptBreakControlData? = null
     ) {
         taskQueue.clear()
         taskQueue.addAll(scriptTasks)
-        scriptBreakControlData = breakControlData
+        scriptBreakControlData = scriptBreakData
         setNextAndComposeMainScriptBehaviorTree()
     }
 

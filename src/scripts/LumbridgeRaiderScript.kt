@@ -23,6 +23,7 @@ import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Axe
 import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Tree
 import scripts.kt.lumbridge.raider.api.ui.ScriptTaskGui
 import scripts.kt.lumbridge.raider.api.ui.SwingGuiState
+import java.awt.Color
 import java.awt.Font
 
 @TribotScriptManifest(
@@ -37,8 +38,8 @@ class LumbridgeRaiderKt : TribotScript {
     private var scriptTaskGui: ScriptTaskGui? = ScriptTaskGui()
 
     private val paintTemplate = PaintTextRow.builder()
-        .background(java.awt.Color(66, 66, 66, 180))
-        .font(Font("Segoe UI", 0, 12))
+        .background(Color(66, 66, 66, 180))
+        .font(Font("Segoe UI", 0, 10))
         .noBorder()
         .build()
 
@@ -48,6 +49,11 @@ class LumbridgeRaiderKt : TribotScript {
         .row(
             paintTemplate.toBuilder().label("Stop")
                 .value { scriptTaskRunner.activeScriptTask?.stopCondition }
+                .build()
+        )
+        .row(
+            paintTemplate.toBuilder().label("Behavior")
+                .value { scriptTaskRunner.activeScriptTask?.behavior?.behavior }
                 .build()
         )
         .row(
@@ -104,6 +110,8 @@ class LumbridgeRaiderKt : TribotScript {
     private fun script(args: String) {
         if (args.equals("/combat/melee/test", true))
             combatMeleeTest()
+        else if (args.equals("/account/config/test", true))
+            accountConfigTest()
         else if (args.equals("/combat/ranged/test", true))
             combatRangedTest()
         else if (args.equals("/combat/magic/test", true))
@@ -152,21 +160,38 @@ class LumbridgeRaiderKt : TribotScript {
             if (behaviorTreeGuiState != BehaviorTreeStatus.SUCCESS) return
             if (scriptTaskGui?.scriptTaskGuiState != SwingGuiState.STARTED) return
 
-            val breakData = scriptTaskGui?.scriptBreakControlData
-            val model = scriptTaskGui?.list1?.model
+            val scriptBreakData = scriptTaskGui?.scriptBreakControlData
+            val scriptTaskListModel = scriptTaskGui?.list1?.model
             val scriptTaskList: MutableList<ScriptTask> = mutableListOf()
 
-            for (i in 0 until model?.size!!) {
-                scriptTaskList.add(model.getElementAt(i))
+            for (i in 0 until scriptTaskListModel?.size!!) {
+                scriptTaskList.add(scriptTaskListModel.getElementAt(i))
             }
 
-            scriptTaskGui = null // de-reference the script gui (assist garbage collection early)
-            scriptTaskRunner.configure(scriptTaskList.toTypedArray(), breakData)
-            scriptTaskRunner.run(
-                onStart = { initializeScriptBehaviorTree().tick() },
-                onEnd = { Login.logout() }
+            scriptTaskGui = null
+
+            scriptTaskRunner.configure(
+                scriptTasks = scriptTaskList.toTypedArray(),
+                scriptBreakData = scriptBreakData
             )
+
+            scriptTaskRunner.run(onEnd = { Login.logout() })
         }
+    }
+
+    private fun accountConfigTest() {
+        val accountConfigData = ScriptTask(
+            behavior = ScriptBehavior.ACCOUNT_CONFIG,
+            accountConfigData = ScriptAccountConfigData(
+                solveNewCharacterBankSetup = false,
+                cameraZoomPercent = 44.47,
+                enableRoofs = false,
+                enableShiftClick = true
+            )
+        )
+
+        scriptTaskRunner.configure(arrayOf(accountConfigData))
+        scriptTaskRunner.run()
     }
 
     private fun combatMeleeTest() {
@@ -298,4 +323,3 @@ class LumbridgeRaiderKt : TribotScript {
         scriptTaskRunner.run()
     }
 }
-

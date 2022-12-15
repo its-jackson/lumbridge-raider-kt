@@ -13,7 +13,7 @@ private val cookingWaitMean: Int =
     PlayerPreferences.preference(
         "scripts.kt.lumbridge.raider.api.behaviors.cooking.CookingBehavior.cookingWaitMean"
     ) { g: PlayerPreferences.Generator ->
-        g.uniform(200, 3000)
+        g.uniform(200, 1000)
     }
 
 private val cookingWaitStd: Int =

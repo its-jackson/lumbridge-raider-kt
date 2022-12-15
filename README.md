@@ -6,7 +6,13 @@
 <p>Premium UI/UX with fully automated script tasks.</p>
 <p>Following a "progressive" structure for leveling up skills efficiently.</p>
 
-### Current Combat Functionality
+### Account Configuration
+* Solve new character bank account guide widget
+* Enable/disable shift clicking
+* Enable/disable roofs
+* Optimize camera zoom percentage
+
+### Combat
 * Slaying Monsters
   * Cows, 
   * Chickens, 
@@ -20,43 +26,44 @@
 * Eating
 * Banking
 
-### Current Combat Magic Functionality
+### Combat Magic
 * Auto castable spells
 
-### Current Fishing Functionality
+### Fishing
 * Lumbridge swamp (shrimps, anchovies, sardine, herring)
 * Lumbridge castle (salmon, trout, pike)
-* Normal banking
-* Normal dropping
 * Cook then bank
 * Cook then drop
+* Power fishing
+* Banking
 
-### Current Cooking Functionality
+### Cooking
 * Any "Raw" inventory item that is not noted
 * Withdraw from bank and cook at lumbridge castle range, until cooked amount satisfied
 
-### Current Mining Functionality
-* All rock types (Lumbridge swamp)
+### Mining
+* All rocks (Lumbridge swamp)
 * All pickaxes
 * Rock priority system
 * M1D1
 * Power mining
 * Banking
 
-### Current Woodcutting Functionality
-* All tree types (Lumbridge castle)
+### Woodcutting
+* All trees (Lumbridge castle)
 * All axes
+* Chop then burn
 * Power chopping
 * Banking
 
-### Current Questing Functionality
+### Questing
 * Cook's Assistant
 
-### Current Prayer Functionality
+### Prayer
 * All bones
-* Several bury patterns
+* Several boning patterns
 
-### Functionality In-Progress
+### In-Progress
 * ~~Fishing~~
 * ~~Cooking~~
 * ~~Mining~~

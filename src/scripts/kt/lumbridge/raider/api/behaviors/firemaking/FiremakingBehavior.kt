@@ -9,6 +9,7 @@ import org.tribot.script.sdk.types.LocalTile
 import org.tribot.script.sdk.types.WorldTile
 import org.tribot.script.sdk.util.TribotRandom
 import scripts.kotlin.api.canReach
+import scripts.kotlin.api.waitAvgHumanReactionTime
 import scripts.kotlin.api.waitUntilNotAnimating
 import scripts.kotlin.api.walkTo
 import scripts.kt.lumbridge.raider.api.ScriptTask
@@ -27,7 +28,9 @@ fun IParentNode.firemakingBehavior(scriptTask: ScriptTask?) = sequence {
     var iterator: FiremakingLane.LaneIterator? = null
     var current: Positionable? = null
 
-    repeatUntil({ scriptTask?.woodcuttingData?.trees?.all { !Inventory.contains(it.logSpriteId) } == true }) {
+    repeatUntil({
+        scriptTask?.woodcuttingData?.trees?.all { !Inventory.contains(it.logSpriteId) } == true
+    }) {
         sequence {
             selector {
                 condition { lane != null && iterator?.hasNext() == true }
@@ -81,9 +84,11 @@ fun IParentNode.firemakingBehavior(scriptTask: ScriptTask?) = sequence {
 
             condition { Waiting.waitUntilAnimating(2000) }
 
-            condition { waitUntilNotAnimating(end = TribotRandom.normal(600, 8).toLong()) }
+            condition { waitUntilNotAnimating(end = TribotRandom.normal(350, 8).toLong()) }
         }
     }
+
+    perform { waitAvgHumanReactionTime() }
 }
 
 internal class FiremakingLane(
@@ -122,6 +127,7 @@ internal class FiremakingLane(
                 .getNeighbor(LocalTile.Direction.WEST)
 
             val lane: LinkedHashSet<Positionable> = linkedSetOf()
+            lane.add(p)
 
             while (isPositionableLightable(neighbor)) {
                 lane.add(neighbor.toWorldTile())

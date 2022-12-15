@@ -17,6 +17,7 @@ import scripts.kt.lumbridge.raider.api.ui.breakmanager.BreakManagerGui;
 import scripts.kt.lumbridge.raider.api.ui.settings.SettingsGui;
 import scripts.kt.lumbridge.raider.api.ui.silly.SillyGui;
 import scripts.kt.lumbridge.raider.api.ui.stop.condition.StopConditionGui;
+import scripts.kt.lumbridge.raider.api.ui.task.account.config.AccountConfigTaskGui;
 import scripts.kt.lumbridge.raider.api.ui.task.combat.CombatTaskGui;
 import scripts.kt.lumbridge.raider.api.ui.task.cooking.CookingTaskGui;
 import scripts.kt.lumbridge.raider.api.ui.task.fishing.FishingTaskGui;
@@ -49,6 +50,7 @@ public class ScriptTaskGui extends JFrame {
     private final SillyGui sillyGui = new SillyGui(this);
 
     private final StopConditionGui stopConditionGui = new StopConditionGui(this);
+    private final AccountConfigTaskGui accountConfigTaskGui = new AccountConfigTaskGui(this);
     private final CombatTaskGui combatTaskGui = new CombatTaskGui(this);
     private final CookingTaskGui cookingTaskGui = new CookingTaskGui(this);
     private final FishingTaskGui fishingTaskGui = new FishingTaskGui(this);
@@ -100,6 +102,8 @@ public class ScriptTaskGui extends JFrame {
                 break;
             case COMBAT_RANGED: combatTaskGui.showRangedEditForm(selectedTask, selectedIndex);
                 break;
+            case ACCOUNT_CONFIG: accountConfigTaskGui.showAccountConfigEditForm(selectedTask, selectedIndex);
+                break;
             case COOKING: cookingTaskGui.showCookingEditForm(selectedTask, selectedIndex);
                 break;
             case FISHING: fishingTaskGui.showFishingEditForm(selectedTask, selectedIndex);
@@ -125,6 +129,8 @@ public class ScriptTaskGui extends JFrame {
             case COMBAT_MELEE: combatTaskGui.showMeleeAddForm();
                 break;
             case COMBAT_RANGED: combatTaskGui.showRangedAddForm();
+                break;
+            case ACCOUNT_CONFIG: accountConfigTaskGui.showAccountConfigAddForm();
                 break;
             case COOKING: cookingTaskGui.showCookingAddForm();
                 break;
