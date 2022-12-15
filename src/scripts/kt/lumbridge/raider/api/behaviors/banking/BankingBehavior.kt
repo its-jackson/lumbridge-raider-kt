@@ -12,6 +12,7 @@ import scripts.kotlin.api.walkToAndOpenBank
 import scripts.kt.lumbridge.raider.api.ScriptBehavior
 import scripts.kt.lumbridge.raider.api.ScriptDisposal
 import scripts.kt.lumbridge.raider.api.ScriptTask
+import scripts.kt.lumbridge.raider.api.behaviors.firemaking.TINDERBOX_ID
 
 fun IParentNode.executeBankTask(
     scriptTask: ScriptTask?,
@@ -133,6 +134,11 @@ private fun initBankTask(scriptTask: ScriptTask?) {
                         bankTaskBuilder.addInvItem(it.id, Amount.of(1))
                     }
                 }
+            scriptTask.disposal?.let {
+                if (it == ScriptDisposal.CHOP_THEN_BURN) {
+                    bankTaskBuilder.addInvItem(TINDERBOX_ID, Amount.of(1))
+                }
+            }
         }
 
         else -> {

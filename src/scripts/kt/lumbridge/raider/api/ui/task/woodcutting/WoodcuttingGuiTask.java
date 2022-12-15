@@ -6,9 +6,7 @@ package scripts.kt.lumbridge.raider.api.ui.task.woodcutting;
 
 import java.awt.event.*;
 
-import scripts.kotlin.api.AbstractStopCondition;
 import scripts.kt.lumbridge.raider.api.*;
-import scripts.kt.lumbridge.raider.api.behaviors.mining.Rock;
 import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Axe;
 import scripts.kt.lumbridge.raider.api.behaviors.woodcutting.Tree;
 import scripts.kt.lumbridge.raider.api.ui.ScriptTaskGui;
@@ -39,6 +37,7 @@ public class WoodcuttingGuiTask extends JFrame {
         Arrays.stream(Tree.values()).forEach(tree -> this.comboBox2.addItem(tree));
         this.comboBox3.addItem(ScriptDisposal.BANK);
         this.comboBox3.addItem(ScriptDisposal.DROP);
+        this.comboBox3.addItem(ScriptDisposal.CHOP_THEN_BURN);
         this.list1.setModel(treeDefaultListModel);
     }
 
@@ -132,10 +131,11 @@ public class WoodcuttingGuiTask extends JFrame {
         panel1 = new JPanel();
         label2 = new JLabel();
         comboBox2 = new JComboBox();
+        label4 = new JLabel();
         scrollPane1 = new JScrollPane();
         list1 = new JList();
         button1 = new JButton();
-        panel2 = new JPanel();
+        label3 = new JLabel();
         comboBox3 = new JComboBox();
 
         //======== this ========
@@ -204,40 +204,45 @@ public class WoodcuttingGuiTask extends JFrame {
                 label2.setText("Tree");
                 panel1.add(label2, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 5), 0, 0));
+                    new Insets(0, 0, 5, 10), 0, 0));
 
                 //---- comboBox2 ----
                 comboBox2.addActionListener(e -> comboBox2(e));
-                panel1.add(comboBox2, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                panel1.add(comboBox2, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 5), 0, 0));
+                    new Insets(0, 0, 5, 10), 0, 0));
+
+                //---- label4 ----
+                label4.setText("Sequence");
+                panel1.add(label4, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 10), 0, 0));
 
                 //======== scrollPane1 ========
                 {
                     scrollPane1.setViewportView(list1);
                 }
-                panel1.add(scrollPane1, new GridBagConstraints(0, 2, 5, 4, 0.0, 0.0,
+                panel1.add(scrollPane1, new GridBagConstraints(1, 1, 5, 5, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 5, 0), 0, 0));
+                    new Insets(0, 0, 5, 10), 0, 0));
 
                 //---- button1 ----
                 button1.setText("Delete Selected");
                 button1.addActionListener(e -> delete(e));
-                panel1.add(button1, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0,
+                panel1.add(button1, new GridBagConstraints(1, 6, 1, 1, 0.0, 0.0,
                     GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 0, 5), 0, 0));
+                    new Insets(0, 0, 5, 10), 0, 0));
+
+                //---- label3 ----
+                label3.setText("Disposal");
+                panel1.add(label3, new GridBagConstraints(0, 7, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 10), 0, 0));
+                panel1.add(comboBox3, new GridBagConstraints(1, 7, 1, 1, 0.0, 0.0,
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 10), 0, 0));
             }
             dialogPane.add(panel1, BorderLayout.CENTER);
-
-            //======== panel2 ========
-            {
-                panel2.setBorder(new TitledBorder("Disposal"));
-                panel2.setLayout(new GridBagLayout());
-                panel2.add(comboBox3, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                    new Insets(0, 0, 0, 0), 0, 0));
-            }
-            dialogPane.add(panel2, BorderLayout.EAST);
         }
         contentPane.add(dialogPane, BorderLayout.CENTER);
         pack();
@@ -257,10 +262,11 @@ public class WoodcuttingGuiTask extends JFrame {
     private JPanel panel1;
     private JLabel label2;
     private JComboBox comboBox2;
+    private JLabel label4;
     private JScrollPane scrollPane1;
     private JList list1;
     private JButton button1;
-    private JPanel panel2;
+    private JLabel label3;
     private JComboBox comboBox3;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }

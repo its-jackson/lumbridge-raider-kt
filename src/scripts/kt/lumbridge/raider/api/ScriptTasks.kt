@@ -233,6 +233,7 @@ enum class ScriptDisposal(val disposal: String) {
     DROP("Drop"),
     COOK_THEN_BANK("Cook then bank"),
     COOK_THEN_DROP("Cook then drop"),
+    CHOP_THEN_BURN("Chop then burn"),
     M1D1("M1D1")
 }
 

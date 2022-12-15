@@ -162,7 +162,10 @@ class LumbridgeRaiderKt : TribotScript {
 
             scriptTaskGui = null // de-reference the script gui (assist garbage collection early)
             scriptTaskRunner.configure(scriptTaskList.toTypedArray(), breakData)
-            scriptTaskRunner.run()
+            scriptTaskRunner.run(
+                onStart = { initializeScriptBehaviorTree().tick() },
+                onEnd = { Login.logout() }
+            )
         }
     }
 
@@ -260,31 +263,18 @@ class LumbridgeRaiderKt : TribotScript {
         val scriptTasks = arrayOf(
             ScriptTask(
                 behavior = ScriptBehavior.WOODCUTTING,
-                disposal = ScriptDisposal.DROP,
-                stopCondition = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 60)),
+                disposal = ScriptDisposal.CHOP_THEN_BURN,
+                stopCondition = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 99)),
                 woodcuttingData = ScriptWoodcuttingData(
-                    trees = listOf(Tree.WILLOW_LUMBRIDGE_CASTLE_HOPS_PATCH),
-                    Axe.BRONZE,
+                    trees = listOf(Tree.NORMAL_LUMBRIDGE_CASTLE, Tree.NORMAL_DEAD_LUMBRIDGE_CASTLE),
+                    Axe.RUNE,
                     true
                 ),
             ),
-            ScriptTask(
-                behavior = ScriptBehavior.WOODCUTTING,
-                disposal = ScriptDisposal.BANK,
-                stopCondition = SkillLevelsReachedCondition(mapOf(Skill.WOODCUTTING to 99)),
-                woodcuttingData = ScriptWoodcuttingData(
-                    trees = listOf(Tree.YEW_LUMBRIDGE_CASTLE),
-                    Axe.BRONZE,
-                    true
-                ),
-            )
         )
 
         scriptTaskRunner.configure(scriptTasks = scriptTasks)
-        scriptTaskRunner.run(
-            onStart = { initializeScriptBehaviorTree().tick() },
-            onEnd = { Login.logout() }
-        )
+        scriptTaskRunner.run()
     }
 
     private fun cooksAssistantQuestTest() {
