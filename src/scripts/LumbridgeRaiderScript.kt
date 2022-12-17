@@ -33,120 +33,133 @@ import java.awt.Font
     description = "Local"
 )
 class LumbridgeRaiderKt : TribotScript {
-    private val scriptTaskRunner = ScriptTaskRunner()
-
-    private var scriptTaskGui: ScriptTaskGui? = ScriptTaskGui()
-
-    //Segoe UI
-    private val paintTemplate = PaintTextRow.builder()
-        .background(Color(66, 66, 66, 180))
-        .font(Font(Font.SANS_SERIF, 0, 10))
-        .noBorder()
-        .build()
-
-    private val mainPaint = BasicPaintTemplate.builder()
-        .row(PaintRows.versionedScriptName(paintTemplate.toBuilder()))
-        .row(PaintRows.runtime(paintTemplate.toBuilder()))
-        .row(
-            paintTemplate.toBuilder().label("Stop")
-                .value { scriptTaskRunner.activeScriptTask?.stopCondition }
-                .build()
-        )
-        .row(
-            paintTemplate.toBuilder().label("Behavior")
-                .value { scriptTaskRunner.activeScriptTask?.behavior?.behavior }
-                .build()
-        )
-        .row(
-            paintTemplate.toBuilder().label("Disposal")
-                .value { scriptTaskRunner.activeScriptTask?.disposal?.disposal }
-                .build()
-        )
-        .row(
-            paintTemplate.toBuilder().label("Monsters")
-                .value { scriptTaskRunner.activeScriptTask?.combatData?.monsters?.map { it.monsterName } }
-                .build()
-        )
-        .row(
-            paintTemplate.toBuilder()
-                .label("Rocks")
-                .value { scriptTaskRunner.activeScriptTask?.miningData?.rocks?.map { it.oreSpriteName } }
-                .build()
-        )
-        .row(
-            paintTemplate.toBuilder()
-                .label("Trees")
-                .value { scriptTaskRunner.activeScriptTask?.woodcuttingData?.trees?.map { it.treeName } }
-                .build()
-        )
-        .row(
-            paintTemplate.toBuilder()
-                .label("Fishing")
-                .value { scriptTaskRunner.activeScriptTask?.fishingData?.fishSpot?.spriteNames?.toList() }
-                .build()
-        )
-        .row(
-            paintTemplate.toBuilder()
-                .label("Quest")
-                .value { scriptTaskRunner.activeScriptTask?.questingData?.quest?.questName }
-                .build()
-        )
-        .row(
-            paintTemplate.toBuilder().label("Remaining tasks")
-                .value { scriptTaskRunner.remaining() }.build()
-        )
-        .build()
-
-    init {
-        Painting.addPaint(mainPaint::render)
-    }
+    private var scriptTaskRunner: ScriptTaskRunner? = null
+    private var scriptTaskGui: ScriptTaskGui? = null
+    private var paintTemplate: PaintTextRow? =  null
+    private var mainPaint: BasicPaintTemplate? = null
 
     override fun configure(config: ScriptConfig) {
         config.isBreakHandlerEnabled = false
         config.isRandomsAndLoginHandlerEnabled = false
     }
 
-    override fun execute(args: String): Unit = script(args)
+    override fun execute(args: String) {
+        preScriptStart()
+        script(args)
+    }
+
+    private fun preScriptStart() {
+        scriptTaskRunner = ScriptTaskRunner()
+
+        paintTemplate = PaintTextRow.builder()
+            .background(Color(66, 66, 66, 180))
+            .font(Font(Font.SANS_SERIF, 0, 10))
+            .noBorder()
+            .build()
+
+        mainPaint = BasicPaintTemplate.builder()
+            .row(PaintRows.versionedScriptName(paintTemplate!!.toBuilder()))
+            .row(PaintRows.runtime(paintTemplate!!.toBuilder()))
+            .row(
+                paintTemplate!!.toBuilder().label("Stop")
+                    .value { scriptTaskRunner!!.activeScriptTask?.stopCondition }
+                    .build()
+            )
+            .row(
+                paintTemplate!!.toBuilder().label("Behavior")
+                    .value { scriptTaskRunner!!.activeScriptTask?.behavior?.behavior }
+                    .build()
+            )
+            .row(
+                paintTemplate!!.toBuilder().label("Disposal")
+                    .value { scriptTaskRunner!!.activeScriptTask?.disposal?.disposal }
+                    .build()
+            )
+            .row(
+                paintTemplate!!.toBuilder().label("Monsters")
+                    .value { scriptTaskRunner!!.activeScriptTask?.combatData?.monsters?.map { it.monsterName } }
+                    .build()
+            )
+            .row(
+                paintTemplate!!.toBuilder()
+                    .label("Rocks")
+                    .value { scriptTaskRunner!!.activeScriptTask?.miningData?.rocks?.map { it.oreSpriteName } }
+                    .build()
+            )
+            .row(
+                paintTemplate!!.toBuilder()
+                    .label("Trees")
+                    .value { scriptTaskRunner!!.activeScriptTask?.woodcuttingData?.trees?.map { it.treeName } }
+                    .build()
+            )
+            .row(
+                paintTemplate!!.toBuilder()
+                    .label("Fishing")
+                    .value { scriptTaskRunner!!.activeScriptTask?.fishingData?.fishSpot?.spriteNames?.toList() }
+                    .build()
+            )
+            .row(
+                paintTemplate!!.toBuilder()
+                    .label("Quest")
+                    .value { scriptTaskRunner!!.activeScriptTask?.questingData?.quest?.questName }
+                    .build()
+            )
+            .row(
+                paintTemplate!!.toBuilder().label("Remaining tasks")
+                    .value { scriptTaskRunner!!.remaining() }.build()
+            )
+            .build()
+
+        mainPaint?.let { paint -> Painting.addPaint{ paint.render(it) } }
+    }
 
     private fun script(args: String) {
-        if (args.equals("/combat/melee/test", true))
-            combatMeleeTest()
-        else if (args.equals("/account/config/test", true))
-            accountConfigTest()
-        else if (args.equals("/combat/ranged/test", true))
-            combatRangedTest()
-        else if (args.equals("/combat/magic/test", true))
-            combatMagicTest()
-        else if (args.equals("/fishing/test", true))
-            fishingTest()
-        else if (args.equals("/prayer/test", true))
-            prayerTest()
-        else if (args.equals("/cooking/test", true))
-            cookingTest()
-        else if (args.equals("/mining/test", true))
-            miningTest()
-        else if (args.equals("/woodcutting/test", true))
-            woodcuttingTest()
-        else if (args.equals("/questing/cooks/assistant/test", true))
-            cooksAssistantQuestTest()
-        else
-        {
+        val adapter = RuntimeTypeAdapterFactory.of(AbstractStopCondition::class.java)
+            .registerSubtype(TimeStopCondition::class.java)
+            .registerSubtype(SkillLevelsReachedCondition::class.java)
+            .registerSubtype(ResourceGainedCondition::class.java)
+
+        val gson = GsonBuilder()
+            .registerTypeAdapterFactory(adapter)
+            .setPrettyPrinting()
+            .create()
+
+        val handler = ScriptSettings.builder()
+            .gson(gson)
+            .build()
+
+        if (args.isNotBlank() && args.isNotEmpty()) {
+            if (args.equals("/combat/melee/test", true))
+                combatMeleeTest()
+            else if (args.equals("/account/config/test", true))
+                accountConfigTest()
+            else if (args.equals("/combat/ranged/test", true))
+                combatRangedTest()
+            else if (args.equals("/combat/magic/test", true))
+                combatMagicTest()
+            else if (args.equals("/fishing/test", true))
+                fishingTest()
+            else if (args.equals("/prayer/test", true))
+                prayerTest()
+            else if (args.equals("/cooking/test", true))
+                cookingTest()
+            else if (args.equals("/mining/test", true))
+                miningTest()
+            else if (args.equals("/woodcutting/test", true))
+                woodcuttingTest()
+            else if (args.equals("/questing/cooks/assistant/test", true))
+                cooksAssistantQuestTest()
+            else {
+                handler.load(args, Array<ScriptTask>::class.java)
+                    .ifPresentOrElse({
+                        scriptTaskRunner?.configure(it)
+                        scriptTaskRunner?.run(onEnd = { Login.logout() })
+                    }) { throw RuntimeException("Unable to load profile settings [$args]") }
+            }
+        }
+        else {
+            scriptTaskGui = ScriptTaskGui()
             scriptTaskGui?.isVisible = true
-
-            val adapter = RuntimeTypeAdapterFactory.of(AbstractStopCondition::class.java)
-                .registerSubtype(TimeStopCondition::class.java)
-                .registerSubtype(SkillLevelsReachedCondition::class.java)
-                .registerSubtype(ResourceGainedCondition::class.java)
-
-            val gson = GsonBuilder()
-                .registerTypeAdapterFactory(adapter)
-                .setPrettyPrinting()
-                .create()
-
-            val handler = ScriptSettings.builder()
-                .gson(gson)
-                .build()
-
             scriptTaskGui?.setDefaultSettingsHandler(handler)
 
             val behaviorTreeGuiState = behaviorTree {
@@ -171,12 +184,12 @@ class LumbridgeRaiderKt : TribotScript {
 
             scriptTaskGui = null
 
-            scriptTaskRunner.configure(
+            scriptTaskRunner?.configure(
                 scriptTasks = scriptTaskList.toTypedArray(),
                 scriptBreakData = scriptBreakData
             )
 
-            scriptTaskRunner.run(onEnd = { Login.logout() })
+            scriptTaskRunner?.run(onEnd = { Login.logout() })
         }
     }
 
@@ -191,8 +204,8 @@ class LumbridgeRaiderKt : TribotScript {
             )
         )
 
-        scriptTaskRunner.configure(arrayOf(accountConfigData))
-        scriptTaskRunner.run()
+        scriptTaskRunner?.configure(arrayOf(accountConfigData))
+        scriptTaskRunner?.run()
     }
 
     private fun combatMeleeTest() {
@@ -207,8 +220,8 @@ class LumbridgeRaiderKt : TribotScript {
 
         val scriptTasks = arrayOf(combatMeleeTask)
 
-        scriptTaskRunner.configure(scriptTasks)
-        scriptTaskRunner.run()
+        scriptTaskRunner?.configure(scriptTasks)
+        scriptTaskRunner?.run()
     }
 
     private fun combatMagicTest() {
@@ -223,8 +236,8 @@ class LumbridgeRaiderKt : TribotScript {
             )
         )
 
-        scriptTaskRunner.configure(arrayOf(combatMagicTask))
-        scriptTaskRunner.run()
+        scriptTaskRunner?.configure(arrayOf(combatMagicTask))
+        scriptTaskRunner?.run()
     }
 
     private fun combatRangedTest() {
@@ -237,8 +250,8 @@ class LumbridgeRaiderKt : TribotScript {
             )
         )
 
-        scriptTaskRunner.configure(arrayOf(combatRangedTask))
-        scriptTaskRunner.run()
+        scriptTaskRunner?.configure(arrayOf(combatRangedTask))
+        scriptTaskRunner?.run()
     }
 
     private fun fishingTest() {
@@ -251,8 +264,8 @@ class LumbridgeRaiderKt : TribotScript {
             )
         )
 
-        scriptTaskRunner.configure(scriptTasks)
-        scriptTaskRunner.run(onStart = { initializeScriptBehaviorTree().tick() })
+        scriptTaskRunner?.configure(scriptTasks)
+        scriptTaskRunner?.run(onStart = { initializeScriptBehaviorTree().tick() })
     }
 
     private fun cookingTest() {
@@ -263,8 +276,8 @@ class LumbridgeRaiderKt : TribotScript {
             )
         )
 
-        scriptTaskRunner.configure(scriptTasks)
-        scriptTaskRunner.run()
+        scriptTaskRunner?.configure(scriptTasks)
+        scriptTaskRunner?.run()
     }
 
     private fun miningTest() {
@@ -281,8 +294,8 @@ class LumbridgeRaiderKt : TribotScript {
             )
         )
 
-        scriptTaskRunner.configure(scriptTasks)
-        scriptTaskRunner.run()
+        scriptTaskRunner?.configure(scriptTasks)
+        scriptTaskRunner?.run()
     }
 
     private fun woodcuttingTest() {
@@ -299,8 +312,8 @@ class LumbridgeRaiderKt : TribotScript {
             ),
         )
 
-        scriptTaskRunner.configure(scriptTasks = scriptTasks)
-        scriptTaskRunner.run()
+        scriptTaskRunner?.configure(scriptTasks = scriptTasks)
+        scriptTaskRunner?.run()
     }
 
     private fun cooksAssistantQuestTest() {
@@ -309,8 +322,8 @@ class LumbridgeRaiderKt : TribotScript {
             behavior = ScriptBehavior.QUESTING
         )
 
-        scriptTaskRunner.configure(arrayOf(questTask))
-        scriptTaskRunner.run()
+        scriptTaskRunner?.configure(arrayOf(questTask))
+        scriptTaskRunner?.run()
     }
 
     private fun prayerTest() {
@@ -320,7 +333,7 @@ class LumbridgeRaiderKt : TribotScript {
             prayerData = ScriptPrayerData(Inventory.DropPattern.ZIGZAG)
         )
 
-        scriptTaskRunner.configure(arrayOf(prayerTask))
-        scriptTaskRunner.run()
+        scriptTaskRunner?.configure(arrayOf(prayerTask))
+        scriptTaskRunner?.run()
     }
 }

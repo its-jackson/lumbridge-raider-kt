@@ -19,16 +19,15 @@ import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
 private val fishingWaitMean: Int =
     PlayerPreferences.preference(
         "scripts.kt.lumbridge.raider.api.behaviors.fishing.FishingBehavior.fishingWaitMean"
-    )
-    { g: PlayerPreferences.Generator ->
-        g.uniform(200, 1000)
+    ) { g: PlayerPreferences.Generator ->
+        g.uniform(200, 600)
     }
 
 private val fishingWaitStd: Int =
     PlayerPreferences.preference(
         "scripts.kt.lumbridge.raider.api.behaviors.fishing.FishingBehavior.fishingWaitStd"
     ) { g: PlayerPreferences.Generator ->
-        g.uniform(20, 30)
+        g.uniform(5, 33)
     }
 
 /**
@@ -51,28 +50,21 @@ private val fishingWaitStd: Int =
  *  Cook then drop
  */
 fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
-    // ensure the bank task is initialized and the inventory is in good state
     initializeBankTask(scriptTask)
 
-    // restock fishing equipment and bait from bank
-    selector {
-        executeBankTask(
-            scriptTask = scriptTask,
-            bankingConditions = listOf { !isFishingEquipmentSatisfied(scriptTask) }
-        )
-    }
+    executeBankTask(
+        scriptTask = scriptTask,
+        bankingConditions = listOf { !isFishingEquipmentSatisfied(scriptTask) }
+    )
 
-    // normal banking disposal - WORKING
     normalBankingDisposal(scriptTask)
 
-    // normal dropping - WORKING
     selector {
         condition { scriptTask?.disposal != ScriptDisposal.DROP }
         condition { !Inventory.isFull() }
         condition { dropAll(scriptTask) }
     }
 
-    // cook then bank disposal - WORKING
     selector {
         condition { scriptTask?.disposal != ScriptDisposal.COOK_THEN_BANK }
         condition { !Inventory.isFull() }
@@ -92,7 +84,6 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
         }
     }
 
-    // cook then drop disposal - WORKING
     selector {
         condition { scriptTask?.disposal != ScriptDisposal.COOK_THEN_DROP }
         condition { !Inventory.isFull() }
@@ -110,13 +101,11 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
         }
     }
 
-    // ensure the fishing spot is nearby and reachable
     selector {
         condition { scriptTask?.fishingData?.fishSpot?.let { it.position.distance() < 15 && canReach(it.position) } }
         condition { scriptTask?.fishingData?.fishSpot?.let { walkTo(it.position) } }
     }
 
-    // interact with the fishing spot (walk to, rotate camera, and click)
     completeFishingAction(scriptTask)
 
     perform { Waiting.waitNormal(fishingWaitMean, fishingWaitStd) }
@@ -148,17 +137,9 @@ private fun isFishingEquipmentSatisfied(scriptTask: ScriptTask?) =
         } == true
 
 /**
- * Drop all items that are NOT the fishing equipment OR bait.
+ * Drop all raw fish inside the inventory according to the task.
  */
-private fun dropAll(scriptTask: ScriptTask?): Boolean {
-    val toDrop = Inventory.getAll()
-        .filter {
-            scriptTask?.fishingData?.fishSpot?.equipmentReq
-                ?.containsKey(it.id) == false &&
-                    !scriptTask.fishingData.fishSpot.baitReq
-                        .containsKey(it.id)
-        }
-        .map { it.id }
-
-    return Inventory.drop(*toDrop.toIntArray()) > 0
-}
+private fun dropAll(scriptTask: ScriptTask?) = Inventory.getAll()
+    .filter { scriptTask?.fishingData?.fishSpot?.spriteIds?.contains(it.id) == true }
+    .map { it.id }
+    .let { Inventory.drop(*it.toIntArray()) > 0 }
