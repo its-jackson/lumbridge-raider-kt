@@ -13,14 +13,14 @@ private val cookingWaitMean: Int =
     PlayerPreferences.preference(
         "scripts.kt.lumbridge.raider.api.behaviors.cooking.CookingBehavior.cookingWaitMean"
     ) { g: PlayerPreferences.Generator ->
-        g.uniform(200, 1000)
+        g.uniform(250, 600)
     }
 
 private val cookingWaitStd: Int =
     PlayerPreferences.preference(
         "scripts.kt.lumbridge.raider.api.behaviors.cooking.CookingBehavior.cookingWaitStd"
     ) { g: PlayerPreferences.Generator ->
-        g.uniform(10, 30)
+        g.uniform(5, 15)
     }
 
 fun IParentNode.cookingBehavior(scriptTask: ScriptTask?) = sequence {
@@ -31,9 +31,12 @@ fun IParentNode.cookingBehavior(scriptTask: ScriptTask?) = sequence {
 }
 
 fun IParentNode.walkToAndCookRange(scriptTask: ScriptTask?) = sequence {
+    val best = Range.LUMBRIDGE_COOKING_TUTOR_RANGE
+    val position = best.position
+
     selector {
-        condition { canReach(Range.optimalRange.position) }
-        condition { walkTo(Range.optimalRange.position) }
+        condition { position.distance() < 5 && position.isVisible && canReach(position) }
+        condition { walkTo(position) }
     }
 
     condition {
@@ -42,7 +45,7 @@ fun IParentNode.walkToAndCookRange(scriptTask: ScriptTask?) = sequence {
                 Inventory.getCount(it.id)
             } ?: 0
 
-        Range.cookRawFood(Range.optimalRange)
+        Range.cookRawFood(best)
 
         val amountAfter = scriptTask?.resourceGainedCondition
             ?.let {

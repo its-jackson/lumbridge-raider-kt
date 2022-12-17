@@ -25,7 +25,7 @@ import java.util.HashMap;
  */
 public class StopConditionGui extends JFrame {
     private final ScriptTaskGui rootFrame;
-    private final SillyGui sillyFrame = new SillyGui(this);
+    private final SillyGui sillyGui = new SillyGui(this);
 
     private final DefaultListModel<HashMap<Skill, Integer>> skillLvlDefaultListModel = new DefaultListModel<>();
 
@@ -88,7 +88,7 @@ public class StopConditionGui extends JFrame {
                 scriptTask.getBehavior() == ScriptBehavior.PRAYER ||
                 scriptTask.getBehavior() == ScriptBehavior.QUESTING ||
                 scriptTask.getBehavior() == ScriptBehavior.ACCOUNT_CONFIG) {
-            sillyFrame.setVisible(true);
+            sillyGui.setVisible(true);
             return;
         }
 
@@ -223,27 +223,27 @@ public class StopConditionGui extends JFrame {
                 //---- label4 ----
                 label4.setText("Skill");
                 panel2.add(label4, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
                 panel2.add(comboBox1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- label5 ----
                 label5.setText("Until Level");
                 panel2.add(label5, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
                 panel2.add(spinner4, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- button3 ----
                 button3.setText(" Add Skill/Lvl Mapping");
                 button3.addActionListener(e -> onAddSkillLvlMapping(e));
                 panel2.add(button3, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //======== scrollPane1 ========
                 {
@@ -255,22 +255,22 @@ public class StopConditionGui extends JFrame {
                     scrollPane1.setViewportView(list1);
                 }
                 panel2.add(scrollPane1, new GridBagConstraints(0, 3, 2, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- button4 ----
                 button4.setText("Delete Selected");
                 button4.addActionListener(e -> delete(e));
                 panel2.add(button4, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 5), 0, 0));
 
                 //---- button1 ----
                 button1.setText("Set/Use Skill Lvls Condition");
                 button1.addActionListener(e -> onSkillLvlConditionButton(e));
                 panel2.add(button1, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 5), 0, 0));
             }
             dialogPane.add(panel2, BorderLayout.NORTH);
 
@@ -282,45 +282,45 @@ public class StopConditionGui extends JFrame {
                 //---- label6 ----
                 label6.setText("Days");
                 panel1.add(label6, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
                 panel1.add(spinner5, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- label1 ----
                 label1.setText("Hours");
                 panel1.add(label1, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
                 panel1.add(spinner1, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- label2 ----
                 label2.setText("Minutes");
                 panel1.add(label2, new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
                 panel1.add(spinner2, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- label3 ----
                 label3.setText("Seconds");
                 panel1.add(label3, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
                 panel1.add(spinner3, new GridBagConstraints(1, 6, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 5, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 5, 5), 0, 0));
 
                 //---- button2 ----
                 button2.setText("Set/Use Time Condition");
                 button2.addActionListener(e -> onTimeConditionButton(e));
                 panel1.add(button2, new GridBagConstraints(1, 8, 1, 1, 0.0, 0.0,
-                        GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-                        new Insets(0, 0, 0, 5), 0, 0));
+                    GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+                    new Insets(0, 0, 0, 5), 0, 0));
             }
             dialogPane.add(panel1, BorderLayout.CENTER);
         }

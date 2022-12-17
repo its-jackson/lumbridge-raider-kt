@@ -52,13 +52,15 @@ public class SettingsGui extends JFrame {
         if (defaultSettingsHandler.save(name, toSave)) {
             comboBox1.addItem(name);
             JOptionPane.showMessageDialog(this, "Profile saved successfully.");
-        } else {
+        }
+        else {
             JOptionPane.showMessageDialog(this, "Unable to save profile: " + name);
         }
     }
 
     private void load(ActionEvent e) {
         if (comboBox1.getSelectedItem() == null || defaultSettingsHandler == null) return;
+        rootFrame.getScriptTaskDefaultListModel().clear();
         String toLoad = (String) comboBox1.getSelectedItem();
 
         defaultSettingsHandler.load(toLoad, ScriptTask[].class)
@@ -78,7 +80,8 @@ public class SettingsGui extends JFrame {
         if (defaultSettingsHandler.delete(toDelete)) {
             comboBox1.removeItem(toDelete);
             JOptionPane.showMessageDialog(this, "Profile deleted successfully.");
-        } else {
+        }
+        else {
             JOptionPane.showMessageDialog(this, "Unable to delete profile: " + toDelete);
         }
     }

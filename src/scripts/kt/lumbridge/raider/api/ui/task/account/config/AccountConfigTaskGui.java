@@ -46,7 +46,7 @@ public class AccountConfigTaskGui extends JFrame {
 
         ScriptAccountConfigData accountConfigData = selectedTask.getAccountConfigData();
         editIndex = selectedIndex;
-        checkBox1.setSelected(accountConfigData.getSolveNewCharacterBankSetup());
+        checkBox1.setSelected(accountConfigData.getSolveNewCharacterBankAccGuide());
         checkBox2.setSelected(accountConfigData.getEnableShiftClick());
         checkBox3.setSelected(accountConfigData.getEnableRoofs());
         spinner1.setValue(accountConfigData.getCameraZoomPercent());

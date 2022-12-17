@@ -42,7 +42,7 @@ inline fun <reified T> deepCopy(ob: T): T {
 
 data class ScriptAccountConfigData(
     @DoNotRename
-    val solveNewCharacterBankSetup: Boolean = false,
+    val solveNewCharacterBankAccGuide: Boolean = false,
     @DoNotRename
     val enableShiftClick: Boolean = false,
     @DoNotRename

@@ -7,6 +7,7 @@ import org.tribot.script.sdk.antiban.PlayerPreferences
 import org.tribot.script.sdk.antiban.PlayerPreferences.Generator
 import org.tribot.script.sdk.frameworks.behaviortree.IParentNode
 import org.tribot.script.sdk.frameworks.behaviortree.condition
+import org.tribot.script.sdk.frameworks.behaviortree.perform
 import org.tribot.script.sdk.frameworks.behaviortree.sequence
 import org.tribot.script.sdk.query.Query
 import org.tribot.script.sdk.util.TribotRandom
@@ -23,7 +24,7 @@ fun IParentNode.prayerBehavior(scriptTask: ScriptTask?) = sequence {
         scriptTask?.resourceGainedCondition?.updateSumDirectly(buryCount)
         buryCount > 0
     }
-    waitAvgHumanReactionTime()
+    perform { waitAvgHumanReactionTime() }
 }
 
 private fun getBonesInventoryQuery(scriptTask: ScriptTask?) = scriptTask?.resourceGainedCondition?.id

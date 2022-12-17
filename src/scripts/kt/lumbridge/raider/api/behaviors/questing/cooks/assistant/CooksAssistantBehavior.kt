@@ -141,7 +141,7 @@ private fun IParentNode.walkToAndMilkCow() = sequence {
             .findBestInteractable()
             .map {
                 it.interact("Milk") &&
-                        Waiting.waitUntilAnimating(10000) &&
+                        Waiting.waitUntilAnimating(it.distance() * 600) &&
                         waitUntilNotAnimating() && Waiting.waitUntil { Inventory.contains(ITEM_4) }
             }
             .orElse(false)

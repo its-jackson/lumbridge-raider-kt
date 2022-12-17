@@ -53,7 +53,7 @@ fun IParentNode.firemakingBehavior(scriptTask: ScriptTask?) = sequence {
                     condition { current?.tile?.let { canReach(it) && it.interact(WALK_HERE_ACTION) } }
                     condition { current?.let { walkTo(it) } == true }
                 }
-                condition { Waiting.waitUntil { current?.tile?.equals(MyPlayer.getTile()) == true } }
+                condition { Waiting.waitUntil(7500) { current?.tile?.equals(MyPlayer.getTile()) == true } }
             }
 
             selector {

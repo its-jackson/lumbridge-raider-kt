@@ -38,7 +38,7 @@ enum class Range(
     val position = WorldTile(x, y, z)
 
     companion object {
-        val optimalRange: Range
+        val bestRange: Range
             get() {
                 return if (Quest.COOKS_ASSISTANT.state == Quest.State.COMPLETE)
                     LUMBRIDGE_CASTLE_RANGE
@@ -46,10 +46,13 @@ enum class Range(
                     Range.values().minByOrNull { it.position.distance() }!!
             }
 
-        fun cookRawFood(optimalRange: Range): Boolean {
-            return if (!MakeScreen.isOpen()) {
+        fun cookRawFood(bestRange: Range): Boolean {
+            return if (MakeScreen.isOpen()) {
+                makeAllAvailableItems(cookableWhiteList)
+            }
+            else {
                 Query.gameObjects()
-                    .nameContains(optimalRange.obj)
+                    .nameContains(bestRange.obj)
                     .isReachable
                     .findBestInteractable()
                     .map { range ->
@@ -60,11 +63,10 @@ enum class Range(
                                 .map { waitUntil { it.useOn(range) } }
                                 .orElse(false)
                         else
-                            range.interact(optimalRange.action)
+                            range.interact(bestRange.action)
                     }
-                    .orElse(false) && waitUntil { MakeScreen.isOpen() } && makeAllAvailableItems(cookableWhiteList)
-            } else {
-                makeAllAvailableItems(cookableWhiteList)
+                    .orElse(false) &&
+                        waitUntil { MakeScreen.isOpen() } && makeAllAvailableItems(cookableWhiteList)
             }
         }
     }

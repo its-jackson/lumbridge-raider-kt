@@ -37,9 +37,10 @@ class LumbridgeRaiderKt : TribotScript {
 
     private var scriptTaskGui: ScriptTaskGui? = ScriptTaskGui()
 
+    //Segoe UI
     private val paintTemplate = PaintTextRow.builder()
         .background(Color(66, 66, 66, 180))
-        .font(Font("Segoe UI", 0, 10))
+        .font(Font(Font.SANS_SERIF, 0, 10))
         .noBorder()
         .build()
 
@@ -80,8 +81,8 @@ class LumbridgeRaiderKt : TribotScript {
         )
         .row(
             paintTemplate.toBuilder()
-                .label("Fish spot")
-                .value { scriptTaskRunner.activeScriptTask?.fishingData?.fishSpot?.spriteNames }
+                .label("Fishing")
+                .value { scriptTaskRunner.activeScriptTask?.fishingData?.fishSpot?.spriteNames?.toList() }
                 .build()
         )
         .row(
@@ -183,7 +184,7 @@ class LumbridgeRaiderKt : TribotScript {
         val accountConfigData = ScriptTask(
             behavior = ScriptBehavior.ACCOUNT_CONFIG,
             accountConfigData = ScriptAccountConfigData(
-                solveNewCharacterBankSetup = false,
+                solveNewCharacterBankAccGuide = false,
                 cameraZoomPercent = 44.47,
                 enableRoofs = false,
                 enableShiftClick = true

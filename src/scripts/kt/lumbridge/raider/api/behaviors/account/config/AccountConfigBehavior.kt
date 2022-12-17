@@ -10,29 +10,29 @@ import scripts.kotlin.api.waitAvgHumanReactionTime
 import scripts.kotlin.api.walkToAndOpenBank
 import scripts.kt.lumbridge.raider.api.ScriptTask
 
-private fun getMainWidgetQuery() = Query.widgets()
+private fun getNewBankAccountGuideWidgetQuery() = Query.widgets()
     .inIndexPath(664, 29)
     .actionContains("Close")
     .isVisible
 
-private fun closeNewBankAccountWidget() = getMainWidgetQuery()
+private fun closeNewBankAccountGuideWidget() = getNewBankAccountGuideWidgetQuery()
     .findFirst()
     .map { it.click() }
     .orElse(false)
 
 fun IParentNode.accountConfigBehavior(scriptTask: ScriptTask?) = sequence {
     selector {
-        condition { scriptTask?.accountConfigData?.solveNewCharacterBankSetup == false }
+        condition { scriptTask?.accountConfigData?.solveNewCharacterBankAccGuide == false }
         selector {
             sequence {
-                condition { getMainWidgetQuery().isAny }
-                condition { closeNewBankAccountWidget() }
+                condition { getNewBankAccountGuideWidgetQuery().isAny }
+                condition { closeNewBankAccountGuideWidget() }
                 perform { waitAvgHumanReactionTime() }
             }
             sequence {
                 walkToAndOpenBank()
-                condition { Waiting.waitUntil { getMainWidgetQuery().isAny } }
-                condition { closeNewBankAccountWidget() }
+                condition { Waiting.waitUntil { getNewBankAccountGuideWidgetQuery().isAny } }
+                condition { closeNewBankAccountGuideWidget() }
                 perform { waitAvgHumanReactionTime() }
             }
         }
