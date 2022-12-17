@@ -35,8 +35,8 @@ import java.awt.Font
 class LumbridgeRaiderKt : TribotScript {
     private var scriptTaskRunner: ScriptTaskRunner? = null
     private var scriptTaskGui: ScriptTaskGui? = null
-    private var paintTemplate: PaintTextRow? =  null
-    private var mainPaint: BasicPaintTemplate? = null
+    private var scriptPaintTemplate: PaintTextRow? =  null
+    private var scriptMainPaint: BasicPaintTemplate? = null
 
     override fun configure(config: ScriptConfig) {
         config.isBreakHandlerEnabled = false
@@ -44,73 +44,74 @@ class LumbridgeRaiderKt : TribotScript {
     }
 
     override fun execute(args: String) {
-        preScriptStart()
+        preScript()
         script(args)
     }
 
-    private fun preScriptStart() {
+    private fun preScript() {
         scriptTaskRunner = ScriptTaskRunner()
 
-        paintTemplate = PaintTextRow.builder()
+        scriptPaintTemplate = PaintTextRow.builder()
             .background(Color(66, 66, 66, 180))
             .font(Font(Font.SANS_SERIF, 0, 10))
             .noBorder()
             .build()
 
-        mainPaint = BasicPaintTemplate.builder()
-            .row(PaintRows.versionedScriptName(paintTemplate!!.toBuilder()))
-            .row(PaintRows.runtime(paintTemplate!!.toBuilder()))
+        scriptMainPaint = BasicPaintTemplate.builder()
+            .row(PaintRows.versionedScriptName(scriptPaintTemplate!!.toBuilder()))
+            .row(PaintRows.runtime(scriptPaintTemplate!!.toBuilder()))
             .row(
-                paintTemplate!!.toBuilder().label("Stop")
+                scriptPaintTemplate!!.toBuilder().label("Stop")
                     .value { scriptTaskRunner!!.activeScriptTask?.stopCondition }
                     .build()
             )
             .row(
-                paintTemplate!!.toBuilder().label("Behavior")
+                scriptPaintTemplate!!.toBuilder().label("Behavior")
                     .value { scriptTaskRunner!!.activeScriptTask?.behavior?.behavior }
                     .build()
             )
             .row(
-                paintTemplate!!.toBuilder().label("Disposal")
+                scriptPaintTemplate!!.toBuilder().label("Disposal")
                     .value { scriptTaskRunner!!.activeScriptTask?.disposal?.disposal }
                     .build()
             )
             .row(
-                paintTemplate!!.toBuilder().label("Monsters")
+                scriptPaintTemplate!!.toBuilder().label("Monsters")
                     .value { scriptTaskRunner!!.activeScriptTask?.combatData?.monsters?.map { it.monsterName } }
                     .build()
             )
             .row(
-                paintTemplate!!.toBuilder()
+                scriptPaintTemplate!!.toBuilder()
                     .label("Rocks")
                     .value { scriptTaskRunner!!.activeScriptTask?.miningData?.rocks?.map { it.oreSpriteName } }
                     .build()
             )
             .row(
-                paintTemplate!!.toBuilder()
+                scriptPaintTemplate!!.toBuilder()
                     .label("Trees")
                     .value { scriptTaskRunner!!.activeScriptTask?.woodcuttingData?.trees?.map { it.treeName } }
                     .build()
             )
             .row(
-                paintTemplate!!.toBuilder()
+                scriptPaintTemplate!!.toBuilder()
                     .label("Fishing")
                     .value { scriptTaskRunner!!.activeScriptTask?.fishingData?.fishSpot?.spriteNames?.toList() }
                     .build()
             )
             .row(
-                paintTemplate!!.toBuilder()
+                scriptPaintTemplate!!.toBuilder()
                     .label("Quest")
                     .value { scriptTaskRunner!!.activeScriptTask?.questingData?.quest?.questName }
                     .build()
             )
             .row(
-                paintTemplate!!.toBuilder().label("Remaining tasks")
-                    .value { scriptTaskRunner!!.remaining() }.build()
+                scriptPaintTemplate!!.toBuilder().label("Remaining tasks")
+                    .value { scriptTaskRunner!!.remaining() }
+                    .build()
             )
             .build()
 
-        mainPaint?.let { paint -> Painting.addPaint{ paint.render(it) } }
+        scriptMainPaint?.let { paint -> Painting.addPaint{ paint.render(it) } }
     }
 
     private fun script(args: String) {
