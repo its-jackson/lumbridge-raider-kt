@@ -1,5 +1,6 @@
 package scripts.kt.lumbridge.raider.api.behaviors.account.config
 
+import org.tribot.script.sdk.Bank
 import org.tribot.script.sdk.Camera
 import org.tribot.script.sdk.Options
 import org.tribot.script.sdk.Waiting
@@ -27,12 +28,14 @@ fun IParentNode.accountConfigBehavior(scriptTask: ScriptTask?) = sequence {
             sequence {
                 condition { getNewBankAccountGuideWidgetQuery().isAny }
                 condition { closeNewBankAccountGuideWidget() }
+                condition { Bank.close() }
                 perform { waitAvgHumanReactionTime() }
             }
             sequence {
                 walkToAndOpenBank()
                 condition { Waiting.waitUntil { getNewBankAccountGuideWidgetQuery().isAny } }
                 condition { closeNewBankAccountGuideWidget() }
+                condition { Bank.close() }
                 perform { waitAvgHumanReactionTime() }
             }
         }

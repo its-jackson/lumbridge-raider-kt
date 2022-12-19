@@ -20,7 +20,7 @@ private val fishingWaitMean: Int =
     PlayerPreferences.preference(
         "scripts.kt.lumbridge.raider.api.behaviors.fishing.FishingBehavior.fishingWaitMean"
     ) { g: PlayerPreferences.Generator ->
-        g.uniform(200, 600)
+        g.uniform(200, 400)
     }
 
 private val fishingWaitStd: Int =
@@ -62,7 +62,7 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
     selector {
         condition { scriptTask?.disposal != ScriptDisposal.DROP }
         condition { !Inventory.isFull() }
-        condition { dropAll(scriptTask) }
+        condition { dropAllFish(scriptTask) }
     }
 
     selector {
@@ -90,20 +90,15 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
         selector {
             sequence {
                 condition { !isCookRawFood() }
-                condition { dropAll(scriptTask) }
+                condition { dropAllNonFishingEquipment(scriptTask) }
             }
             sequence {
                 condition { isCookRawFood() }
                 walkToAndCookRange(scriptTask)
                 condition { !isCookRawFood() }
-                condition { dropAll(scriptTask) }
+                condition { dropAllNonFishingEquipment(scriptTask) }
             }
         }
-    }
-
-    selector {
-        condition { scriptTask?.fishingData?.fishSpot?.let { it.position.distance() < 15 && canReach(it.position) } }
-        condition { scriptTask?.fishingData?.fishSpot?.let { walkTo(it.position) } }
     }
 
     completeFishingAction(scriptTask)
@@ -117,12 +112,17 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
  */
 private fun IParentNode.completeFishingAction(scriptTask: ScriptTask?) = sequence {
     selector {
+        condition { scriptTask?.fishingData?.fishSpot?.let { it.position.distance() < 15 && canReach(it.position) } }
+        condition { scriptTask?.fishingData?.fishSpot?.let { walkTo(it.position) } }
+    }
+
+    selector {
         condition { scriptTask?.fishingData?.fishSpot?.getFishSpotQuery()?.isAny }
         perform { waitUntil { scriptTask?.fishingData?.fishSpot?.getFishSpotQuery()?.isAny == true } }
     }
+
     condition { scriptTask?.fishingData?.fishSpot?.fish() }
 }
-
 
 /**
  * Determine if the character has the required bait / net etc.
@@ -137,9 +137,25 @@ private fun isFishingEquipmentSatisfied(scriptTask: ScriptTask?) =
         } == true
 
 /**
- * Drop all raw fish inside the inventory according to the task.
+ * Drop all fish.
  */
-private fun dropAll(scriptTask: ScriptTask?) = Inventory.getAll()
-    .filter { scriptTask?.fishingData?.fishSpot?.spriteIds?.contains(it.id) == true }
+private fun dropAllFish(scriptTask: ScriptTask?) = Inventory.getAll()
     .map { it.id }
+    .filter {
+        scriptTask?.fishingData?.fishSpot?.spriteIds
+            ?.contains(it) == true
+    }
+    .let { Inventory.drop(*it.toIntArray()) > 0 }
+
+/**
+ * Drop all non-fishing-equipment
+ */
+private fun dropAllNonFishingEquipment(scriptTask: ScriptTask?) = Inventory.getAll()
+    .map { it.id }
+    .filter {
+        scriptTask?.fishingData?.fishSpot?.equipmentReq
+            ?.containsKey(it) == false &&
+                !scriptTask.fishingData.fishSpot.baitReq
+                    .containsKey(it)
+    }
     .let { Inventory.drop(*it.toIntArray()) > 0 }

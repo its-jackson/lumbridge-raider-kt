@@ -2,7 +2,7 @@
 
 ### Purpose
 
-<p>A behaviour tree script that trains several skills in the Lumbridge area of RuneScape.</p>
+<p>A behavior tree script that trains several skills in the Lumbridge area of RuneScape.</p>
 <p>Premium UI/UX with fully automated script tasks.</p>
 <p>Following a "progressive" structure for leveling up skills efficiently.</p>
 

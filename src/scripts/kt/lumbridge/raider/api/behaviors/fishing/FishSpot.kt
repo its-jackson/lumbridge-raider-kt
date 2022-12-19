@@ -119,8 +119,7 @@ enum class FishSpot(
         lumbridgeCastleFishingCoords[0], lumbridgeCastleFishingCoords[1], lumbridgeCastleFishingCoords[2]
     ) {
         override fun location(): String = LUMBRIDGE_CASTLE
-    }
-    ;
+    };
 
     val position = WorldTile(x, y, z)
 

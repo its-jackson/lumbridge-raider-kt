@@ -31,7 +31,7 @@ fun IParentNode.cookingBehavior(scriptTask: ScriptTask?) = sequence {
 }
 
 fun IParentNode.walkToAndCookRange(scriptTask: ScriptTask?) = sequence {
-    val best = Range.LUMBRIDGE_COOKING_TUTOR_RANGE
+    val best = Range.best
     val position = best.position
 
     selector {
@@ -59,6 +59,4 @@ fun IParentNode.walkToAndCookRange(scriptTask: ScriptTask?) = sequence {
 }
 
 fun isCookRawFood() = Inventory.getAll()
-    .filter { it.name.contains("Raw") }
-    .filterNot { it.definition.isNoted }
-    .any()
+    .any { it.name.contains("Raw") && !it.definition.isNoted }

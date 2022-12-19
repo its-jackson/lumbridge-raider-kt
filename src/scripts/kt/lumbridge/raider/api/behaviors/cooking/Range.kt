@@ -38,7 +38,7 @@ enum class Range(
     val position = WorldTile(x, y, z)
 
     companion object {
-        val bestRange: Range
+        val best: Range
             get() {
                 return if (Quest.COOKS_ASSISTANT.state == Quest.State.COMPLETE)
                     LUMBRIDGE_CASTLE_RANGE
