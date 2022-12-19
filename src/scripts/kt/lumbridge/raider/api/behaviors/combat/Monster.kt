@@ -125,12 +125,8 @@ enum class Monster(
             it.interact("Attack") &&
                     Waiting.waitUntil(6500) { it.isInteractingWithMe } &&
                     Waiting.waitUntilAnimating(3000) &&
-                    waitUntilNotAnimating(
-                        end = 2500,
-                        step = 200,
-                        actions = actions
-                    ) &&
-                    Waiting.waitUntil(2500) { !it.isValid }
+                    waitUntilNotAnimating(step = 200, actions = actions) &&
+                    Waiting.waitUntil(2000) { !it.isValid }
         }
         .orElse(false)
 

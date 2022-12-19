@@ -12,6 +12,15 @@
 * Enable/disable roofs
 * Optimize camera zoom percentage
 
+### Death
+* Solve new character death guide
+* Go through all dialog sequentially
+* Leave the death area by using the portal
+* Walk to the grave
+* Loot the grave
+* Walk to the bank
+* Deposit all items
+
 ### Combat
 * Slaying Monsters
   * Cows, 

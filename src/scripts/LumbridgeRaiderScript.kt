@@ -3,6 +3,7 @@ package scripts
 import com.google.gson.GsonBuilder
 import org.tribot.script.sdk.*
 import org.tribot.script.sdk.frameworks.behaviortree.*
+import org.tribot.script.sdk.painting.MousePaint
 import org.tribot.script.sdk.painting.Painting
 import org.tribot.script.sdk.painting.template.basic.BasicPaintTemplate
 import org.tribot.script.sdk.painting.template.basic.PaintRows
@@ -111,7 +112,9 @@ class LumbridgeRaiderKt : TribotScript {
             )
             .build()
 
-        scriptMainPaint?.let { paint -> Painting.addPaint{ paint.render(it) } }
+        //scriptMainPaint?.let { paint -> Painting.addPaint{ paint.render(it) } }
+        Painting.setMousePaint { _, _, _ -> }
+        Painting.setMouseSplinePaint { _, _ -> }
     }
 
     private fun script(args: String) {
@@ -150,6 +153,9 @@ class LumbridgeRaiderKt : TribotScript {
                 woodcuttingTest()
             else if (args.equals("/questing/cooks/assistant/test", true))
                 cooksAssistantQuestTest()
+            else if (args.equals("/death/test", true)) {
+
+            }
             else {
                 handler.load(args, Array<ScriptTask>::class.java)
                     .ifPresentOrElse({
