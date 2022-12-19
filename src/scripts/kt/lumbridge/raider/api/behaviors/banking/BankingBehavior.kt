@@ -40,7 +40,9 @@ fun IParentNode.initializeBankTask(scriptTask: ScriptTask?): SelectorNode = sele
     condition { scriptTask?.bankTask != null }
     sequence {
         perform { initBankTask(scriptTask) }
-        executeBankTask(scriptTask)
+        repeatUntil(BehaviorTreeStatus.SUCCESS) {
+            executeBankTask(scriptTask)
+        }
     }
 }
 
