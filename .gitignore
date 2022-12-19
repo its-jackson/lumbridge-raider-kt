@@ -1,10 +1,4 @@
 .gradle
 .idea
-# Project exclude paths
-/build/
-/libraries/build/
-/scripts/build/
-/scripts/polymorphic-scripts/build/
-/scripts/polymorphic-scripts/premium/build/
-/scripts/polymorphic-scripts/testing/build/
-/scripts/polymorphic-scripts/testing/build/classes/java/main/
+build
+build.gradle.kts

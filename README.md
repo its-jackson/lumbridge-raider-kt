@@ -1,25 +1,82 @@
 # LumbridgeRaider.kt
 
 ### Purpose
-<p>A behaviour tree script that trains several skills in the Lumbridge area of RuneScape.</p>
-<p>Having minimal user interactions, with fully automated script tasks, unique for each profile.</p>
+
+<p>A behavior tree script that trains several skills in the Lumbridge area of RuneScape.</p>
+<p>Premium UI/UX with fully automated script tasks.</p>
 <p>Following a "progressive" structure for leveling up skills efficiently.</p>
 
-### Current functionality
-* Slaying NPC's (Cows, Chickens)
-* Looting after NPC death
-* Cooking raw meat
+### Account Configuration
+* Solve new character bank account guide widget
+* Enable/disable shift clicking
+* Enable/disable roofs
+* Optimize camera zoom percentage
+
+### Death
+* Solve new character death guide
+* Go through all dialog sequentially
+* Leave the death area by using the portal
+* Walk to the grave
+* Loot the grave
+* Walk to the bank
+* Deposit all items
+
+### Combat
+* Slaying Monsters
+  * Cows, 
+  * Chickens, 
+  * Giant rats, 
+  * Goblins,
+  * Frogs,
+  * Big frogs,
+  * Giant frogs
+  
+* Looting
+* Eating
 * Banking
 
-### Functionality in-progress
-* Fishing
-* Firemaking
-* Cooking
-* Woodcutting
-* Magic
-* Ranged
+### Combat Magic
+* Auto castable spells
 
-### User stories
-* As an ironman, I want to train several skills with low cost, so I can advance quickly.
-* As a new player, I want a script that is easy and not complicated, so I can learn and bot effectively.
-* As a script-writer, I want a script that has minimal user interaction, so I can write bug free code and not worry about user error.
+### Fishing
+* Lumbridge swamp (shrimps, anchovies, sardine, herring)
+* Lumbridge castle (salmon, trout, pike)
+* Cook then bank
+* Cook then drop
+* Power fishing
+* Banking
+
+### Cooking
+* Any "Raw" inventory item that is not noted
+* Withdraw from bank and cook at lumbridge castle range, until cooked amount satisfied
+
+### Mining
+* All rocks (Lumbridge swamp)
+* All pickaxes
+* Rock priority system
+* M1D1
+* Power mining
+* Banking
+
+### Woodcutting
+* All trees (Lumbridge castle)
+* All axes
+* Chop then burn
+* Power chopping
+* Banking
+
+### Questing
+* Cook's Assistant
+
+### Prayer
+* All bones
+* Several boning patterns
+
+### In-Progress
+* ~~Fishing~~
+* ~~Cooking~~
+* ~~Mining~~
+* ~~Prayer~~
+* ~~Woodcutting~~
+* ~~Combat (Melee/Ranged/Magic)~~
+* ~~Questing (Cook's Assistant)~~
