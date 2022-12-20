@@ -16,20 +16,6 @@ import scripts.kt.lumbridge.raider.api.behaviors.banking.normalBankingDisposal
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.isCookRawFood
 import scripts.kt.lumbridge.raider.api.behaviors.cooking.walkToAndCookRange
 
-private val fishingWaitMean: Int =
-    PlayerPreferences.preference(
-        "scripts.kt.lumbridge.raider.api.behaviors.fishing.FishingBehavior.fishingWaitMean"
-    ) { g: PlayerPreferences.Generator ->
-        g.uniform(200, 400)
-    }
-
-private val fishingWaitStd: Int =
-    PlayerPreferences.preference(
-        "scripts.kt.lumbridge.raider.api.behaviors.fishing.FishingBehavior.fishingWaitStd"
-    ) { g: PlayerPreferences.Generator ->
-        g.uniform(5, 33)
-    }
-
 /**
  * The Fishing Behavior SequenceNode:
  *  Initialize bank task,
@@ -102,8 +88,6 @@ fun IParentNode.fishingBehavior(scriptTask: ScriptTask?) = sequence {
     }
 
     completeFishingAction(scriptTask)
-
-    perform { Waiting.waitNormal(fishingWaitMean, fishingWaitStd) }
 }
 
 /**

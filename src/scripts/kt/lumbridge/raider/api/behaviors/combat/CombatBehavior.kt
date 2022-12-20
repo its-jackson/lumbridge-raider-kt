@@ -4,7 +4,6 @@ import org.tribot.script.sdk.Combat
 import org.tribot.script.sdk.Equipment
 import org.tribot.script.sdk.Inventory
 import org.tribot.script.sdk.Waiting
-import org.tribot.script.sdk.antiban.PlayerPreferences
 import org.tribot.script.sdk.frameworks.behaviortree.*
 import org.tribot.script.sdk.query.Query
 import scripts.kotlin.api.eatingAction
@@ -13,20 +12,6 @@ import scripts.kotlin.api.lootItems
 import scripts.kt.lumbridge.raider.api.ScriptTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.executeBankTask
 import scripts.kt.lumbridge.raider.api.behaviors.banking.initializeBankTask
-
-private val combatWaitMean: Int =
-    PlayerPreferences.preference(
-        "scripts.kt.lumbridge.raider.api.behaviors.combat.CombatBehavior.combatWaitMean"
-    ) { g: PlayerPreferences.Generator ->
-        g.uniform(300, 1000)
-    }
-
-private val combatWaitStd: Int =
-    PlayerPreferences.preference(
-        "scripts.kt.lumbridge.raider.api.behaviors.combat.CombatBehavior.combatWaitStd"
-    ) { g: PlayerPreferences.Generator ->
-        g.uniform(30, 60)
-    }
 
 fun IParentNode.combatBehavior(scriptTask: ScriptTask?) = sequence {
     // ensure the bank task is initialized,
@@ -92,9 +77,6 @@ fun IParentNode.completeCombatAction(scriptTask: ScriptTask?) = sequence {
 
     // do the looting stuff
     lootingAction(scriptTask)
-
-    // wait using seeded normal dist
-    perform { Waiting.waitNormal(combatWaitMean, combatWaitStd) }
 }
 
 fun IParentNode.lootingAction(scriptTask: ScriptTask?) = selector {

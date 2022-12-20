@@ -87,8 +87,6 @@ fun IParentNode.firemakingBehavior(scriptTask: ScriptTask?) = sequence {
             condition { waitUntilNotAnimating(end = TribotRandom.normal(625, 5).toLong()) }
         }
     }
-
-    perform { waitAvgHumanReactionTime() }
 }
 
 internal class FiremakingLane(

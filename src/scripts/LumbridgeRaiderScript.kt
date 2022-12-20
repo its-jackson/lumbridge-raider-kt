@@ -59,7 +59,7 @@ class LumbridgeRaiderKt : TribotScript {
             .build()
 
         scriptMainPaint = BasicPaintTemplate.builder()
-            .row(PaintRows.versionedScriptName(scriptPaintTemplate!!.toBuilder()))
+            .row(PaintRows.scriptName(scriptPaintTemplate!!.toBuilder()))
             .row(PaintRows.runtime(scriptPaintTemplate!!.toBuilder()))
             .row(
                 scriptPaintTemplate!!.toBuilder().label("Stop")
