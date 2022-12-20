@@ -99,8 +99,6 @@ private fun IParentNode.completeMiningAction(scriptTask: ScriptTask?) = sequence
             }
         }
     }
-
-    perform { waitAvgHumanReactionTime() }
 }
 
 private fun IParentNode.normalOreDroppingDisposal(scriptTask: ScriptTask?) = selector {
